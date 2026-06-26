@@ -12,8 +12,12 @@ dist
 dist-ssr
 *.local
 
+discord-assets
+
 # Editor directories and files
-.vscode/*
+.vscode
+.codex
+.agents
 !.vscode/extensions.json
 .idea
 .DS_Store
