@@ -346,17 +346,28 @@ impl PollingEventSource {
             }
         }
 
-        if let Ok(mmr) = client.mmr(puuid).await {
-            if let Some(rank) = rank_from_mmr(&mmr, self.active_season_id.as_deref()) {
-                self.cached_rank = Some(rank);
-                return;
+        let mut next_rank = client
+            .mmr(puuid)
+            .await
+            .ok()
+            .and_then(|mmr| rank_from_mmr(&mmr, self.active_season_id.as_deref()));
+
+        let update_rank = client
+            .competitive_updates(puuid)
+            .await
+            .ok()
+            .and_then(|updates| rank_from_competitive_updates(&updates));
+
+        if let Some(update_rank) = update_rank {
+            if let Some(rank) = &mut next_rank {
+                rank.last_match_delta = update_rank.last_match_delta;
+            } else {
+                next_rank = Some(update_rank);
             }
         }
 
-        if let Ok(updates) = client.competitive_updates(puuid).await {
-            if let Some(rank) = rank_from_competitive_updates(&updates) {
-                self.cached_rank = Some(rank);
-            }
+        if let Some(rank) = next_rank {
+            self.cached_rank = Some(rank);
         }
     }
 }
@@ -412,6 +423,12 @@ fn enrich_content_names(snapshot: &mut LiveSnapshot, content: &ValorantContent) 
             rank.tier_name = rank
                 .tier
                 .and_then(|tier| content.competitive_tier_name(tier));
+        }
+
+        if rank.icon_url.is_none() {
+            rank.icon_url = rank
+                .tier
+                .and_then(|tier| content.competitive_tier_icon_url(tier));
         }
     }
 }

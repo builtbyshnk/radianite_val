@@ -597,8 +597,10 @@ mod tests {
             tier: Some(15),
             tier_name: Some("Silver 2".to_string()),
             ranked_rating: Some(47),
+            last_match_delta: None,
             leaderboard_rank: None,
             season_id: None,
+            icon_url: None,
         });
 
         assert_eq!(state_text(&snapshot), "SILVER 2 (47rr) - Solo 1/5");

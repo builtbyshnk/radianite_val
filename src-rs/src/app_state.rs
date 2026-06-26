@@ -11,7 +11,7 @@ use crate::{
     riot::{
         state::{
             now_timestamp, CoreStatus, CoreStatusKind, DiagnosticSnapshot, LiveSnapshot,
-            MatchPhase, RpcStatus,
+            MatchPhase, OverlayStatus, RpcStatus,
         },
         watcher::{run_monitor_loop, PollResult},
     },
@@ -22,6 +22,8 @@ pub struct AppState {
     inner: Arc<RwLock<AppInner>>,
     monitor: Arc<Mutex<Option<MonitorHandle>>>,
     discord: Arc<Mutex<DiscordRpcManager>>,
+    overlay_status: Arc<RwLock<OverlayStatus>>,
+    overlay_server: Arc<Mutex<Option<JoinHandle<()>>>>,
 }
 
 struct AppInner {
@@ -58,7 +60,37 @@ impl AppState {
             })),
             monitor: Arc::new(Mutex::new(None)),
             discord: Arc::new(Mutex::new(DiscordRpcManager::new(RpcConfig::from_env()))),
+            overlay_status: Arc::new(RwLock::new(OverlayStatus::new(
+                false,
+                None,
+                None,
+                "OBS overlay server has not started",
+            ))),
+            overlay_server: Arc::new(Mutex::new(None)),
         }
+    }
+
+    pub async fn start_overlay_server(&self) -> OverlayStatus {
+        let mut server = self.overlay_server.lock().await;
+        if server.is_some() {
+            return self.overlay_status().await;
+        }
+
+        self.set_overlay_status(OverlayStatus::new(
+            false,
+            None,
+            None,
+            "Starting OBS overlay server",
+        ))
+        .await;
+
+        let state = self.clone();
+        let join = tokio::spawn(async move {
+            crate::overlay::run_overlay_server(state).await;
+        });
+        *server = Some(join);
+
+        self.overlay_status().await
     }
 
     pub async fn start_monitor(&self, app: AppHandle) -> CoreStatus {
@@ -106,6 +138,14 @@ impl AppState {
 
     pub async fn rpc_status(&self) -> RpcStatus {
         self.discord.lock().await.status()
+    }
+
+    pub async fn overlay_status(&self) -> OverlayStatus {
+        self.overlay_status.read().await.clone()
+    }
+
+    pub async fn set_overlay_status(&self, status: OverlayStatus) {
+        *self.overlay_status.write().await = status;
     }
 
     pub async fn set_rpc_enabled(&self, enabled: bool) -> RpcStatus {

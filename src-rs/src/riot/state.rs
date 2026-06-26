@@ -80,8 +80,37 @@ pub struct RankSnapshot {
     pub tier: Option<u32>,
     pub tier_name: Option<String>,
     pub ranked_rating: Option<i32>,
+    pub last_match_delta: Option<i32>,
     pub leaderboard_rank: Option<u32>,
     pub season_id: Option<String>,
+    pub icon_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct OverlayStatus {
+    pub enabled: bool,
+    pub url: Option<String>,
+    pub port: Option<u16>,
+    pub message: String,
+    pub updated_at: String,
+}
+
+impl OverlayStatus {
+    pub fn new(
+        enabled: bool,
+        url: Option<String>,
+        port: Option<u16>,
+        message: impl Into<String>,
+    ) -> Self {
+        Self {
+            enabled,
+            url,
+            port,
+            message: message.into(),
+            updated_at: now_timestamp(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

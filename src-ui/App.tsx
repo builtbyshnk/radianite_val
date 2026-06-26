@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { invoke } from "@tauri-apps/api/core"
 import { listen } from "@tauri-apps/api/event"
+import { openUrl } from "@tauri-apps/plugin-opener"
 import {
   IconBrandDiscord,
+  IconBroadcast,
+  IconCopy,
+  IconExternalLink,
   IconPlayerPlay,
   IconPlayerStop,
   IconRefresh,
@@ -101,8 +105,10 @@ type LiveSnapshot = {
     tier?: number | null
     tierName?: string | null
     rankedRating?: number | null
+    lastMatchDelta?: number | null
     leaderboardRank?: number | null
     seasonId?: string | null
+    iconUrl?: string | null
   } | null
   matchId?: string | null
   sessionStartedAt?: string | null
@@ -113,6 +119,14 @@ type RpcStatus = {
   enabled: boolean
   connected: boolean
   configured: boolean
+  message: string
+  updatedAt: string
+}
+
+type OverlayStatus = {
+  enabled: boolean
+  url?: string | null
+  port?: number | null
   message: string
   updatedAt: string
 }
@@ -146,24 +160,41 @@ const initialRpcStatus: RpcStatus = {
   updatedAt: "",
 }
 
+const initialOverlayStatus: OverlayStatus = {
+  enabled: false,
+  url: null,
+  port: null,
+  message: "OBS overlay server status has not loaded",
+  updatedAt: "",
+}
+
 function App() {
   const [diagnostics, setDiagnostics] =
     useState<DiagnosticSnapshot>(initialDiagnostics)
   const [snapshot, setSnapshot] = useState<LiveSnapshot | null>(null)
   const [rpcStatus, setRpcStatus] = useState<RpcStatus>(initialRpcStatus)
+  const [overlayStatus, setOverlayStatus] =
+    useState<OverlayStatus>(initialOverlayStatus)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
   const refresh = useCallback(async () => {
-    const [nextDiagnostics, nextSnapshot, nextRpcStatus] = await Promise.all([
+    const [
+      nextDiagnostics,
+      nextSnapshot,
+      nextRpcStatus,
+      nextOverlayStatus,
+    ] = await Promise.all([
       invoke<DiagnosticSnapshot>("riot_get_diagnostics"),
       invoke<LiveSnapshot | null>("riot_get_live_snapshot"),
       invoke<RpcStatus>("discord_rpc_get_status"),
+      invoke<OverlayStatus>("overlay_get_status"),
     ])
 
     setDiagnostics(nextDiagnostics)
     setSnapshot(nextSnapshot)
     setRpcStatus(nextRpcStatus)
+    setOverlayStatus(nextOverlayStatus)
   }, [])
 
   const runCommand = useCallback(
@@ -181,6 +212,28 @@ function App() {
     },
     [refresh],
   )
+
+  const copyOverlayUrl = useCallback(async () => {
+    if (!overlayStatus.url) return
+
+    setError(null)
+    try {
+      await navigator.clipboard.writeText(overlayStatus.url)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    }
+  }, [overlayStatus.url])
+
+  const openOverlayUrl = useCallback(async () => {
+    if (!overlayStatus.url) return
+
+    setError(null)
+    try {
+      await openUrl(overlayStatus.url)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    }
+  }, [overlayStatus.url])
 
   useEffect(() => {
     const unlistenCallbacks: Array<() => void> = []
@@ -205,7 +258,14 @@ function App() {
       await invoke<CoreStatus>("riot_start_monitor")
     })
 
+    const refreshTimer = window.setInterval(() => {
+      refresh().catch((err) => {
+        setError(err instanceof Error ? err.message : String(err))
+      })
+    }, 5000)
+
     return () => {
+      window.clearInterval(refreshTimer)
       unlistenCallbacks.forEach((unlisten) => unlisten())
     }
   }, [refresh, runCommand])
@@ -218,6 +278,7 @@ function App() {
   const playerName = snapshot?.player.gameName
     ? `${snapshot.player.gameName}${snapshot.player.gameTag ? `#${snapshot.player.gameTag}` : ""}`
     : "Own player"
+  const overlayUrl = overlayStatus.url ?? null
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -375,6 +436,67 @@ function App() {
           </div>
 
           <div className="flex min-w-0 flex-col gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>OBS Overlay</CardTitle>
+                <CardDescription>{overlayStatus.message}</CardDescription>
+                <CardAction>
+                  <Badge variant={overlayStatus.enabled ? "default" : "secondary"}>
+                    {overlayStatus.enabled ? "Running" : "Stopped"}
+                  </Badge>
+                </CardAction>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                <div className="grid min-w-0 gap-2">
+                  <InfoRow label="Browser source" value={overlayUrl} />
+                  <InfoRow
+                    label="Suggested size"
+                    value={overlayUrl ? "360 x 90" : null}
+                  />
+                  <InfoRow
+                    label="Bind"
+                    value={
+                      overlayStatus.port
+                        ? `127.0.0.1:${overlayStatus.port}`
+                        : null
+                    }
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={copyOverlayUrl}
+                    disabled={!overlayUrl}
+                  >
+                    <IconCopy data-icon="inline-start" />
+                    Copy URL
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={openOverlayUrl}
+                    disabled={!overlayUrl}
+                  >
+                    <IconExternalLink data-icon="inline-start" />
+                    Open
+                  </Button>
+                </div>
+                <div className="border bg-[rgb(24,24,27)] p-2">
+                  {overlayUrl ? (
+                    <iframe
+                      title="OBS rank overlay preview"
+                      src={overlayUrl}
+                      className="h-[90px] w-full border-0 bg-transparent"
+                    />
+                  ) : (
+                    <div className="flex h-[90px] items-center justify-center gap-2 text-xs text-muted-foreground">
+                      <IconBroadcast />
+                      Overlay preview is unavailable
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>Discord Rich Presence</CardTitle>

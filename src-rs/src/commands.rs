@@ -2,7 +2,7 @@ use tauri::{AppHandle, Emitter, State};
 
 use crate::{
     app_state::AppState,
-    riot::state::{CoreStatus, DiagnosticSnapshot, LiveSnapshot, RpcStatus},
+    riot::state::{CoreStatus, DiagnosticSnapshot, LiveSnapshot, OverlayStatus, RpcStatus},
 };
 
 #[tauri::command]
@@ -56,4 +56,9 @@ pub async fn discord_rpc_set_enabled(
 #[tauri::command]
 pub async fn discord_rpc_get_status(state: State<'_, AppState>) -> Result<RpcStatus, String> {
     Ok(state.rpc_status().await)
+}
+
+#[tauri::command]
+pub async fn overlay_get_status(state: State<'_, AppState>) -> Result<OverlayStatus, String> {
+    Ok(state.overlay_status().await)
 }

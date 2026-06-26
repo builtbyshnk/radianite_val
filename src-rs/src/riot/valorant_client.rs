@@ -229,6 +229,7 @@ struct ContentMap {
 struct ContentCompetitiveTier {
     tier: u32,
     name: String,
+    icon_url: Option<String>,
 }
 
 impl ValorantContent {
@@ -251,6 +252,13 @@ impl ValorantContent {
             .iter()
             .find(|competitive_tier| competitive_tier.tier == tier)
             .map(|competitive_tier| competitive_tier.name.clone())
+    }
+
+    pub fn competitive_tier_icon_url(&self, tier: u32) -> Option<String> {
+        self.competitive_tiers
+            .iter()
+            .find(|competitive_tier| competitive_tier.tier == tier)
+            .and_then(|competitive_tier| competitive_tier.icon_url.clone())
     }
 }
 
@@ -301,6 +309,7 @@ pub async fn fetch_public_content() -> Result<ValorantContent, ValorantHttpError
                 Some(ContentCompetitiveTier {
                     tier: tier.tier?,
                     name: tier.tier_name?,
+                    icon_url: tier.large_icon.or(tier.small_icon),
                 })
             })
             .collect();
@@ -370,6 +379,8 @@ struct CompetitiveTierSetDto {
 struct CompetitiveTierDto {
     tier: Option<u32>,
     tier_name: Option<String>,
+    large_icon: Option<String>,
+    small_icon: Option<String>,
 }
 
 pub fn extract_region_and_shard(sessions: &ExternalSessions) -> (Option<String>, Option<String>) {
@@ -449,8 +460,10 @@ pub fn rank_from_mmr(mmr: &Value, season_id: Option<&str>) -> Option<RankSnapsho
         tier,
         tier_name: None,
         ranked_rating,
+        last_match_delta: None,
         leaderboard_rank,
         season_id: season_id.map(str::to_string),
+        icon_url: None,
     })
 }
 
@@ -464,6 +477,7 @@ pub fn rank_from_competitive_updates(updates: &Value) -> Option<RankSnapshot> {
         .or_else(|| u32_path(match_update, &["CompetitiveTier"]));
     let ranked_rating = i32_path(match_update, &["RankedRatingAfterUpdate"])
         .or_else(|| i32_path(match_update, &["RankedRating"]));
+    let last_match_delta = i32_path(match_update, &["RankedRatingEarned"]);
 
     if tier.is_none() && ranked_rating.is_none() {
         return None;
@@ -473,8 +487,10 @@ pub fn rank_from_competitive_updates(updates: &Value) -> Option<RankSnapshot> {
         tier,
         tier_name: None,
         ranked_rating,
+        last_match_delta,
         leaderboard_rank: None,
         season_id: None,
+        icon_url: None,
     })
 }
 
@@ -510,7 +526,10 @@ pub fn bool_path(value: &Value, path: &[&str]) -> Option<bool> {
 mod tests {
     use serde_json::json;
 
-    use super::{active_season_id, extract_region_and_shard, rank_from_mmr, ValorantClient};
+    use super::{
+        active_season_id, extract_region_and_shard, rank_from_competitive_updates, rank_from_mmr,
+        ContentCompetitiveTier, ValorantClient, ValorantContent,
+    };
     use crate::riot::local_client::EntitlementsToken;
     use crate::riot::local_client::{ExternalSession, LaunchConfiguration};
 
@@ -564,6 +583,45 @@ mod tests {
         assert_eq!(rank.tier, Some(24));
         assert_eq!(rank.ranked_rating, Some(53));
         assert_eq!(rank.leaderboard_rank, None);
+    }
+
+    #[test]
+    fn parses_last_match_delta_from_competitive_updates() {
+        let updates = json!({
+            "Matches": [{
+                "TierAfterUpdate": 24,
+                "RankedRatingAfterUpdate": 20,
+                "RankedRatingEarned": -18
+            }]
+        });
+
+        let rank = rank_from_competitive_updates(&updates).expect("rank should parse");
+
+        assert_eq!(rank.tier, Some(24));
+        assert_eq!(rank.ranked_rating, Some(20));
+        assert_eq!(rank.last_match_delta, Some(-18));
+    }
+
+    #[test]
+    fn resolves_competitive_tier_name_and_icon_url() {
+        let content = ValorantContent {
+            agents: Vec::new(),
+            maps: Vec::new(),
+            competitive_tiers: vec![ContentCompetitiveTier {
+                tier: 24,
+                name: "Diamond 1".to_string(),
+                icon_url: Some("https://example.test/diamond.png".to_string()),
+            }],
+        };
+
+        assert_eq!(
+            content.competitive_tier_name(24).as_deref(),
+            Some("Diamond 1")
+        );
+        assert_eq!(
+            content.competitive_tier_icon_url(24).as_deref(),
+            Some("https://example.test/diamond.png")
+        );
     }
 
     #[test]
