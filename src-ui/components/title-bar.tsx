@@ -8,8 +8,8 @@ import {
   IconX,
 } from "@tabler/icons-react"
 
+import { AppIcon } from "@/components/app-icon"
 import { Button } from "@/components/ui/button"
-import { ValorantMark } from "@/components/valorant-mark"
 import { cn } from "@/lib/utils"
 import { statusPill, type StatusTone } from "@/lib/format"
 import type { CoreStatus } from "@/lib/types"
@@ -46,7 +46,7 @@ export function TitleBar({
       className="flex h-12 shrink-0 items-center justify-between gap-3 border-b bg-background/80 px-3 backdrop-blur"
     >
       <div data-tauri-drag-region className="flex items-center gap-3">
-        <ValorantMark className="size-5 text-primary" />
+        <AppIcon className="size-5 rounded-sm" />
         <span className="text-sm font-semibold tracking-wide">Radianite</span>
         <span className="font-mono text-xs text-muted-foreground">
           v{version ?? "—"}

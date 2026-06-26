@@ -9,7 +9,7 @@ import {
   IconWorld,
 } from "@tabler/icons-react"
 
-import { ValorantMark } from "@/components/valorant-mark"
+import { AppIcon } from "@/components/app-icon"
 import { agentPortraitUrl, mapArt, rankIconUrl } from "@/lib/valorant-assets"
 import { phaseLabel, playerName, queueLabel } from "@/lib/format"
 import { cn } from "@/lib/utils"
@@ -47,7 +47,7 @@ export function LiveMatchHero({ snapshot }: { snapshot: LiveSnapshot | null }) {
       <section className="relative flex flex-1 flex-col overflow-hidden rounded-xl border bg-card">
         <StandbyArt />
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center gap-3 text-center">
-          <ValorantMark className="size-10 text-primary/70" />
+          <AppIcon className="size-10 rounded-lg opacity-80" />
           <div>
             <p className="text-base font-semibold">Waiting for VALORANT…</p>
             <p className="text-sm text-muted-foreground">
@@ -95,7 +95,7 @@ export function LiveMatchHero({ snapshot }: { snapshot: LiveSnapshot | null }) {
         ) : null}
 
         <div className="absolute right-6 top-1/2 -translate-y-1/2 text-right">
-          <ValorantMark className="ml-auto size-10 text-primary/80" />
+          <AppIcon className="ml-auto size-10 rounded-lg opacity-90" />
           {snapshot.mapName ? (
             <>
               <p className="mt-2 text-xs font-medium tracking-[0.3em] text-muted-foreground">

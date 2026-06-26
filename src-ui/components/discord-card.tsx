@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react"
 import { IconBrandDiscord, IconPlayerPlay, IconPlayerStop } from "@tabler/icons-react"
 
+import { AppIcon } from "@/components/app-icon"
 import { Button } from "@/components/ui/button"
 import { Panel } from "@/components/panel"
-import { ValorantMark } from "@/components/valorant-mark"
-import { agentIconUrl } from "@/lib/valorant-assets"
+import { agentIconUrl, mapArt } from "@/lib/valorant-assets"
 import { rpcPreview, type RpcPreview } from "@/lib/rpc-preview"
 import { cn } from "@/lib/utils"
 import type { LiveSnapshot, RpcStatus } from "@/lib/types"
@@ -84,7 +84,38 @@ function DiscordActivity({
   snapshot: LiveSnapshot | null
 }) {
   const elapsed = useElapsed(preview.startedAt)
-  const iconUrl = agentIconUrl(snapshot?.agentId)
+  const agentUrl = agentIconUrl(snapshot?.agentId)
+  const [largeUrl, setLargeUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+
+    async function resolveLargeImage() {
+      if (!snapshot) {
+        if (active) setLargeUrl(null)
+        return
+      }
+
+      if (snapshot.phase === "pregame") {
+        if (active) setLargeUrl(agentUrl)
+        return
+      }
+
+      if (snapshot.phase === "ingame" || snapshot.phase === "range") {
+        const art = await mapArt(snapshot.mapId, snapshot.mapName)
+        if (!active) return
+        setLargeUrl(art?.listViewIcon ?? agentUrl)
+        return
+      }
+
+      if (active) setLargeUrl(null)
+    }
+
+    void resolveLargeImage()
+    return () => {
+      active = false
+    }
+  }, [snapshot, agentUrl])
 
   return (
     <div className="rounded-lg border border-white/5 bg-[#232428] p-3 text-[#dbdee1]">
@@ -94,23 +125,27 @@ function DiscordActivity({
       <div className="flex gap-3">
         <div className="relative size-[52px] shrink-0">
           <div className="flex size-full items-center justify-center overflow-hidden rounded-lg bg-[#1a1b1e]">
-            {iconUrl ? (
-              <img src={iconUrl} alt="" className="size-full object-cover" />
+            {largeUrl ? (
+              <img src={largeUrl} alt="" className="size-full object-cover" />
             ) : (
-              <ValorantMark className="size-7 text-primary" />
+              <AppIcon className="size-9 rounded-md" />
             )}
           </div>
-          <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-[#232428]">
-            <span className="flex size-4 items-center justify-center rounded-full bg-primary">
-              <ValorantMark className="size-2.5 text-white" />
-            </span>
+          <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center overflow-hidden rounded-full bg-[#232428] ring-2 ring-[#232428]">
+            {agentUrl ? (
+              <img
+                src={agentUrl}
+                alt=""
+                className="size-4 rounded-full object-cover"
+              />
+            ) : null}
           </span>
         </div>
 
         <div className="min-w-0 flex-1 text-sm leading-tight">
           <p className="truncate font-semibold text-white">{preview.name}</p>
-          <p className="truncate text-[0.8rem]">{preview.details}</p>
-          <p className="truncate text-[0.8rem]">{preview.state}</p>
+          <p className="truncate text-[0.7rem] text-[#b5bac1]">{preview.details}</p>
+          <p className="truncate text-[0.7rem] text-[#b5bac1]">{preview.state}</p>
           {elapsed ? (
             <p className="mt-0.5 truncate text-[0.8rem] text-[#b5bac1]">
               {elapsed} elapsed
