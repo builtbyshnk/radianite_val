@@ -1,0 +1,123 @@
+export type CoreStatusKind =
+  | "noRiotInstall"
+  | "riotClientClosed"
+  | "riotClientOnly"
+  | "valorantLaunching"
+  | "valorantReady"
+  | "authExpired"
+  | "disconnected"
+  | "degraded"
+  | "error"
+
+export type CoreStatus = {
+  kind: CoreStatusKind
+  message: string
+  monitored: boolean
+  updatedAt: string
+}
+
+export type DiagnosticSnapshot = {
+  status: CoreStatus
+  riotInstallsJsonExists: boolean
+  riotInstallsPath?: string | null
+  lockfileExists: boolean
+  lockfilePath?: string | null
+  lockfilePid?: number | null
+  lockfileProtocol?: string | null
+  lockfilePortPresent: boolean
+  localApiReady: boolean
+  riotClientSessionsStatus?: number | null
+  sessionProductIds: string[]
+  valorantSessionPresent: boolean
+  region?: string | null
+  shard?: string | null
+  clientVersion?: string | null
+  puuidPresent: boolean
+  gameName?: string | null
+  gameTag?: string | null
+  accessTokenReady: boolean
+  entitlementTokenReady: boolean
+  lastError?: string | null
+  updatedAt: string
+}
+
+export type MatchPhase =
+  | "menus"
+  | "matchmaking"
+  | "pregame"
+  | "ingame"
+  | "range"
+  | "unknown"
+
+export type LiveSnapshot = {
+  phase: MatchPhase
+  player: {
+    puuidPresent: boolean
+    gameName?: string | null
+    gameTag?: string | null
+  }
+  region?: string | null
+  shard?: string | null
+  queueId?: string | null
+  party: {
+    state?: string | null
+    size?: number | null
+    maxSize?: number | null
+    accessibility?: string | null
+  }
+  mapId?: string | null
+  mapName?: string | null
+  agentId?: string | null
+  agentName?: string | null
+  score?: {
+    ally: number
+    enemy: number
+  } | null
+  rank?: {
+    tier?: number | null
+    tierName?: string | null
+    rankedRating?: number | null
+    lastMatchDelta?: number | null
+    leaderboardRank?: number | null
+    seasonId?: string | null
+    iconUrl?: string | null
+  } | null
+  matchId?: string | null
+  sessionStartedAt?: string | null
+  updatedAt: string
+}
+
+export type RpcStatus = {
+  enabled: boolean
+  connected: boolean
+  configured: boolean
+  message: string
+  updatedAt: string
+}
+
+export type OverlayStatus = {
+  enabled: boolean
+  url?: string | null
+  port?: number | null
+  message: string
+  updatedAt: string
+}
+
+export type UpdaterStatus =
+  | "idle"
+  | "checking"
+  | "current"
+  | "available"
+  | "installing"
+  | "installed"
+  | "error"
+
+export type UpdaterState = {
+  status: UpdaterStatus
+  message: string
+  currentVersion?: string | null
+  version?: string | null
+  date?: string | null
+  body?: string | null
+  progress?: number | null
+}

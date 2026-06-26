@@ -19,6 +19,7 @@ discord-assets
 # Editor directories and files
 .vscode
 .codex
+.cursor
 .agents
 !.vscode/extensions.json
 .idea
