@@ -86,6 +86,7 @@ export function useRadianite() {
   const [busy, setBusy] = useState(false)
   const [appVersion, setAppVersion] = useState<string | null>(null)
   const [lastSync, setLastSync] = useState<Date | null>(null)
+  const [lastChecked, setLastChecked] = useState<Date | null>(null)
   const [startedAt] = useState<number>(() => Date.now())
   const [uptimeMs, setUptimeMs] = useState(0)
   const [settings, setSettings] = useState<Settings>(defaultSettings)
@@ -204,6 +205,7 @@ export function useRadianite() {
     try {
       const update = await check()
       setAvailableUpdate(update)
+      setLastChecked(new Date())
 
       if (!update) {
         setUpdater((current) => ({
@@ -227,6 +229,7 @@ export function useRadianite() {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
       setUpdater((current) => ({ ...current, status: "error", message }))
+      setLastChecked(new Date())
       toast.error(message)
     }
   }, [])
@@ -384,6 +387,7 @@ export function useRadianite() {
     busy,
     appVersion,
     lastSync,
+    lastChecked,
     uptimeMs,
     settings,
     setSetting,

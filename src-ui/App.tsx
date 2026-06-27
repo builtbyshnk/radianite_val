@@ -54,6 +54,7 @@ function App() {
               updater={r.updater}
               version={r.appVersion}
               canInstall={Boolean(r.availableUpdate)}
+              lastChecked={r.lastChecked}
               onCheck={r.checkForUpdate}
               onInstall={r.installAvailableUpdate}
             />
