@@ -121,3 +121,10 @@ export type UpdaterState = {
   body?: string | null
   progress?: number | null
 }
+
+export type Settings = {
+  runAtBoot: boolean
+  minimizeToTray: boolean
+}
+
+export type SettingKey = keyof Settings

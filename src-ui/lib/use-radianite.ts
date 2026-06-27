@@ -1,10 +1,16 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { invoke } from "@tauri-apps/api/core"
 import { listen } from "@tauri-apps/api/event"
 import { getVersion } from "@tauri-apps/api/app"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { relaunch } from "@tauri-apps/plugin-process"
 import { check, type DownloadEvent, type Update } from "@tauri-apps/plugin-updater"
+import { load, type Store } from "@tauri-apps/plugin-store"
+import {
+  disable as disableAutostart,
+  enable as enableAutostart,
+  isEnabled as isAutostartEnabled,
+} from "@tauri-apps/plugin-autostart"
 import { toast } from "sonner"
 
 import type {
@@ -13,6 +19,8 @@ import type {
   LiveSnapshot,
   OverlayStatus,
   RpcStatus,
+  SettingKey,
+  Settings,
   UpdaterState,
 } from "@/lib/types"
 
@@ -59,6 +67,13 @@ const initialUpdaterState: UpdaterState = {
   progress: null,
 }
 
+const defaultSettings: Settings = {
+  runAtBoot: false,
+  minimizeToTray: true,
+}
+
+const SETTINGS_STORE = "settings.json"
+
 export function useRadianite() {
   const [diagnostics, setDiagnostics] =
     useState<DiagnosticSnapshot>(initialDiagnostics)
@@ -73,6 +88,8 @@ export function useRadianite() {
   const [lastSync, setLastSync] = useState<Date | null>(null)
   const [startedAt] = useState<number>(() => Date.now())
   const [uptimeMs, setUptimeMs] = useState(0)
+  const [settings, setSettings] = useState<Settings>(defaultSettings)
+  const settingsStore = useRef<Store | null>(null)
 
   const refresh = useCallback(async () => {
     const [nextDiagnostics, nextSnapshot, nextRpcStatus, nextOverlayStatus] =
@@ -149,6 +166,32 @@ export function useRadianite() {
       toast.error(err instanceof Error ? err.message : String(err))
     }
   }, [overlayStatus.url])
+
+  const setSetting = useCallback(
+    async <K extends SettingKey>(key: K, value: Settings[K]) => {
+      setSettings((current) => ({ ...current, [key]: value }))
+
+      try {
+        if (key === "runAtBoot") {
+          if (value) {
+            if (!(await isAutostartEnabled())) await enableAutostart()
+          } else {
+            if (await isAutostartEnabled()) await disableAutostart()
+          }
+        }
+
+        const store = settingsStore.current
+        if (store) {
+          await store.set(key, value)
+          await store.save()
+        }
+      } catch (err) {
+        setSettings((current) => ({ ...current, [key]: !value }))
+        toast.error(err instanceof Error ? err.message : String(err))
+      }
+    },
+    [],
+  )
 
   const checkForUpdate = useCallback(async () => {
     setUpdater((current) => ({
@@ -289,6 +332,42 @@ export function useRadianite() {
   }, [refresh, runCommand])
 
   useEffect(() => {
+    let active = true
+
+    const loadSettings = async () => {
+      try {
+        const store = await load(SETTINGS_STORE)
+        settingsStore.current = store
+
+        const runAtBoot =
+          (await store.get<boolean>("runAtBoot")) ?? defaultSettings.runAtBoot
+        const minimizeToTray =
+          (await store.get<boolean>("minimizeToTray")) ??
+          defaultSettings.minimizeToTray
+
+        const autostartActive = await isAutostartEnabled().catch(
+          () => runAtBoot,
+        )
+
+        if (active) setSettings({ runAtBoot: autostartActive, minimizeToTray })
+
+        if (autostartActive !== runAtBoot) {
+          await store.set("runAtBoot", autostartActive)
+          await store.save()
+        }
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : String(err))
+      }
+    }
+
+    loadSettings()
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
     const timer = window.setInterval(() => {
       setUptimeMs(Date.now() - startedAt)
     }, 1000)
@@ -306,6 +385,8 @@ export function useRadianite() {
     appVersion,
     lastSync,
     uptimeMs,
+    settings,
+    setSetting,
     refresh: () => runCommand(refresh),
     startMonitor,
     stopMonitor,

@@ -1,22 +1,12 @@
-import { useState } from "react"
 import {
   IconClockHour4,
   IconFileText,
   IconRefreshDot,
-  IconSettings,
   IconWifi,
 } from "@tabler/icons-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { formatTime, formatUptime } from "@/lib/format"
 import { cn } from "@/lib/utils"
@@ -52,7 +42,6 @@ export function StatusBar({
   lastSync: Date | null
   uptimeMs: number
 }) {
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const health = connectionHealth(status)
 
   return (
@@ -92,23 +81,6 @@ export function StatusBar({
           <IconFileText data-icon="inline-start" />
           Logs
         </Button>
-        <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <IconSettings data-icon="inline-start" />
-              Settings
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Settings</DialogTitle>
-              <DialogDescription>
-                Settings are not available yet. Configuration options will land
-                in a future release.
-              </DialogDescription>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
       </div>
     </footer>
   )

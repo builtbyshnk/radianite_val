@@ -4,6 +4,7 @@ import {
   IconPlayerPlay,
   IconPlayerStop,
   IconRefresh,
+  IconSettings,
   IconSquare,
   IconX,
 } from "@tabler/icons-react"
@@ -30,6 +31,7 @@ export function TitleBar({
   onRefresh,
   onStartMonitor,
   onStopMonitor,
+  onOpenSettings,
 }: {
   status: CoreStatus
   version: string | null
@@ -37,6 +39,7 @@ export function TitleBar({
   onRefresh: () => void
   onStartMonitor: () => void
   onStopMonitor: () => void
+  onOpenSettings: () => void
 }) {
   const pill = statusPill(status.kind)
 
@@ -63,6 +66,15 @@ export function TitleBar({
       </div>
 
       <div className="flex items-center gap-2">
+        <Button
+          size="icon-sm"
+          variant="ghost"
+          onClick={onOpenSettings}
+          aria-label="Open settings"
+          className="size-8"
+        >
+          <IconSettings />
+        </Button>
         <Button
           size="sm"
           variant="outline"

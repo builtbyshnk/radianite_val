@@ -1,3 +1,5 @@
+import { useState } from "react"
+
 import { TitleBar } from "@/components/title-bar"
 import { LiveMatchHero } from "@/components/live-match-hero"
 import { CoreStatusCard } from "@/components/core-status-card"
@@ -6,11 +8,13 @@ import { DiscordCard } from "@/components/discord-card"
 import { UpdatesCard } from "@/components/updates-card"
 import { QuickInfoCard } from "@/components/quick-info-card"
 import { StatusBar } from "@/components/status-bar"
+import { SettingsDialog } from "@/components/settings-dialog"
 import { useRadianite } from "@/lib/use-radianite"
 import "./App.css"
 
 function App() {
   const r = useRadianite()
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   return (
     <div className="flex h-screen flex-col bg-background text-foreground">
@@ -21,6 +25,7 @@ function App() {
         onRefresh={r.refresh}
         onStartMonitor={r.startMonitor}
         onStopMonitor={r.stopMonitor}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
 
       <main className="flex-1 overflow-y-auto p-3">
@@ -66,6 +71,20 @@ function App() {
         status={r.diagnostics.status}
         lastSync={r.lastSync}
         uptimeMs={r.uptimeMs}
+      />
+
+      <SettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        settings={r.settings}
+        onSetSetting={r.setSetting}
+        overlay={r.overlayStatus}
+        onCopyOverlay={r.copyOverlayUrl}
+        onOpenOverlay={r.openOverlayUrl}
+        rpc={r.rpcStatus}
+        onToggleRpc={r.toggleRpc}
+        busy={r.busy}
+        appVersion={r.appVersion}
       />
     </div>
   )
