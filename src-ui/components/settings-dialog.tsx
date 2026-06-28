@@ -38,7 +38,7 @@ const NAV: Array<{ id: TabId; label: string; icon: Icon }> = [
   { id: "about", label: "About", icon: IconInfoCircle },
 ]
 
-const REPO_URL = "https://github.com/radcolor/radianite"
+const REPO_URL = "https://github.com/radcolor-dev/radianite_val"
 const SITE_URL = "https://radcolor.dev"
 
 export function SettingsDialog({
