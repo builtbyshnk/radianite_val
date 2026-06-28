@@ -4,16 +4,16 @@ Radianite is a lightweight VALORANT companion app for streamers and players who 
 
 ## Features
 
-- 🪶 **Light on your PC** - low CPU and memory usage keeps resources available for VALORANT.
-- ⚡ **Blazingly fast Rust core** - native performance delivers quick updates without slowing down your game.
-- 🎥 **Effortless OBS overlay** - add your rank to streams without external API keys or accounts.
-- 🎮 **Clean Discord presence** - share your current VALORANT activity with a polished, readable status.
-- 🎨 **Customizable overlays** - choose themes and styles that complement your stream's unique visual identity.
-- 🔒 **Private by design** - reads your active local Riot session without requesting your account password.
-- 🛠️ **Simple setup** - launch Radianite, copy your overlay URL, and start streaming within minutes.
-- 🔄 **Live status updates** - keep your overlay and Discord presence current while you continue playing.
-- 🖥️ **Focused desktop experience** - manage integrations and settings from one clean, straightforward application.
-- 🌐 **No cloud dependency** - core features run locally, avoiding unnecessary services, subscriptions, and configuration.
+- 🪶 **Light on your PC** - Low CPU and memory usage leaves headroom for VALORANT.
+- ⚡ **Blazingly fast Rust core** - Native Rust delivers fast updates without slowing your game down.
+- 🎥 **Effortless OBS overlay** - Add your rank to streams with no API keys or accounts.
+- 🎮 **Clean Discord presence** - Share polished VALORANT activity with friends through Discord status.
+- 🎨 **Customizable overlays** - Pick themes and styles that match your stream's unique look.
+- 🔒 **Private by design** - Uses your local Riot session; no Riot password is ever requested.
+- 🛠️ **Simple setup** - Launch the app, copy the overlay URL, and stream within minutes.
+- 🔄 **Live status updates** - Overlay and Discord presence stay current while you keep playing.
+- 🖥️ **Focused desktop experience** - Manage all settings and integrations from one clean desktop application.
+- 🌐 **No cloud dependency** - Everything runs locally with no subscriptions or extra services needed.
 
 ## Product Demo
 
