@@ -263,29 +263,40 @@ impl ValorantContent {
 }
 
 pub async fn fetch_public_content() -> Result<ValorantContent, ValorantHttpError> {
+    fetch_public_content_for_locale("en-US").await
+}
+
+pub async fn fetch_public_content_for_locale(
+    locale: &str,
+) -> Result<ValorantContent, ValorantHttpError> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(6))
         .user_agent("Radianite/0.1")
         .build()
         .map_err(|err| ValorantHttpError::transport(format!("HTTP client setup failed: {err}")))?;
 
-    let agents = fetch_valorant_api::<ValorantApiList<AgentDto>>(
-        &client,
-        "/agents?isPlayableCharacter=true",
-    )
-    .await?
-    .data
-    .into_iter()
-    .filter_map(|agent| {
-        Some(ContentAgent {
-            uuid: agent.uuid?,
-            display_name: agent.display_name?,
-        })
-    })
-    .collect();
+    let agents_endpoint = format!("/agents?isPlayableCharacter=true&language={locale}");
+    let maps_endpoint = format!("/maps?language={locale}");
+    let tiers_endpoint = format!("/competitivetiers?language={locale}");
+    let agents_request = fetch_valorant_api::<ValorantApiList<AgentDto>>(&client, &agents_endpoint);
+    let maps_request = fetch_valorant_api::<ValorantApiList<MapDto>>(&client, &maps_endpoint);
+    let tiers_request =
+        fetch_valorant_api::<ValorantApiList<CompetitiveTierSetDto>>(&client, &tiers_endpoint);
+    let (agents_response, maps_response, tiers_response) =
+        tokio::try_join!(agents_request, maps_request, tiers_request)?;
 
-    let maps = fetch_valorant_api::<ValorantApiList<MapDto>>(&client, "/maps")
-        .await?
+    let agents = agents_response
+        .data
+        .into_iter()
+        .filter_map(|agent| {
+            Some(ContentAgent {
+                uuid: agent.uuid?,
+                display_name: agent.display_name?,
+            })
+        })
+        .collect();
+
+    let maps = maps_response
         .data
         .into_iter()
         .filter_map(|map| {
@@ -296,23 +307,21 @@ pub async fn fetch_public_content() -> Result<ValorantContent, ValorantHttpError
         })
         .collect();
 
-    let competitive_tiers =
-        fetch_valorant_api::<ValorantApiList<CompetitiveTierSetDto>>(&client, "/competitivetiers")
-            .await?
-            .data
-            .into_iter()
-            .last()
-            .map(|set| set.tiers)
-            .unwrap_or_default()
-            .into_iter()
-            .filter_map(|tier| {
-                Some(ContentCompetitiveTier {
-                    tier: tier.tier?,
-                    name: tier.tier_name?,
-                    icon_url: tier.large_icon.or(tier.small_icon),
-                })
+    let competitive_tiers = tiers_response
+        .data
+        .into_iter()
+        .last()
+        .map(|set| set.tiers)
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|tier| {
+            Some(ContentCompetitiveTier {
+                tier: tier.tier?,
+                name: tier.tier_name?,
+                icon_url: tier.large_icon.or(tier.small_icon),
             })
-            .collect();
+        })
+        .collect();
 
     Ok(ValorantContent {
         agents,

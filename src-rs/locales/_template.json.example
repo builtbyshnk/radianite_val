@@ -1,0 +1,4 @@
+{
+  "_version": 1,
+  "$comment": "Copy en-US.json to a BCP 47 filename, translate values, and preserve every %{placeholder}. Missing keys fall back to en-US."
+}

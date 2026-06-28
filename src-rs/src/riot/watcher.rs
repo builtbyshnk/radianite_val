@@ -14,8 +14,8 @@ use super::{
     local_client::LocalClient,
     lockfile::{default_paths, RiotLockfile},
     state::{
-        now_timestamp, CoreStatus, CoreStatusKind, DiagnosticSnapshot, LiveSnapshot, MatchPhase,
-        PartySnapshot, PlayerIdentity, RankSnapshot, ScoreSnapshot,
+        now_timestamp, CoreStatus, CoreStatusKind, DiagnosticSnapshot, LiveSnapshot,
+        LocalizedMessage, MatchPhase, PartySnapshot, PlayerIdentity, RankSnapshot, ScoreSnapshot,
     },
     valorant_client::{
         active_season_id, extract_region_and_shard, fetch_public_client_version,
@@ -73,7 +73,7 @@ impl PollingEventSource {
         let checking = CoreStatus::new(
             CoreStatusKind::Disconnected,
             true,
-            "Checking Riot Client local services",
+            LocalizedMessage::key("status.message.checking"),
         );
         let mut diagnostics = DiagnosticSnapshot::empty(checking);
 
@@ -439,6 +439,23 @@ fn finish(
     kind: CoreStatusKind,
     message: impl Into<String>,
 ) -> PollResult {
+    let detail = message.into();
+    let key = match kind {
+        CoreStatusKind::NoRiotInstall => "status.message.noInstall",
+        CoreStatusKind::RiotClientClosed => "status.message.riotClosed",
+        CoreStatusKind::RiotClientOnly => "status.message.riotOnly",
+        CoreStatusKind::ValorantLaunching => "status.message.launching",
+        CoreStatusKind::ValorantReady => "status.message.ready",
+        CoreStatusKind::AuthExpired => "status.message.authExpired",
+        CoreStatusKind::Degraded => "status.message.degraded",
+        CoreStatusKind::Error => "status.message.error",
+        CoreStatusKind::Disconnected => "status.message.technical",
+    };
+    let message = if matches!(kind, CoreStatusKind::Error) {
+        LocalizedMessage::technical(key, detail)
+    } else {
+        LocalizedMessage::key(key)
+    };
     let status = CoreStatus::new(kind, true, message);
     diagnostics.status = status.clone();
     diagnostics.touch();

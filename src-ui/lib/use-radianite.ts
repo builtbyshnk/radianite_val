@@ -13,6 +13,8 @@ import {
 } from "@tauri-apps/plugin-autostart"
 import { toast } from "sonner"
 
+import i18n, { applyUiLocale, detectedLocale, resolveLocale } from "@/lib/i18n"
+
 import type {
   CoreStatus,
   DiagnosticSnapshot,
@@ -22,11 +24,18 @@ import type {
   SettingKey,
   Settings,
   UpdaterState,
+  LocalizedMessage,
 } from "@/lib/types"
+
+const localizedMessage = (
+  key: string,
+  args?: Record<string, string | number>,
+  detail?: string,
+): LocalizedMessage => ({ key, args, detail })
 
 const initialStatus: CoreStatus = {
   kind: "disconnected",
-  message: "Radianite monitor has not started",
+  message: localizedMessage("status.message.notStarted"),
   monitored: false,
   updatedAt: "",
 }
@@ -49,7 +58,9 @@ const initialRpcStatus: RpcStatus = {
   enabled: false,
   connected: false,
   configured: false,
-  message: "Discord RPC status has not loaded",
+  message: localizedMessage("status.rpc.notLoaded"),
+  locale: "en-US",
+  preview: null,
   updatedAt: "",
 }
 
@@ -57,19 +68,21 @@ const initialOverlayStatus: OverlayStatus = {
   enabled: false,
   url: null,
   port: null,
-  message: "OBS overlay server status has not loaded",
+  message: localizedMessage("status.overlay.notLoaded"),
   updatedAt: "",
 }
 
 const initialUpdaterState: UpdaterState = {
   status: "idle",
-  message: "Updates have not been checked in this session",
+  message: localizedMessage("updates.state.idle"),
   progress: null,
 }
 
 const defaultSettings: Settings = {
   runAtBoot: false,
   minimizeToTray: true,
+  uiLocale: detectedLocale("ui"),
+  rpcLocale: detectedLocale("rpc"),
 }
 
 const SETTINGS_STORE = "settings.json"
@@ -115,7 +128,7 @@ export function useRadianite() {
         await operation()
         await refresh()
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : String(err))
+        toast.error(errorText(err))
       } finally {
         setBusy(false)
       }
@@ -153,9 +166,9 @@ export function useRadianite() {
     if (!overlayStatus.url) return
     try {
       await navigator.clipboard.writeText(overlayStatus.url)
-      toast.success("Overlay URL copied")
+      toast.success(i18n.t("overlay.copied"))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err))
+      toast.error(errorText(err))
     }
   }, [overlayStatus.url])
 
@@ -164,12 +177,15 @@ export function useRadianite() {
     try {
       await openUrl(overlayStatus.url)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : String(err))
+      toast.error(errorText(err))
     }
   }, [overlayStatus.url])
 
   const setSetting = useCallback(
     async <K extends SettingKey>(key: K, value: Settings[K]) => {
+      const previous = settings[key]
+      const changesLocale = key === "uiLocale" || key === "rpcLocale"
+      if (changesLocale) setBusy(true)
       setSettings((current) => ({ ...current, [key]: value }))
 
       try {
@@ -181,24 +197,42 @@ export function useRadianite() {
           }
         }
 
+        if (key === "uiLocale" && typeof value === "string") {
+          const locale = await applyUiLocale(value)
+          await invoke("localization_set_ui_locale", { locale })
+          value = locale as Settings[K]
+          setSettings((current) => ({ ...current, uiLocale: locale }))
+        }
+
+        if (key === "rpcLocale" && typeof value === "string") {
+          const locale = resolveLocale([value], "rpc")
+          const status = await invoke<RpcStatus>("discord_rpc_set_locale", { locale })
+          setRpcStatus(status)
+          value = locale as Settings[K]
+          setSettings((current) => ({ ...current, rpcLocale: locale }))
+        }
+
         const store = settingsStore.current
         if (store) {
           await store.set(key, value)
           await store.save()
         }
       } catch (err) {
-        setSettings((current) => ({ ...current, [key]: !value }))
-        toast.error(err instanceof Error ? err.message : String(err))
+        setSettings((current) => ({ ...current, [key]: previous }))
+        if (key === "uiLocale" && typeof previous === "string") void applyUiLocale(previous)
+        toast.error(errorText(err))
+      } finally {
+        if (changesLocale) setBusy(false)
       }
     },
-    [],
+    [settings],
   )
 
   const checkForUpdate = useCallback(async () => {
     setUpdater((current) => ({
       ...current,
       status: "checking",
-      message: "Checking for a signed update",
+      message: localizedMessage("updates.checking"),
       progress: null,
     }))
 
@@ -211,7 +245,7 @@ export function useRadianite() {
         setUpdater((current) => ({
           ...current,
           status: "current",
-          message: "This build is up to date",
+          message: localizedMessage("updates.current"),
           progress: null,
         }))
         return
@@ -219,7 +253,7 @@ export function useRadianite() {
 
       setUpdater({
         status: "available",
-        message: `Version ${update.version} is ready to install`,
+        message: localizedMessage("updates.available", { version: update.version }),
         currentVersion: update.currentVersion,
         version: update.version,
         date: update.date,
@@ -228,7 +262,7 @@ export function useRadianite() {
       })
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
-      setUpdater((current) => ({ ...current, status: "error", message }))
+      setUpdater((current) => ({ ...current, status: "error", message: localizedMessage("errors.generic", undefined, message) }))
       setLastChecked(new Date())
       toast.error(message)
     }
@@ -240,7 +274,7 @@ export function useRadianite() {
     setUpdater((current) => ({
       ...current,
       status: "installing",
-      message: `Installing version ${availableUpdate.version}`,
+      message: localizedMessage("updates.installing", { version: availableUpdate.version }),
       progress: 0,
     }))
 
@@ -253,8 +287,8 @@ export function useRadianite() {
         setUpdater((current) => ({
           ...current,
           message: contentLength
-            ? `Downloading ${formatBytes(contentLength)}`
-            : "Downloading update",
+            ? localizedMessage("updates.downloadingSize", { size: formatBytes(contentLength) })
+            : localizedMessage("updates.downloading"),
           progress: 0,
         }))
         return
@@ -265,8 +299,8 @@ export function useRadianite() {
         setUpdater((current) => ({
           ...current,
           message: contentLength
-            ? `Downloaded ${formatBytes(downloadedBytes)} of ${formatBytes(contentLength)}`
-            : `Downloaded ${formatBytes(downloadedBytes)}`,
+            ? localizedMessage("updates.downloadedOf", { downloaded: formatBytes(downloadedBytes), total: formatBytes(contentLength) })
+            : localizedMessage("updates.downloaded", { downloaded: formatBytes(downloadedBytes) }),
           progress: contentLength
             ? Math.min(100, Math.round((downloadedBytes / contentLength) * 100))
             : null,
@@ -276,7 +310,7 @@ export function useRadianite() {
 
       setUpdater((current) => ({
         ...current,
-        message: "Installing update",
+        message: localizedMessage("updates.installingNow"),
         progress: 100,
       }))
     }
@@ -286,13 +320,13 @@ export function useRadianite() {
       setUpdater((current) => ({
         ...current,
         status: "installed",
-        message: "Update installed. Relaunching Radianite.",
+        message: localizedMessage("updates.installed"),
         progress: 100,
       }))
       await relaunch()
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
-      setUpdater((current) => ({ ...current, status: "error", message }))
+      setUpdater((current) => ({ ...current, status: "error", message: localizedMessage("errors.generic", undefined, message) }))
       toast.error(message)
     }
   }, [availableUpdate])
@@ -324,7 +358,7 @@ export function useRadianite() {
 
     const refreshTimer = window.setInterval(() => {
       refresh().catch((err) => {
-        toast.error(err instanceof Error ? err.message : String(err))
+        toast.error(errorText(err))
       })
     }, 5000)
 
@@ -347,19 +381,39 @@ export function useRadianite() {
         const minimizeToTray =
           (await store.get<boolean>("minimizeToTray")) ??
           defaultSettings.minimizeToTray
+        const uiLocale = resolveLocale(
+          [(await store.get<string>("uiLocale")) ?? defaultSettings.uiLocale],
+          "ui",
+        )
+        const rpcLocale = resolveLocale(
+          [(await store.get<string>("rpcLocale")) ?? defaultSettings.rpcLocale],
+          "rpc",
+        )
 
         const autostartActive = await isAutostartEnabled().catch(
           () => runAtBoot,
         )
 
-        if (active) setSettings({ runAtBoot: autostartActive, minimizeToTray })
+        await applyUiLocale(uiLocale)
+        const [, rpc] = await Promise.all([
+          invoke("localization_set_ui_locale", { locale: uiLocale }),
+          invoke<RpcStatus>("discord_rpc_set_locale", { locale: rpcLocale }),
+        ])
+
+        if (active) {
+          setSettings({ runAtBoot: autostartActive, minimizeToTray, uiLocale, rpcLocale })
+          setRpcStatus(rpc)
+        }
 
         if (autostartActive !== runAtBoot) {
           await store.set("runAtBoot", autostartActive)
           await store.save()
         }
+        await store.set("uiLocale", uiLocale)
+        await store.set("rpcLocale", rpcLocale)
+        await store.save()
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : String(err))
+        toast.error(errorText(err))
       }
     }
 
@@ -405,7 +459,22 @@ export function useRadianite() {
 function formatBytes(value: number) {
   if (value < 1024) return `${value} B`
   const kb = value / 1024
-  if (kb < 1024) return `${kb.toFixed(1)} KB`
+  if (kb < 1024) return `${formatDecimal(kb)} KB`
   const mb = kb / 1024
-  return `${mb.toFixed(1)} MB`
+  return `${formatDecimal(mb)} MB`
+}
+
+function formatDecimal(value: number) {
+  return new Intl.NumberFormat(i18n.language, {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(value)
+}
+
+function errorText(error: unknown) {
+  const detail = error instanceof Error ? error.message : String(error)
+  return i18n.t("errors.withDetail", {
+    message: i18n.t("errors.generic"),
+    detail,
+  })
 }

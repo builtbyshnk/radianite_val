@@ -1,3 +1,5 @@
+import type { LiveSnapshot } from "@/lib/types"
+
 const API = "https://valorant-api.com/v1"
 
 const UUID_RE =
@@ -32,6 +34,63 @@ type TierEntry = {
 
 type TierTable = {
   tiers?: TierEntry[] | null
+}
+
+type LocalizedContent = {
+  agents: Map<string, string>
+  maps: Map<string, string>
+  tiers: Map<number, string>
+}
+
+export type LocalizedGameNames = {
+  agentName: string | null
+  mapName: string | null
+  rankName: string | null
+}
+
+const localizedContentCache = new Map<string, Promise<LocalizedContent>>()
+
+async function loadLocalizedContent(locale: string): Promise<LocalizedContent> {
+  const result: LocalizedContent = { agents: new Map(), maps: new Map(), tiers: new Map() }
+  try {
+    const [agentsResponse, mapsResponse, tiersResponse] = await Promise.all([
+      fetch(`${API}/agents?isPlayableCharacter=true&language=${encodeURIComponent(locale)}`),
+      fetch(`${API}/maps?language=${encodeURIComponent(locale)}`),
+      fetch(`${API}/competitivetiers?language=${encodeURIComponent(locale)}`),
+    ])
+    const [agentsJson, mapsJson, tiersJson] = await Promise.all([
+      agentsResponse.json() as Promise<{ data?: Array<{ uuid?: string; displayName?: string }> }>,
+      mapsResponse.json() as Promise<{ data?: MapEntry[] }>,
+      tiersResponse.json() as Promise<{ data?: Array<{ tiers?: Array<TierEntry & { tierName?: string }> }> }>,
+    ])
+    for (const agent of agentsJson.data ?? []) {
+      if (agent.uuid && agent.displayName) result.agents.set(agent.uuid.toLowerCase(), agent.displayName)
+    }
+    for (const map of mapsJson.data ?? []) {
+      if (map.mapUrl && map.displayName) result.maps.set(map.mapUrl.toLowerCase(), map.displayName)
+    }
+    const tierSet = tiersJson.data?.[Math.max(0, (tiersJson.data?.length ?? 1) - 1)]
+    for (const tier of tierSet?.tiers ?? []) {
+      if (typeof tier.tier === "number" && tier.tierName) result.tiers.set(tier.tier, tier.tierName)
+    }
+  } catch {
+    // The caller falls back to the English names already present in the snapshot.
+  }
+  return result
+}
+
+export async function localizedGameNames(snapshot: LiveSnapshot, locale: string): Promise<LocalizedGameNames> {
+  let content = localizedContentCache.get(locale)
+  if (!content) {
+    content = loadLocalizedContent(locale)
+    localizedContentCache.set(locale, content)
+  }
+  const resolved = await content
+  return {
+    agentName: snapshot.agentId ? resolved.agents.get(snapshot.agentId.toLowerCase()) ?? null : null,
+    mapName: snapshot.mapId ? resolved.maps.get(snapshot.mapId.toLowerCase()) ?? null : null,
+    rankName: typeof snapshot.rank?.tier === "number" ? resolved.tiers.get(snapshot.rank.tier) ?? null : null,
+  }
 }
 
 async function loadMaps(): Promise<Map<string, MapArt>> {

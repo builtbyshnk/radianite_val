@@ -4,7 +4,11 @@ mod discord_rpc;
 mod overlay;
 mod riot;
 
+// Missing community translation keys fall back to this English catalog.
+rust_i18n::i18n!("locales", fallback = "en-US");
+
 use app_state::AppState;
+use rust_i18n::t;
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
@@ -52,6 +56,8 @@ pub fn run() {
             commands::riot_get_live_snapshot,
             commands::discord_rpc_set_enabled,
             commands::discord_rpc_get_status,
+            commands::discord_rpc_set_locale,
+            commands::localization_set_ui_locale,
             commands::overlay_get_status,
         ])
         .run(tauri::generate_context!())
@@ -59,11 +65,9 @@ pub fn run() {
 }
 
 fn build_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
-    let show = MenuItem::with_id(app, "show", "Show Radianite", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&show, &quit])?;
+    let menu = localized_tray_menu(app)?;
 
-    TrayIconBuilder::new()
+    TrayIconBuilder::with_id("main")
         .icon(app.default_window_icon().unwrap().clone())
         .tooltip("Radianite")
         .menu(&menu)
@@ -85,6 +89,19 @@ fn build_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
         })
         .build(app)?;
 
+    Ok(())
+}
+
+fn localized_tray_menu(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
+    let show = MenuItem::with_id(app, "show", &t!("tray.show"), true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", &t!("tray.quit"), true, None::<&str>)?;
+    Menu::with_items(app, &[&show, &quit])
+}
+
+pub(crate) fn refresh_tray_menu(app: &tauri::AppHandle) -> tauri::Result<()> {
+    if let Some(tray) = app.tray_by_id("main") {
+        tray.set_menu(Some(localized_tray_menu(app)?))?;
+    }
     Ok(())
 }
 

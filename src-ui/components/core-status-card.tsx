@@ -1,4 +1,5 @@
 import { IconActivity, IconCircleCheck, IconCircleX } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import { Panel } from "@/components/panel"
 import { cn } from "@/lib/utils"
@@ -9,18 +10,19 @@ export function CoreStatusCard({
 }: {
   diagnostics: DiagnosticSnapshot
 }) {
+  const { t } = useTranslation()
   const rows = [
-    { label: "Riot Connected", ready: diagnostics.localApiReady },
-    { label: "VALORANT Running", ready: diagnostics.valorantSessionPresent },
+    { label: t("core.riotConnected"), ready: diagnostics.localApiReady },
+    { label: t("core.valorantRunning"), ready: diagnostics.valorantSessionPresent },
     {
-      label: "Account Ready",
+      label: t("core.accountReady"),
       ready:
         diagnostics.accessTokenReady && diagnostics.entitlementTokenReady,
     },
   ]
 
   return (
-    <Panel icon={<IconActivity />} title="Core Status">
+    <Panel icon={<IconActivity />} title={t("core.title")}>
       <div className="flex flex-col">
         {rows.map((row) => (
           <StatusRow key={row.label} label={row.label} ready={row.ready} />
@@ -31,6 +33,7 @@ export function CoreStatusCard({
 }
 
 function StatusRow({ label, ready }: { label: string; ready: boolean }) {
+  const { t } = useTranslation()
   return (
     <div className="flex items-center justify-between gap-3 border-t border-border/60 py-2 first:border-t-0">
       <span className="flex items-center gap-2.5 text-sm">
@@ -47,7 +50,7 @@ function StatusRow({ label, ready }: { label: string; ready: boolean }) {
           ready ? "text-success" : "text-muted-foreground",
         )}
       >
-        {ready ? "Ready" : "Not Ready"}
+        {ready ? t("common.ready") : t("common.notReady")}
       </span>
     </div>
   )

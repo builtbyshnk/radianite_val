@@ -8,6 +8,7 @@ import {
   IconSquare,
   IconX,
 } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import { AppIcon } from "@/components/app-icon"
 import { Button } from "@/components/ui/button"
@@ -22,7 +23,7 @@ const toneStyles: Record<StatusTone, string> = {
   idle: "border-border bg-muted/40 text-muted-foreground",
 }
 
-const appWindow = getCurrentWindow()
+const appWindow = "__TAURI_INTERNALS__" in window ? getCurrentWindow() : null
 
 export function TitleBar({
   status,
@@ -41,6 +42,7 @@ export function TitleBar({
   onStopMonitor: () => void
   onOpenSettings: () => void
 }) {
+  const { t } = useTranslation()
   const pill = statusPill(status.kind)
 
   return (
@@ -70,7 +72,7 @@ export function TitleBar({
           size="icon-sm"
           variant="ghost"
           onClick={onOpenSettings}
-          aria-label="Open settings"
+          aria-label={t("titleBar.openSettings")}
           className="size-8"
         >
           <IconSettings />
@@ -83,7 +85,7 @@ export function TitleBar({
           className="h-8"
         >
           <IconRefresh data-icon="inline-start" />
-          Refresh
+          {t("titleBar.refresh")}
         </Button>
         {status.monitored ? (
           <Button
@@ -93,7 +95,7 @@ export function TitleBar({
             className="h-8 bg-primary text-primary-foreground hover:bg-primary/85"
           >
             <IconPlayerStop data-icon="inline-start" />
-            Stop Monitoring
+            {t("titleBar.stopMonitoring")}
           </Button>
         ) : (
           <Button
@@ -103,23 +105,23 @@ export function TitleBar({
             className="h-8"
           >
             <IconPlayerPlay data-icon="inline-start" />
-            Start Monitoring
+            {t("titleBar.startMonitoring")}
           </Button>
         )}
 
-        <div className="ml-1 flex items-center">
-          <WindowButton label="Minimize" onClick={() => appWindow.minimize()}>
+        <div className="ms-1 flex items-center">
+          <WindowButton label={t("titleBar.minimize")} onClick={() => void appWindow?.minimize()}>
             <IconMinus className="size-4" />
           </WindowButton>
           <WindowButton
-            label="Maximize"
-            onClick={() => appWindow.toggleMaximize()}
+            label={t("titleBar.maximize")}
+            onClick={() => void appWindow?.toggleMaximize()}
           >
             <IconSquare className="size-3.5" />
           </WindowButton>
           <WindowButton
-            label="Close"
-            onClick={() => appWindow.close()}
+            label={t("titleBar.close")}
+            onClick={() => void appWindow?.close()}
             danger
           >
             <IconX className="size-4" />

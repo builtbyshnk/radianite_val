@@ -1,3 +1,4 @@
+use rust_i18n::t;
 use serde::Serialize;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -7,8 +8,8 @@ use tokio::{
 use crate::{
     app_state::AppState,
     riot::state::{
-        now_timestamp, CoreStatus, CoreStatusKind, LiveSnapshot, OverlayStatus, PlayerIdentity,
-        RankSnapshot,
+        now_timestamp, CoreStatus, CoreStatusKind, LiveSnapshot, LocalizedMessage, OverlayStatus,
+        PlayerIdentity, RankSnapshot,
     },
 };
 
@@ -30,7 +31,12 @@ pub async fn run_overlay_server(state: AppState) {
         Ok(listener) => listener,
         Err(message) => {
             state
-                .set_overlay_status(OverlayStatus::new(false, None, None, message))
+                .set_overlay_status(OverlayStatus::new(
+                    false,
+                    None,
+                    None,
+                    LocalizedMessage::technical("status.overlay.failed", message),
+                ))
                 .await;
             return;
         }
@@ -44,7 +50,10 @@ pub async fn run_overlay_server(state: AppState) {
                     false,
                     None,
                     None,
-                    format!("OBS overlay server address failed: {err}"),
+                    LocalizedMessage::technical(
+                        "status.overlay.failed",
+                        format!("OBS overlay server address failed: {err}"),
+                    ),
                 ))
                 .await;
             return;
@@ -57,7 +66,7 @@ pub async fn run_overlay_server(state: AppState) {
             true,
             Some(url),
             Some(port),
-            "OBS overlay server is running",
+            LocalizedMessage::key("status.overlay.running"),
         ))
         .await;
 
@@ -124,7 +133,7 @@ pub fn overlay_snapshot_from_parts(
         if let Some(rank) = snapshot.rank {
             return OverlaySnapshot {
                 status: "ready",
-                message: "Rank data is available".to_string(),
+                message: t!("overlay.rankAvailable").to_string(),
                 rank: Some(rank),
                 player: snapshot.player,
                 updated_at: snapshot.updated_at,
@@ -133,7 +142,7 @@ pub fn overlay_snapshot_from_parts(
 
         return OverlaySnapshot {
             status: "waiting",
-            message: "Waiting for competitive rank data".to_string(),
+            message: t!("overlay.waitingRank").to_string(),
             rank: None,
             player: snapshot.player,
             updated_at: snapshot.updated_at,
@@ -147,7 +156,11 @@ pub fn overlay_snapshot_from_parts(
 
     OverlaySnapshot {
         status,
-        message: core_status.message.clone(),
+        message: core_status
+            .message
+            .detail
+            .clone()
+            .unwrap_or_else(|| t!(core_status.message.key.as_str()).to_string()),
         rank: None,
         player: PlayerIdentity::default(),
         updated_at: core_status.updated_at.clone(),

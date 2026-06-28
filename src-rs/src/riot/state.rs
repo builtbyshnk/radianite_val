@@ -1,8 +1,49 @@
 use chrono::{SecondsFormat, Utc};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 pub fn now_timestamp() -> String {
     Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalizedMessage {
+    pub key: String,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub args: BTreeMap<String, String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
+}
+
+impl LocalizedMessage {
+    pub fn key(key: impl Into<String>) -> Self {
+        Self {
+            key: key.into(),
+            args: BTreeMap::new(),
+            detail: None,
+        }
+    }
+
+    pub fn technical(key: impl Into<String>, detail: impl Into<String>) -> Self {
+        Self {
+            key: key.into(),
+            args: BTreeMap::new(),
+            detail: Some(detail.into()),
+        }
+    }
+}
+
+impl From<&str> for LocalizedMessage {
+    fn from(detail: &str) -> Self {
+        Self::technical("status.message.technical", detail)
+    }
+}
+
+impl From<String> for LocalizedMessage {
+    fn from(detail: String) -> Self {
+        Self::technical("status.message.technical", detail)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -23,13 +64,17 @@ pub enum CoreStatusKind {
 #[serde(rename_all = "camelCase")]
 pub struct CoreStatus {
     pub kind: CoreStatusKind,
-    pub message: String,
+    pub message: LocalizedMessage,
     pub monitored: bool,
     pub updated_at: String,
 }
 
 impl CoreStatus {
-    pub fn new(kind: CoreStatusKind, monitored: bool, message: impl Into<String>) -> Self {
+    pub fn new(
+        kind: CoreStatusKind,
+        monitored: bool,
+        message: impl Into<LocalizedMessage>,
+    ) -> Self {
         Self {
             kind,
             message: message.into(),
@@ -92,7 +137,7 @@ pub struct OverlayStatus {
     pub enabled: bool,
     pub url: Option<String>,
     pub port: Option<u16>,
-    pub message: String,
+    pub message: LocalizedMessage,
     pub updated_at: String,
 }
 
@@ -101,7 +146,7 @@ impl OverlayStatus {
         enabled: bool,
         url: Option<String>,
         port: Option<u16>,
-        message: impl Into<String>,
+        message: impl Into<LocalizedMessage>,
     ) -> Self {
         Self {
             enabled,
@@ -200,8 +245,19 @@ pub struct RpcStatus {
     pub enabled: bool,
     pub connected: bool,
     pub configured: bool,
-    pub message: String,
+    pub message: LocalizedMessage,
+    pub locale: String,
+    pub preview: Option<RpcPreview>,
     pub updated_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct RpcPreview {
+    pub name: String,
+    pub details: String,
+    pub state: String,
+    pub started_at: Option<i64>,
 }
 
 impl RpcStatus {
@@ -209,13 +265,15 @@ impl RpcStatus {
         enabled: bool,
         connected: bool,
         configured: bool,
-        message: impl Into<String>,
+        message: impl Into<LocalizedMessage>,
     ) -> Self {
         Self {
             enabled,
             connected,
             configured,
             message: message.into(),
+            locale: "en-US".to_string(),
+            preview: None,
             updated_at: now_timestamp(),
         }
     }

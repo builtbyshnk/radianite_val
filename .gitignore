@@ -15,6 +15,7 @@ dist-ssr
 .updater-private.key.pub
 
 discord-assets
+scripts
 
 # Editor directories and files
 .vscode

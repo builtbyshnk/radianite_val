@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use tauri::AppHandle;
 use tokio::{
@@ -11,8 +11,9 @@ use crate::{
     riot::{
         state::{
             now_timestamp, CoreStatus, CoreStatusKind, DiagnosticSnapshot, LiveSnapshot,
-            MatchPhase, OverlayStatus, RpcStatus,
+            LocalizedMessage, MatchPhase, OverlayStatus, RpcStatus,
         },
+        valorant_client::fetch_public_content_for_locale,
         watcher::{run_monitor_loop, PollResult},
     },
 };
@@ -24,6 +25,7 @@ pub struct AppState {
     discord: Arc<Mutex<DiscordRpcManager>>,
     overlay_status: Arc<RwLock<OverlayStatus>>,
     overlay_server: Arc<Mutex<Option<JoinHandle<()>>>>,
+    localized_content: Arc<Mutex<HashMap<String, crate::riot::valorant_client::ValorantContent>>>,
 }
 
 struct AppInner {
@@ -48,7 +50,7 @@ impl AppState {
         let status = CoreStatus::new(
             CoreStatusKind::Disconnected,
             false,
-            "Radianite monitor has not started",
+            LocalizedMessage::key("status.message.notStarted"),
         );
         let diagnostics = DiagnosticSnapshot::empty(status.clone());
 
@@ -64,9 +66,10 @@ impl AppState {
                 false,
                 None,
                 None,
-                "OBS overlay server has not started",
+                LocalizedMessage::key("status.overlay.notStarted"),
             ))),
             overlay_server: Arc::new(Mutex::new(None)),
+            localized_content: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -80,7 +83,7 @@ impl AppState {
             false,
             None,
             None,
-            "Starting OBS overlay server",
+            LocalizedMessage::key("status.overlay.starting"),
         ))
         .await;
 
@@ -99,7 +102,11 @@ impl AppState {
             return self.status().await;
         }
 
-        let starting = CoreStatus::new(CoreStatusKind::Disconnected, true, "Starting Riot monitor");
+        let starting = CoreStatus::new(
+            CoreStatusKind::Disconnected,
+            true,
+            LocalizedMessage::key("status.message.starting"),
+        );
         self.set_status(starting.clone()).await;
 
         let (stop_tx, stop_rx) = oneshot::channel();
@@ -119,7 +126,11 @@ impl AppState {
             let _ = handle.join.await;
         }
 
-        let stopped = CoreStatus::new(CoreStatusKind::Disconnected, false, "Riot monitor stopped");
+        let stopped = CoreStatus::new(
+            CoreStatusKind::Disconnected,
+            false,
+            LocalizedMessage::key("status.message.stopped"),
+        );
         self.set_status(stopped.clone()).await;
         stopped
     }
@@ -154,6 +165,28 @@ impl AppState {
             .lock()
             .await
             .set_enabled(enabled, snapshot.as_ref())
+    }
+
+    pub async fn set_rpc_locale(&self, locale: String) -> RpcStatus {
+        let cached = self.localized_content.lock().await.get(&locale).cloned();
+        let content = match cached {
+            Some(content) => Some(content),
+            None => match fetch_public_content_for_locale(&locale).await {
+                Ok(content) => {
+                    self.localized_content
+                        .lock()
+                        .await
+                        .insert(locale.clone(), content.clone());
+                    Some(content)
+                }
+                Err(_) => None,
+            },
+        };
+        let snapshot = self.live_snapshot().await;
+        self.discord
+            .lock()
+            .await
+            .set_locale(locale, content, snapshot.as_ref())
     }
 
     pub async fn apply_poll_result(&self, result: PollResult) -> AppliedChanges {

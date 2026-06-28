@@ -1,0 +1,3 @@
+{
+  "$comment": "Copy en-US.json, translate values only, preserve every key and {{placeholder}}. Missing keys fall back to English."
+}

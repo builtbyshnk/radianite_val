@@ -11,7 +11,7 @@ export type CoreStatusKind =
 
 export type CoreStatus = {
   kind: CoreStatusKind
-  message: string
+  message: LocalizedMessage
   monitored: boolean
   updatedAt: string
 }
@@ -91,7 +91,9 @@ export type RpcStatus = {
   enabled: boolean
   connected: boolean
   configured: boolean
-  message: string
+  message: LocalizedMessage
+  locale: string
+  preview?: RpcPreview | null
   updatedAt: string
 }
 
@@ -99,7 +101,7 @@ export type OverlayStatus = {
   enabled: boolean
   url?: string | null
   port?: number | null
-  message: string
+  message: LocalizedMessage
   updatedAt: string
 }
 
@@ -114,7 +116,7 @@ export type UpdaterStatus =
 
 export type UpdaterState = {
   status: UpdaterStatus
-  message: string
+  message: LocalizedMessage
   currentVersion?: string | null
   version?: string | null
   date?: string | null
@@ -125,6 +127,21 @@ export type UpdaterState = {
 export type Settings = {
   runAtBoot: boolean
   minimizeToTray: boolean
+  uiLocale: string
+  rpcLocale: string
 }
 
 export type SettingKey = keyof Settings
+
+export type LocalizedMessage = {
+  key: string
+  args?: Record<string, string | number>
+  detail?: string | null
+}
+
+export type RpcPreview = {
+  name: string
+  details: string
+  state: string
+  startedAt?: number | null
+}

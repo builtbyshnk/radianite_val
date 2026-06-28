@@ -59,6 +59,36 @@ pub async fn discord_rpc_get_status(state: State<'_, AppState>) -> Result<RpcSta
 }
 
 #[tauri::command]
+pub async fn discord_rpc_set_locale(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    locale: String,
+) -> Result<RpcStatus, String> {
+    if !rust_i18n::available_locales!()
+        .iter()
+        .any(|available| *available == locale)
+    {
+        return Err(format!("unsupported RPC locale: {locale}"));
+    }
+    let status = state.set_rpc_locale(locale).await;
+    app.emit("discord:status", status.clone())
+        .map_err(|err| err.to_string())?;
+    Ok(status)
+}
+
+#[tauri::command]
+pub fn localization_set_ui_locale(app: AppHandle, locale: String) -> Result<(), String> {
+    if !rust_i18n::available_locales!()
+        .iter()
+        .any(|available| *available == locale)
+    {
+        return Err(format!("unsupported UI locale: {locale}"));
+    }
+    rust_i18n::set_locale(&locale);
+    crate::refresh_tray_menu(&app).map_err(|err| err.to_string())
+}
+
+#[tauri::command]
 pub async fn overlay_get_status(state: State<'_, AppState>) -> Result<OverlayStatus, String> {
     Ok(state.overlay_status().await)
 }

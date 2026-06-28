@@ -5,8 +5,12 @@ use discord_rich_presence::{
     activity::{Activity, ActivityType, Assets, Button, Timestamps},
     DiscordIpc, DiscordIpcClient,
 };
+use rust_i18n::t;
 
-use crate::riot::state::{LiveSnapshot, MatchPhase, RpcStatus};
+use crate::riot::{
+    state::{LiveSnapshot, LocalizedMessage, MatchPhase, RpcPreview, RpcStatus},
+    valorant_client::ValorantContent,
+};
 
 const DEFAULT_DISCORD_APP_ID: &str = "1520041097945153566";
 const DEFAULT_GITHUB_URL: &str = "https://github.com/radcolor-dev/radiante_val";
@@ -71,25 +75,32 @@ pub struct DiscordRpcManager {
     enabled: bool,
     client: Option<DiscordIpcClient>,
     status: RpcStatus,
+    locale: String,
+    content: Option<ValorantContent>,
 }
 
 impl DiscordRpcManager {
     pub fn new(config: RpcConfig) -> Self {
         let configured = config.configured();
+        let locale = "en-US".to_string();
+        let mut status = RpcStatus::new(
+            false,
+            false,
+            configured,
+            LocalizedMessage::key(if configured {
+                "status.rpc.disabled"
+            } else {
+                "status.rpc.notConfigured"
+            }),
+        );
+        status.locale = locale.clone();
         Self {
             config,
             enabled: false,
             client: None,
-            status: RpcStatus::new(
-                false,
-                false,
-                configured,
-                if configured {
-                    "Discord RPC is disabled"
-                } else {
-                    "Set RADIANITE_DISCORD_APP_ID to enable Discord RPC"
-                },
-            ),
+            status,
+            locale,
+            content: None,
         }
     }
 
@@ -97,8 +108,29 @@ impl DiscordRpcManager {
         self.status.clone()
     }
 
+    pub fn set_locale(
+        &mut self,
+        locale: String,
+        content: Option<ValorantContent>,
+        snapshot: Option<&LiveSnapshot>,
+    ) -> RpcStatus {
+        self.locale = locale;
+        self.content = content;
+        self.status.locale = self.locale.clone();
+        if let Some(snapshot) = snapshot {
+            if self.enabled {
+                return self.update_snapshot(snapshot);
+            }
+            self.refresh_preview(snapshot);
+        }
+        self.status()
+    }
+
     pub fn set_enabled(&mut self, enabled: bool, snapshot: Option<&LiveSnapshot>) -> RpcStatus {
         self.enabled = enabled;
+        if let Some(snapshot) = snapshot {
+            self.refresh_preview(snapshot);
+        }
 
         if !enabled {
             self.disconnect();
@@ -106,8 +138,12 @@ impl DiscordRpcManager {
                 false,
                 false,
                 self.config.configured(),
-                "Discord RPC is disabled",
+                LocalizedMessage::key("status.rpc.disabled"),
             );
+            self.status.locale = self.locale.clone();
+            if let Some(snapshot) = snapshot {
+                self.refresh_preview(snapshot);
+            }
             return self.status();
         }
 
@@ -117,8 +153,9 @@ impl DiscordRpcManager {
                 false,
                 false,
                 false,
-                "Set RADIANITE_DISCORD_APP_ID to enable Discord RPC",
+                LocalizedMessage::key("status.rpc.notConfigured"),
             );
+            self.status.locale = self.locale.clone();
             return self.status();
         }
 
@@ -131,14 +168,21 @@ impl DiscordRpcManager {
                         true,
                         true,
                         true,
-                        "Discord RPC is connected; waiting for live VALORANT data",
+                        LocalizedMessage::key("status.rpc.waiting"),
                     );
+                    self.status.locale = self.locale.clone();
                     self.status()
                 }
             }
             Err(message) => {
                 self.client = None;
-                self.status = RpcStatus::new(true, false, true, message);
+                self.status = RpcStatus::new(
+                    true,
+                    false,
+                    true,
+                    LocalizedMessage::technical("status.rpc.connectionFailed", message),
+                );
+                self.status.locale = self.locale.clone();
                 self.status()
             }
         }
@@ -146,19 +190,28 @@ impl DiscordRpcManager {
 
     pub fn update_snapshot(&mut self, snapshot: &LiveSnapshot) -> RpcStatus {
         if !self.enabled {
+            self.refresh_preview(snapshot);
             return self.status();
         }
 
         if let Err(message) = self.ensure_connected() {
             self.client = None;
-            self.status = RpcStatus::new(true, false, self.config.configured(), message);
+            self.status = RpcStatus::new(
+                true,
+                false,
+                self.config.configured(),
+                LocalizedMessage::technical("status.rpc.connectionFailed", message),
+            );
+            self.status.locale = self.locale.clone();
             return self.status();
         }
 
-        let activity = render_activity(
+        let (activity, preview) = render_activity(
             snapshot,
             &self.config.assets,
             self.config.github_url.as_deref(),
+            &self.locale,
+            self.content.as_ref(),
         );
         let result = self
             .client
@@ -172,16 +225,39 @@ impl DiscordRpcManager {
 
         match result {
             Ok(()) => {
-                self.status =
-                    RpcStatus::new(true, true, self.config.configured(), "Discord RPC updated");
+                self.status = RpcStatus::new(
+                    true,
+                    true,
+                    self.config.configured(),
+                    LocalizedMessage::key("status.rpc.updated"),
+                );
             }
             Err(message) => {
                 self.client = None;
-                self.status = RpcStatus::new(true, false, self.config.configured(), message);
+                self.status = RpcStatus::new(
+                    true,
+                    false,
+                    self.config.configured(),
+                    LocalizedMessage::technical("status.rpc.updateFailed", message),
+                );
             }
         }
 
+        self.status.locale = self.locale.clone();
+        self.status.preview = Some(preview);
         self.status()
+    }
+
+    fn refresh_preview(&mut self, snapshot: &LiveSnapshot) {
+        let (_, preview) = render_activity(
+            snapshot,
+            &self.config.assets,
+            self.config.github_url.as_deref(),
+            &self.locale,
+            self.content.as_ref(),
+        );
+        self.status.preview = Some(preview);
+        self.status.locale = self.locale.clone();
     }
 
     fn ensure_connected(&mut self) -> Result<(), String> {
@@ -214,11 +290,13 @@ fn render_activity<'a>(
     snapshot: &LiveSnapshot,
     assets: &RpcAssetConfig,
     github_url: Option<&'a str>,
-) -> Activity<'a> {
-    let details = truncate_discord(&details_text(snapshot));
-    let state = truncate_discord(&state_text(snapshot));
-    let large = large_asset(snapshot, assets);
-    let small = small_asset(snapshot, assets);
+    locale: &str,
+    content: Option<&ValorantContent>,
+) -> (Activity<'a>, RpcPreview) {
+    let details = truncate_discord(&details_text(snapshot, locale, content));
+    let state = truncate_discord(&state_text(snapshot, locale, content));
+    let large = large_asset(snapshot, assets, locale, content);
+    let small = small_asset(snapshot, assets, locale, content);
     let mut rendered_assets = Assets::new()
         .large_image(large.image)
         .large_text(truncate_discord(&large.text))
@@ -231,9 +309,9 @@ fn render_activity<'a>(
 
     let mut activity = Activity::new()
         .activity_type(ActivityType::Playing)
-        .name("VALORANT w/ Radianite")
-        .details(details)
-        .state(state)
+        .name(t!("rpc.name", locale = locale).to_string())
+        .details(details.clone())
+        .state(state.clone())
         .assets(rendered_assets);
 
     if let Some(started_at) = snapshot
@@ -248,55 +326,85 @@ fn render_activity<'a>(
         activity = activity
             .details_url(github_url)
             .state_url(github_url)
-            .buttons(vec![Button::new("Get Radianite", github_url)]);
+            .buttons(vec![Button::new(
+                t!("rpc.button.get", locale = locale).to_string(),
+                github_url,
+            )]);
     }
 
-    activity
+    let preview = RpcPreview {
+        name: t!("rpc.name", locale = locale).to_string(),
+        details,
+        state,
+        started_at: snapshot
+            .session_started_at
+            .as_deref()
+            .and_then(unix_millis_from_rfc3339),
+    };
+    (activity, preview)
 }
 
-fn details_text(snapshot: &LiveSnapshot) -> String {
+fn details_text(
+    snapshot: &LiveSnapshot,
+    locale: &str,
+    content: Option<&ValorantContent>,
+) -> String {
+    let mode = mode_text(snapshot, locale);
     match snapshot.phase {
-        MatchPhase::Menus => format!("{} / In Menu", mode_text(snapshot)),
-        MatchPhase::Matchmaking => format!("{} / Queueing", mode_text(snapshot)),
-        MatchPhase::Pregame => format!("{} / Agent Select", mode_text(snapshot)),
+        MatchPhase::Menus => t!("rpc.phase.menu", locale = locale, mode = mode).to_string(),
+        MatchPhase::Matchmaking => t!("rpc.phase.queue", locale = locale, mode = mode).to_string(),
+        MatchPhase::Pregame => t!("rpc.phase.pregame", locale = locale, mode = mode).to_string(),
         MatchPhase::Ingame => {
-            let location = if let Some(map_name) = snapshot
-                .map_name
-                .as_deref()
-                .or_else(|| snapshot.map_id.as_deref().and_then(map_name_from_path))
-            {
-                map_name.to_string()
-            } else {
-                mode_text(snapshot)
-            };
+            let location = localized_map_name(snapshot, content).unwrap_or_else(|| mode.clone());
             if let Some(score) = &snapshot.score {
-                format!(
-                    "{location} / {} ({}-{})",
-                    mode_text(snapshot),
-                    score.ally,
-                    score.enemy
+                t!(
+                    "rpc.phase.ingameScore",
+                    locale = locale,
+                    location = location,
+                    mode = mode,
+                    ally = score.ally,
+                    enemy = score.enemy
                 )
+                .to_string()
             } else {
-                format!("{location} / {}", mode_text(snapshot))
+                t!(
+                    "rpc.phase.ingame",
+                    locale = locale,
+                    location = location,
+                    mode = mode
+                )
+                .to_string()
             }
         }
-        MatchPhase::Range => "The Range / Practice".to_string(),
-        MatchPhase::Unknown => mode_text(snapshot),
+        MatchPhase::Range => t!("rpc.phase.range", locale = locale).to_string(),
+        MatchPhase::Unknown => mode,
     }
 }
 
-fn state_text(snapshot: &LiveSnapshot) -> String {
+fn state_text(snapshot: &LiveSnapshot, locale: &str, content: Option<&ValorantContent>) -> String {
     let mut parts = Vec::new();
 
     if let Some(rank) = &snapshot.rank {
         let rank_label = rank
-            .tier_name
-            .clone()
-            .or_else(|| rank.tier.map(|tier| format!("T{tier}")));
+            .tier
+            .and_then(|tier| content.and_then(|content| content.competitive_tier_name(tier)))
+            .or_else(|| rank.tier_name.clone())
+            .or_else(|| {
+                rank.tier
+                    .map(|tier| t!("rpc.rank.tier", locale = locale, tier = tier).to_string())
+            });
         if let Some(label) = rank_label {
-            let label = label.to_ascii_uppercase();
+            let label = label.to_uppercase();
             if let Some(ranked_rating) = rank.ranked_rating {
-                parts.push(format!("{label} ({ranked_rating}rr)"));
+                parts.push(
+                    t!(
+                        "rpc.state.rank",
+                        locale = locale,
+                        rank = label,
+                        rr = ranked_rating
+                    )
+                    .to_string(),
+                );
             } else {
                 parts.push(label);
             }
@@ -305,27 +413,38 @@ fn state_text(snapshot: &LiveSnapshot) -> String {
 
     if let Some(size) = snapshot.party.size {
         let max = snapshot.party.max_size.unwrap_or(size);
-        let party_state = match size {
-            1 => "Solo",
-            2 => "Duo",
-            _ => "In Party",
+        let key = match size {
+            1 => "rpc.party.solo",
+            2 => "rpc.party.duo",
+            _ => "rpc.party.group",
         };
-        parts.push(format!("{party_state} {size}/{max}"));
+        parts.push(t!(key, locale = locale, size = size, max = max).to_string());
     }
 
     if parts.is_empty() {
-        "Live".to_string()
+        t!("rpc.state.live", locale = locale).to_string()
     } else {
-        parts.join(" - ")
+        parts
+            .into_iter()
+            .reduce(|rank, party| {
+                t!(
+                    "rpc.state.join",
+                    locale = locale,
+                    rank = rank,
+                    party = party
+                )
+                .to_string()
+            })
+            .unwrap_or_default()
     }
 }
 
-fn mode_text(snapshot: &LiveSnapshot) -> String {
+fn mode_text(snapshot: &LiveSnapshot, locale: &str) -> String {
     snapshot
         .queue_id
         .as_deref()
-        .map(queue_label)
-        .unwrap_or_else(|| "VALORANT".to_string())
+        .map(|queue| queue_label(queue, locale))
+        .unwrap_or_else(|| t!("rpc.mode.valorant", locale = locale).to_string())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -334,85 +453,104 @@ struct RenderedAsset {
     text: String,
 }
 
-fn large_asset(snapshot: &LiveSnapshot, assets: &RpcAssetConfig) -> RenderedAsset {
+fn large_asset(
+    snapshot: &LiveSnapshot,
+    assets: &RpcAssetConfig,
+    locale: &str,
+    content: Option<&ValorantContent>,
+) -> RenderedAsset {
     match snapshot.phase {
         MatchPhase::Pregame => snapshot
             .agent_name
             .as_deref()
             .map(|agent| RenderedAsset {
                 image: prefixed_asset(&assets.agent_prefix, agent),
-                text: agent.to_string(),
+                text: localized_agent_name(snapshot, content).unwrap_or_else(|| agent.to_string()),
             })
-            .unwrap_or_else(|| game_asset(assets)),
-        MatchPhase::Ingame | MatchPhase::Range => map_asset(snapshot, assets)
+            .unwrap_or_else(|| game_asset(assets, locale)),
+        MatchPhase::Ingame | MatchPhase::Range => map_asset(snapshot, assets, locale, content)
             .or_else(|| {
                 snapshot.agent_name.as_deref().map(|agent| RenderedAsset {
                     image: prefixed_asset(&assets.agent_prefix, agent),
-                    text: agent.to_string(),
+                    text: localized_agent_name(snapshot, content)
+                        .unwrap_or_else(|| agent.to_string()),
                 })
             })
-            .unwrap_or_else(|| game_asset(assets)),
-        _ => game_asset(assets),
+            .unwrap_or_else(|| game_asset(assets, locale)),
+        _ => game_asset(assets, locale),
     }
 }
 
-fn small_asset(snapshot: &LiveSnapshot, assets: &RpcAssetConfig) -> RenderedAsset {
+fn small_asset(
+    snapshot: &LiveSnapshot,
+    assets: &RpcAssetConfig,
+    locale: &str,
+    content: Option<&ValorantContent>,
+) -> RenderedAsset {
     match snapshot.phase {
-        MatchPhase::Pregame => mode_asset(snapshot, assets)
-            .or_else(|| rank_asset(snapshot, assets))
-            .unwrap_or_else(|| menu_asset(assets)),
+        MatchPhase::Pregame => mode_asset(snapshot, assets, locale)
+            .or_else(|| rank_asset(snapshot, assets, locale, content))
+            .unwrap_or_else(|| menu_asset(assets, locale)),
         MatchPhase::Ingame | MatchPhase::Range => snapshot
             .agent_name
             .as_deref()
             .map(|agent| RenderedAsset {
                 image: prefixed_asset(&assets.agent_prefix, agent),
-                text: agent.to_string(),
+                text: localized_agent_name(snapshot, content).unwrap_or_else(|| agent.to_string()),
             })
-            .or_else(|| rank_asset(snapshot, assets))
-            .or_else(|| mode_asset(snapshot, assets))
-            .unwrap_or_else(|| menu_asset(assets)),
+            .or_else(|| rank_asset(snapshot, assets, locale, content))
+            .or_else(|| mode_asset(snapshot, assets, locale))
+            .unwrap_or_else(|| menu_asset(assets, locale)),
         MatchPhase::Menus | MatchPhase::Matchmaking => {
             if snapshot.queue_id.as_deref() == Some("competitive") {
-                rank_asset(snapshot, assets)
-                    .or_else(|| mode_asset(snapshot, assets))
-                    .unwrap_or_else(|| menu_asset(assets))
+                rank_asset(snapshot, assets, locale, content)
+                    .or_else(|| mode_asset(snapshot, assets, locale))
+                    .unwrap_or_else(|| menu_asset(assets, locale))
             } else {
-                mode_asset(snapshot, assets).unwrap_or_else(|| menu_asset(assets))
+                mode_asset(snapshot, assets, locale).unwrap_or_else(|| menu_asset(assets, locale))
             }
         }
-        MatchPhase::Unknown => rank_asset(snapshot, assets).unwrap_or_else(|| menu_asset(assets)),
+        MatchPhase::Unknown => rank_asset(snapshot, assets, locale, content)
+            .unwrap_or_else(|| menu_asset(assets, locale)),
     }
 }
 
-fn game_asset(assets: &RpcAssetConfig) -> RenderedAsset {
+fn game_asset(assets: &RpcAssetConfig, locale: &str) -> RenderedAsset {
     RenderedAsset {
         image: assets.large_game.clone(),
-        text: "VALORANT w/ Radianite".to_string(),
+        text: t!("rpc.asset.game", locale = locale).to_string(),
     }
 }
 
-fn menu_asset(assets: &RpcAssetConfig) -> RenderedAsset {
+fn menu_asset(assets: &RpcAssetConfig, locale: &str) -> RenderedAsset {
     RenderedAsset {
         image: assets.small_menu.clone(),
-        text: "Radianite".to_string(),
+        text: t!("rpc.asset.menu", locale = locale).to_string(),
     }
 }
 
-fn map_asset(snapshot: &LiveSnapshot, assets: &RpcAssetConfig) -> Option<RenderedAsset> {
+fn map_asset(
+    snapshot: &LiveSnapshot,
+    assets: &RpcAssetConfig,
+    locale: &str,
+    content: Option<&ValorantContent>,
+) -> Option<RenderedAsset> {
     if snapshot.phase == MatchPhase::Range {
         return Some(RenderedAsset {
             image: square_map_asset(&assets.map_prefix, "range"),
-            text: "The Range".to_string(),
+            text: t!("rpc.asset.range", locale = locale).to_string(),
         });
     }
 
-    let map_name = snapshot
+    let map_name = localized_map_name(snapshot, content)?;
+    let asset_name = snapshot
         .map_name
         .as_deref()
-        .or_else(|| snapshot.map_id.as_deref().and_then(map_name_from_path))?;
+        .or_else(|| snapshot.map_id.as_deref().and_then(map_name_from_path))
+        .unwrap_or(&map_name);
     Some(RenderedAsset {
-        image: square_map_asset(&assets.map_prefix, map_name),
-        text: map_name.to_string(),
+        image: square_map_asset(&assets.map_prefix, asset_name),
+        text: map_name,
     })
 }
 
@@ -420,27 +558,36 @@ fn square_map_asset(prefix: &str, label: &str) -> String {
     format!("{}_square", prefixed_asset(prefix, label))
 }
 
-fn rank_asset(snapshot: &LiveSnapshot, assets: &RpcAssetConfig) -> Option<RenderedAsset> {
+fn rank_asset(
+    snapshot: &LiveSnapshot,
+    assets: &RpcAssetConfig,
+    locale: &str,
+    content: Option<&ValorantContent>,
+) -> Option<RenderedAsset> {
     snapshot
         .rank
         .as_ref()
         .and_then(|rank| rank.tier.map(|tier| (tier, rank)))
         .map(|(tier, rank)| RenderedAsset {
             image: format!("{}{tier}", assets.small_rank_prefix),
-            text: rank
-                .tier_name
-                .clone()
-                .unwrap_or_else(|| format!("Tier {tier}")),
+            text: content
+                .and_then(|content| content.competitive_tier_name(tier))
+                .or_else(|| rank.tier_name.clone())
+                .unwrap_or_else(|| t!("rpc.rank.tier", locale = locale, tier = tier).to_string()),
         })
 }
 
-fn mode_asset(snapshot: &LiveSnapshot, assets: &RpcAssetConfig) -> Option<RenderedAsset> {
+fn mode_asset(
+    snapshot: &LiveSnapshot,
+    assets: &RpcAssetConfig,
+    locale: &str,
+) -> Option<RenderedAsset> {
     let queue = snapshot.queue_id.as_deref()?;
     let key = mode_asset_key(queue);
 
     Some(RenderedAsset {
         image: format!("{}{key}", assets.mode_prefix),
-        text: queue_label(queue),
+        text: queue_label(queue, locale),
     })
 }
 
@@ -465,29 +612,59 @@ fn mode_asset_key(queue: &str) -> &'static str {
     }
 }
 
-fn queue_label(queue: &str) -> String {
-    match queue.to_ascii_lowercase().as_str() {
-        "competitive" => "Competitive",
-        "unrated" => "Unrated",
-        "spikerush" => "Spike Rush",
-        "deathmatch" => "Deathmatch",
-        "ggteam" | "gungame" | "escalation" => "Escalation",
-        "onefa" | "oneforall" | "replication" => "Replication",
-        "custom" | "" => "Custom",
-        "snowball" | "snowballfight" => "Snowball Fight",
-        "swiftplay" => "Swiftplay",
-        "hurm" | "teamdeathmatch" => "Team Deathmatch",
-        "retake" | "fortcollins" => "Retake",
-        "knockout" | "dodgeball" => "Knockout",
-        "aros" | "allrandomonesite" => "All Random One Site",
-        "skirmish" => "Skirmish",
-        "skirmishascension" => "Skirmish: Ascension",
-        "basictraining" | "npev2" => "Basic Training",
-        "botmatch" | "exampleplayertestbot" => "Bot Match",
-        "newmap" => "New Map",
-        _ => queue,
-    }
-    .to_string()
+fn queue_label(queue: &str, locale: &str) -> String {
+    let key = match queue.to_ascii_lowercase().as_str() {
+        "competitive" => Some("rpc.mode.competitive"),
+        "unrated" => Some("rpc.mode.unrated"),
+        "spikerush" => Some("rpc.mode.spikerush"),
+        "deathmatch" => Some("rpc.mode.deathmatch"),
+        "ggteam" | "gungame" | "escalation" => Some("rpc.mode.ggteam"),
+        "onefa" | "oneforall" | "replication" => Some("rpc.mode.onefa"),
+        "custom" | "" => Some("rpc.mode.custom"),
+        "snowball" | "snowballfight" => Some("rpc.mode.snowball"),
+        "swiftplay" => Some("rpc.mode.swiftplay"),
+        "hurm" | "teamdeathmatch" => Some("rpc.mode.hurm"),
+        "retake" | "fortcollins" => Some("rpc.mode.retake"),
+        "knockout" | "dodgeball" => Some("rpc.mode.knockout"),
+        "aros" | "allrandomonesite" => Some("rpc.mode.aros"),
+        "skirmish" => Some("rpc.mode.skirmish"),
+        "skirmishascension" => Some("rpc.mode.skirmishascension"),
+        "basictraining" | "npev2" => Some("rpc.mode.basictraining"),
+        "botmatch" | "exampleplayertestbot" => Some("rpc.mode.botmatch"),
+        "newmap" => Some("rpc.mode.newmap"),
+        _ => None,
+    };
+    key.map(|key| t!(key, locale = locale).to_string())
+        .unwrap_or_else(|| queue.to_string())
+}
+
+fn localized_map_name(
+    snapshot: &LiveSnapshot,
+    content: Option<&ValorantContent>,
+) -> Option<String> {
+    snapshot
+        .map_id
+        .as_deref()
+        .and_then(|id| content.and_then(|content| content.map_name(id)))
+        .or_else(|| snapshot.map_name.clone())
+        .or_else(|| {
+            snapshot
+                .map_id
+                .as_deref()
+                .and_then(map_name_from_path)
+                .map(str::to_string)
+        })
+}
+
+fn localized_agent_name(
+    snapshot: &LiveSnapshot,
+    content: Option<&ValorantContent>,
+) -> Option<String> {
+    snapshot
+        .agent_id
+        .as_deref()
+        .and_then(|id| content.and_then(|content| content.agent_name(id)))
+        .or_else(|| snapshot.agent_name.clone())
 }
 
 fn prefixed_asset(prefix: &str, label: &str) -> String {
@@ -557,7 +734,8 @@ mod tests {
     };
 
     use super::{
-        details_text, large_asset, render_activity, small_asset, state_text, RpcAssetConfig,
+        details_text, large_asset, render_activity, small_asset, state_text, truncate_discord,
+        RpcAssetConfig,
     };
 
     fn snapshot(phase: MatchPhase) -> LiveSnapshot {
@@ -588,7 +766,7 @@ mod tests {
     #[test]
     fn renders_matchmaking_details() {
         assert_eq!(
-            details_text(&snapshot(MatchPhase::Matchmaking)),
+            details_text(&snapshot(MatchPhase::Matchmaking), "en-US", None),
             "Competitive / Queueing"
         );
     }
@@ -607,7 +785,10 @@ mod tests {
             icon_url: None,
         });
 
-        assert_eq!(state_text(&snapshot), "SILVER 2 (47rr) - Solo 1/5");
+        assert_eq!(
+            state_text(&snapshot, "en-US", None),
+            "SILVER 2 (47rr) - Solo 1/5"
+        );
     }
 
     #[test]
@@ -616,10 +797,10 @@ mod tests {
         snapshot.party.max_size = Some(5);
 
         snapshot.party.size = Some(2);
-        assert_eq!(state_text(&snapshot), "Duo 2/5");
+        assert_eq!(state_text(&snapshot, "en-US", None), "Duo 2/5");
 
         snapshot.party.size = Some(3);
-        assert_eq!(state_text(&snapshot), "In Party 3/5");
+        assert_eq!(state_text(&snapshot, "en-US", None), "In Party 3/5");
     }
 
     #[test]
@@ -628,7 +809,10 @@ mod tests {
         snapshot.map_name = Some("Ascent".to_string());
         snapshot.score = Some(ScoreSnapshot { ally: 7, enemy: 4 });
 
-        assert_eq!(details_text(&snapshot), "Ascent / Competitive (7-4)");
+        assert_eq!(
+            details_text(&snapshot, "en-US", None),
+            "Ascent / Competitive (7-4)"
+        );
     }
 
     #[test]
@@ -638,8 +822,8 @@ mod tests {
         snapshot.agent_name = Some("KAY/O".to_string());
 
         let assets = asset_config();
-        let large = large_asset(&snapshot, &assets);
-        let small = small_asset(&snapshot, &assets);
+        let large = large_asset(&snapshot, &assets, "en-US", None);
+        let small = small_asset(&snapshot, &assets, "en-US", None);
 
         assert_eq!(large.image, "splash_ascent_square");
         assert_eq!(large.text, "Ascent");
@@ -652,7 +836,7 @@ mod tests {
         let mut snapshot = snapshot(MatchPhase::Ingame);
         snapshot.map_id = Some("/Game/Maps/Ascent/Ascent".to_string());
 
-        let large = large_asset(&snapshot, &asset_config());
+        let large = large_asset(&snapshot, &asset_config(), "en-US", None);
 
         assert_eq!(large.image, "splash_ascent_square");
         assert_eq!(large.text, "Ascent");
@@ -679,7 +863,7 @@ mod tests {
             let mut snapshot = snapshot(MatchPhase::Ingame);
             snapshot.map_id = Some(map_id.to_string());
 
-            let large = large_asset(&snapshot, &asset_config());
+            let large = large_asset(&snapshot, &asset_config(), "en-US", None);
 
             assert_eq!(large.image, image);
             assert_eq!(large.text, text);
@@ -699,7 +883,7 @@ mod tests {
             let mut snapshot = snapshot(MatchPhase::Menus);
             snapshot.queue_id = Some(queue.to_string());
 
-            let small = small_asset(&snapshot, &asset_config());
+            let small = small_asset(&snapshot, &asset_config(), "en-US", None);
 
             assert_eq!(small.image, image);
             assert_eq!(small.text, text);
@@ -711,13 +895,31 @@ mod tests {
         let mut snapshot = snapshot(MatchPhase::Ingame);
         snapshot.session_started_at = Some("2026-06-26T10:11:12.345Z".to_string());
 
-        let activity = render_activity(&snapshot, &asset_config(), None);
+        let (activity, preview) = render_activity(&snapshot, &asset_config(), None, "en-US", None);
         let rendered = serde_json::to_value(activity).expect("serialized activity");
 
         assert_eq!(
             rendered.pointer("/timestamps/start"),
             Some(&Value::from(1_782_468_672_345_i64))
         );
+        assert_eq!(preview.started_at, Some(1_782_468_672_345_i64));
+    }
+
+    #[test]
+    fn blank_catalogs_fall_back_to_english() {
+        for locale in ["de-DE", "es-ES", "ja-JP"] {
+            assert_eq!(
+                details_text(&snapshot(MatchPhase::Matchmaking), locale, None),
+                "Competitive / Queueing"
+            );
+        }
+    }
+
+    #[test]
+    fn truncates_unicode_by_character_not_byte() {
+        let rendered = truncate_discord(&"界".repeat(121));
+        assert_eq!(rendered.chars().count(), 120);
+        assert!(rendered.is_char_boundary(rendered.len()));
     }
 
     fn asset_config() -> RpcAssetConfig {

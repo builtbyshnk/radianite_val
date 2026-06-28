@@ -1,4 +1,5 @@
 import type { CoreStatusKind, LiveSnapshot, MatchPhase } from "@/lib/types"
+import i18n from "@/lib/i18n"
 
 export type StatusTone = "ready" | "pending" | "error" | "idle"
 
@@ -8,56 +9,51 @@ export function statusPill(kind: CoreStatusKind): {
 } {
   switch (kind) {
     case "valorantReady":
-      return { label: "VALORANT Ready", tone: "ready" }
+      return { label: i18n.t("status.pill.valorantReady"), tone: "ready" }
     case "valorantLaunching":
-      return { label: "VALORANT Launching", tone: "pending" }
+      return { label: i18n.t("status.pill.valorantLaunching"), tone: "pending" }
     case "riotClientOnly":
-      return { label: "Riot Client Only", tone: "pending" }
+      return { label: i18n.t("status.pill.riotClientOnly"), tone: "pending" }
     case "riotClientClosed":
-      return { label: "Riot Client Closed", tone: "idle" }
+      return { label: i18n.t("status.pill.riotClientClosed"), tone: "idle" }
     case "noRiotInstall":
-      return { label: "Riot Not Installed", tone: "error" }
+      return { label: i18n.t("status.pill.noRiotInstall"), tone: "error" }
     case "authExpired":
-      return { label: "Auth Expired", tone: "error" }
+      return { label: i18n.t("status.pill.authExpired"), tone: "error" }
     case "error":
-      return { label: "Error", tone: "error" }
+      return { label: i18n.t("status.pill.error"), tone: "error" }
     case "degraded":
-      return { label: "Degraded", tone: "pending" }
+      return { label: i18n.t("status.pill.degraded"), tone: "pending" }
     case "disconnected":
     default:
-      return { label: "Disconnected", tone: "idle" }
+      return { label: i18n.t("status.pill.disconnected"), tone: "idle" }
   }
 }
 
-const QUEUE_LABELS: Record<string, string> = {
-  competitive: "Competitive",
-  unrated: "Unrated",
-  swiftplay: "Swiftplay",
-  spikerush: "Spike Rush",
-  deathmatch: "Deathmatch",
-  ggteam: "Escalation",
-  hurm: "Team Deathmatch",
-  newmap: "New Map",
-  onefa: "Replication",
-  ggrush: "Escalation",
-}
-
-const PHASE_LABELS: Record<MatchPhase, string> = {
-  menus: "In Menus",
-  matchmaking: "Matchmaking",
-  pregame: "Agent Select",
-  ingame: "In Game",
-  range: "Practice Range",
-  unknown: "Unknown",
+const QUEUE_ALIASES: Record<string, string> = {
+  gungame: "ggteam",
+  escalation: "ggteam",
+  oneforall: "onefa",
+  replication: "onefa",
+  snowballfight: "snowball",
+  teamdeathmatch: "hurm",
+  fortcollins: "retake",
+  dodgeball: "knockout",
+  allrandomonesite: "aros",
+  npev2: "basictraining",
+  exampleplayertestbot: "botmatch",
+  ggrush: "ggteam",
 }
 
 export function phaseLabel(phase: MatchPhase) {
-  return PHASE_LABELS[phase] ?? labelize(phase)
+  return i18n.t(`match.phaseLabel.${phase}`, { defaultValue: labelize(phase) })
 }
 
 export function queueLabel(queueId?: string | null) {
   if (!queueId) return null
-  return QUEUE_LABELS[queueId.toLowerCase()] ?? labelize(queueId)
+  const raw = queueId.toLowerCase()
+  const key = QUEUE_ALIASES[raw] ?? raw
+  return i18n.t(`match.queueLabel.${key}`, { defaultValue: labelize(queueId) })
 }
 
 export function playerName(snapshot: LiveSnapshot | null) {
@@ -75,10 +71,18 @@ export function labelize(value: string) {
 
 export function formatTime(date: Date | null) {
   if (!date) return "--:--"
-  return date.toLocaleTimeString(undefined, {
+  return date.toLocaleTimeString(i18n.language, {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
+  })
+}
+
+export function formatDate(date: Date) {
+  return date.toLocaleDateString(i18n.language, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   })
 }
 
@@ -98,7 +102,7 @@ export function formatUpdateDate(value?: string | null) {
   if (!value) return null
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(i18n.language, {
     year: "numeric",
     month: "short",
     day: "numeric",

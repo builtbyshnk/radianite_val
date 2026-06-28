@@ -1,0 +1,151 @@
+{
+  "fallbackLocale": "en-US",
+  "locales": [
+    {
+      "tag": "en-US",
+      "nativeName": "English (United States)",
+      "englishName": "English (United States)",
+      "direction": "ltr",
+      "contributors": [
+        "Radianite contributors"
+      ],
+      "ui": true,
+      "rpc": true
+    },
+    {
+      "tag": "ar-AE",
+      "nativeName": "العربية",
+      "englishName": "Arabic",
+      "direction": "rtl",
+      "contributors": [],
+      "ui": true,
+      "rpc": true
+    },
+    {
+      "tag": "de-DE",
+      "nativeName": "Deutsch",
+      "englishName": "German",
+      "direction": "ltr",
+      "contributors": [],
+      "ui": true,
+      "rpc": true
+    },
+    {
+      "tag": "es-ES",
+      "nativeName": "Español (España)",
+      "englishName": "Spanish (Spain)",
+      "direction": "ltr",
+      "contributors": [],
+      "ui": true,
+      "rpc": true
+    },
+    {
+      "tag": "fr-FR",
+      "nativeName": "Français",
+      "englishName": "French",
+      "direction": "ltr",
+      "contributors": [],
+      "ui": true,
+      "rpc": true
+    },
+    {
+      "tag": "hi-IN",
+      "nativeName": "हिन्दी",
+      "englishName": "Hindi",
+      "direction": "ltr",
+      "contributors": [],
+      "ui": true,
+      "rpc": true
+    },
+    {
+      "tag": "it-IT",
+      "nativeName": "Italiano",
+      "englishName": "Italian",
+      "direction": "ltr",
+      "contributors": [],
+      "ui": true,
+      "rpc": true
+    },
+    {
+      "tag": "ja-JP",
+      "nativeName": "日本語",
+      "englishName": "Japanese",
+      "direction": "ltr",
+      "contributors": [],
+      "ui": true,
+      "rpc": true
+    },
+    {
+      "tag": "ko-KR",
+      "nativeName": "한국어",
+      "englishName": "Korean",
+      "direction": "ltr",
+      "contributors": [],
+      "ui": true,
+      "rpc": true
+    },
+    {
+      "tag": "nl-NL",
+      "nativeName": "Nederlands",
+      "englishName": "Dutch",
+      "direction": "ltr",
+      "contributors": [],
+      "ui": true,
+      "rpc": true
+    },
+    {
+      "tag": "pl-PL",
+      "nativeName": "Polski",
+      "englishName": "Polish",
+      "direction": "ltr",
+      "contributors": [],
+      "ui": true,
+      "rpc": true
+    },
+    {
+      "tag": "pt-BR",
+      "nativeName": "Português (Brasil)",
+      "englishName": "Portuguese (Brazil)",
+      "direction": "ltr",
+      "contributors": [],
+      "ui": true,
+      "rpc": true
+    },
+    {
+      "tag": "ru-RU",
+      "nativeName": "Русский",
+      "englishName": "Russian",
+      "direction": "ltr",
+      "contributors": [],
+      "ui": true,
+      "rpc": true
+    },
+    {
+      "tag": "tr-TR",
+      "nativeName": "Türkçe",
+      "englishName": "Turkish",
+      "direction": "ltr",
+      "contributors": [],
+      "ui": true,
+      "rpc": true
+    },
+    {
+      "tag": "zh-CN",
+      "nativeName": "简体中文",
+      "englishName": "Chinese (Simplified)",
+      "direction": "ltr",
+      "contributors": [],
+      "ui": true,
+      "rpc": true
+    },
+    {
+      "tag": "zh-TW",
+      "nativeName": "繁體中文",
+      "englishName": "Chinese (Traditional)",
+      "direction": "ltr",
+      "contributors": [],
+      "ui": true,
+      "rpc": true
+    }
+  ]
+}

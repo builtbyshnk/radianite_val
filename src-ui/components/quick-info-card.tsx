@@ -5,6 +5,7 @@ import {
   IconInfoCircle,
   IconTargetArrow,
 } from "@tabler/icons-react"
+import { useTranslation } from "react-i18next"
 
 import { Panel } from "@/components/panel"
 import { formatTime } from "@/lib/format"
@@ -24,37 +25,38 @@ export function QuickInfoCard({
   snapshot: LiveSnapshot | null
   lastSync: Date | null
 }) {
+  const { t } = useTranslation()
   const tracking = snapshot ? LIVE_PHASES.has(snapshot.phase) : false
 
   const rows = [
     {
       icon: <IconBroadcast />,
-      label: "Overlay",
-      value: overlay.enabled ? "Ready" : "Off",
+      label: t("quickInfo.overlay"),
+      value: overlay.enabled ? t("common.ready") : t("common.off"),
       good: overlay.enabled,
     },
     {
       icon: <IconBrandDiscord />,
-      label: "Discord Rich Presence",
-      value: rpc.connected ? "Ready" : rpc.enabled ? "Connecting" : "Off",
+      label: t("quickInfo.discord"),
+      value: rpc.connected ? t("common.ready") : rpc.enabled ? t("common.connecting") : t("common.off"),
       good: rpc.connected,
     },
     {
       icon: <IconTargetArrow />,
-      label: "Match Tracking",
-      value: tracking ? "Active" : "Idle",
+      label: t("quickInfo.tracking"),
+      value: tracking ? t("common.active") : t("common.idle"),
       good: tracking,
     },
     {
       icon: <IconClockHour4 />,
-      label: "Last Sync",
+      label: t("quickInfo.lastSync"),
       value: formatTime(lastSync),
       good: undefined,
     },
   ]
 
   return (
-    <Panel icon={<IconInfoCircle />} title="Quick Info">
+    <Panel icon={<IconInfoCircle />} title={t("quickInfo.title")}>
       <div className="flex flex-col">
         {rows.map((row) => (
           <div
