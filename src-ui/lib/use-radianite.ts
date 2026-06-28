@@ -18,6 +18,7 @@ import type {
   DiagnosticSnapshot,
   LiveSnapshot,
   OverlayStatus,
+  OverlayTheme,
   RpcStatus,
   SettingKey,
   Settings,
@@ -70,6 +71,8 @@ const initialUpdaterState: UpdaterState = {
 const defaultSettings: Settings = {
   runAtBoot: false,
   minimizeToTray: true,
+  overlayTheme: "default",
+  overlayShowPlayerId: true,
 }
 
 const SETTINGS_STORE = "settings.json"
@@ -170,6 +173,7 @@ export function useRadianite() {
 
   const setSetting = useCallback(
     async <K extends SettingKey>(key: K, value: Settings[K]) => {
+      const previous = settings[key]
       setSettings((current) => ({ ...current, [key]: value }))
 
       try {
@@ -181,17 +185,29 @@ export function useRadianite() {
           }
         }
 
+        if (key === "overlayTheme" || key === "overlayShowPlayerId") {
+          await invoke("overlay_set_config", {
+            config: {
+              theme: key === "overlayTheme" ? value : settings.overlayTheme,
+              showPlayerId:
+                key === "overlayShowPlayerId"
+                  ? value
+                  : settings.overlayShowPlayerId,
+            },
+          })
+        }
+
         const store = settingsStore.current
         if (store) {
           await store.set(key, value)
           await store.save()
         }
       } catch (err) {
-        setSettings((current) => ({ ...current, [key]: !value }))
+        setSettings((current) => ({ ...current, [key]: previous }))
         toast.error(err instanceof Error ? err.message : String(err))
       }
     },
-    [],
+    [settings],
   )
 
   const checkForUpdate = useCallback(async () => {
@@ -347,12 +363,24 @@ export function useRadianite() {
         const minimizeToTray =
           (await store.get<boolean>("minimizeToTray")) ??
           defaultSettings.minimizeToTray
+        const overlayTheme =
+          (await store.get<OverlayTheme>("overlayTheme")) ??
+          defaultSettings.overlayTheme
+        const overlayShowPlayerId =
+          (await store.get<boolean>("overlayShowPlayerId")) ??
+          defaultSettings.overlayShowPlayerId
 
         const autostartActive = await isAutostartEnabled().catch(
           () => runAtBoot,
         )
 
-        if (active) setSettings({ runAtBoot: autostartActive, minimizeToTray })
+        if (active)
+          setSettings({
+            runAtBoot: autostartActive,
+            minimizeToTray,
+            overlayTheme,
+            overlayShowPlayerId,
+          })
 
         if (autostartActive !== runAtBoot) {
           await store.set("runAtBoot", autostartActive)

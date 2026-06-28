@@ -8,6 +8,7 @@ use tokio::{
 
 use crate::{
     discord_rpc::{DiscordRpcManager, RpcConfig},
+    overlay::OverlayConfig,
     riot::{
         state::{
             now_timestamp, CoreStatus, CoreStatusKind, DiagnosticSnapshot, LiveSnapshot,
@@ -24,6 +25,7 @@ pub struct AppState {
     discord: Arc<Mutex<DiscordRpcManager>>,
     overlay_status: Arc<RwLock<OverlayStatus>>,
     overlay_server: Arc<Mutex<Option<JoinHandle<()>>>>,
+    overlay_config: Arc<RwLock<OverlayConfig>>,
 }
 
 struct AppInner {
@@ -67,6 +69,7 @@ impl AppState {
                 "OBS overlay server has not started",
             ))),
             overlay_server: Arc::new(Mutex::new(None)),
+            overlay_config: Arc::new(RwLock::new(OverlayConfig::default())),
         }
     }
 
@@ -146,6 +149,16 @@ impl AppState {
 
     pub async fn set_overlay_status(&self, status: OverlayStatus) {
         *self.overlay_status.write().await = status;
+    }
+
+    pub async fn overlay_config(&self) -> OverlayConfig {
+        self.overlay_config.read().await.clone()
+    }
+
+    pub async fn set_overlay_config(&self, config: OverlayConfig) -> OverlayConfig {
+        let mut current = self.overlay_config.write().await;
+        *current = config;
+        current.clone()
     }
 
     pub async fn set_rpc_enabled(&self, enabled: bool) -> RpcStatus {

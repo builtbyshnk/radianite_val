@@ -19,14 +19,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import type {
   OverlayStatus,
+  OverlayTheme,
   RpcStatus,
   SettingKey,
   Settings,
 } from "@/lib/types"
+import { OVERLAY_THEMES } from "@/lib/types"
 
 type TabId = "general" | "overlay" | "discord" | "donate" | "about"
 
@@ -119,6 +128,8 @@ export function SettingsDialog({
                     overlay={overlay}
                     onCopy={onCopyOverlay}
                     onOpen={onOpenOverlay}
+                    settings={settings}
+                    onSetSetting={onSetSetting}
                   />
                 )}
                 {activeTab === "discord" && (
@@ -206,10 +217,14 @@ function OverlayPanel({
   overlay,
   onCopy,
   onOpen,
+  settings,
+  onSetSetting,
 }: {
   overlay: OverlayStatus
   onCopy: () => void
   onOpen: () => void
+  settings: Settings
+  onSetSetting: <K extends SettingKey>(key: K, value: Settings[K]) => void
 }) {
   const url = overlay.url ?? null
 
@@ -242,6 +257,42 @@ function OverlayPanel({
           Suggested size:{" "}
           <span className="font-mono text-foreground">360 × 90</span>
         </p>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-4 rounded-lg border bg-background/40 px-4 py-3.5">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-foreground">Theme</span>
+            <span className="text-xs text-muted-foreground">
+              Choose how the overlay looks. Changes apply within ~2s.
+            </span>
+          </div>
+          <Select
+            value={settings.overlayTheme}
+            onValueChange={(value) =>
+              onSetSetting("overlayTheme", value as OverlayTheme)
+            }
+          >
+            <SelectTrigger className="w-40 shrink-0" size="sm">
+              <SelectValue placeholder="Theme" />
+            </SelectTrigger>
+            <SelectContent>
+              {OVERLAY_THEMES.map((theme) => (
+                <SelectItem key={theme.id} value={theme.id}>
+                  {theme.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <SettingRow
+          title="Show player ID"
+          description="Display your Riot name and tag on the overlay. Turn off for privacy."
+          checked={settings.overlayShowPlayerId}
+          onCheckedChange={(value) =>
+            onSetSetting("overlayShowPlayerId", value)
+          }
+        />
       </div>
     </>
   )

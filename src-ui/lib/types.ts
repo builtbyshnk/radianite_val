@@ -122,9 +122,32 @@ export type UpdaterState = {
   progress?: number | null
 }
 
+export type OverlayTheme =
+  | "default"
+  | "dark"
+  | "light"
+  | "valorant"
+  | "valorant-purple"
+  | "minimal"
+  | "pink"
+  | "purple"
+
+export const OVERLAY_THEMES: Array<{ id: OverlayTheme; label: string }> = [
+  { id: "default", label: "Default" },
+  { id: "dark", label: "Dark" },
+  { id: "light", label: "Light" },
+  { id: "valorant", label: "Valorant (Red)" },
+  { id: "valorant-purple", label: "Valorant (Purple)" },
+  { id: "minimal", label: "Minimal" },
+  { id: "pink", label: "Pink" },
+  { id: "purple", label: "Purple" },
+]
+
 export type Settings = {
   runAtBoot: boolean
   minimizeToTray: boolean
+  overlayTheme: OverlayTheme
+  overlayShowPlayerId: boolean
 }
 
 export type SettingKey = keyof Settings

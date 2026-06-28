@@ -5,6 +5,7 @@ mod overlay;
 mod riot;
 
 use app_state::AppState;
+use overlay::OverlayConfig;
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
@@ -28,8 +29,10 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_autostart::Builder::new().build())
         .setup(move |app| {
+            let seeded_config = load_overlay_config(app.handle());
             let state = overlay_state.clone();
             tauri::async_runtime::spawn(async move {
+                state.set_overlay_config(seeded_config).await;
                 state.start_overlay_server().await;
             });
 
@@ -53,6 +56,8 @@ pub fn run() {
             commands::discord_rpc_set_enabled,
             commands::discord_rpc_get_status,
             commands::overlay_get_status,
+            commands::overlay_get_config,
+            commands::overlay_set_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -101,4 +106,23 @@ fn minimize_to_tray_enabled(app: &tauri::AppHandle) -> bool {
         .and_then(|store| store.get("minimizeToTray"))
         .and_then(|value| value.as_bool())
         .unwrap_or(DEFAULT_MINIMIZE_TO_TRAY)
+}
+
+fn load_overlay_config(app: &tauri::AppHandle) -> OverlayConfig {
+    let mut config = OverlayConfig::default();
+    if let Some(store) = app.get_store(SETTINGS_STORE) {
+        if let Some(theme) = store
+            .get("overlayTheme")
+            .and_then(|value| value.as_str().map(str::to_owned))
+        {
+            config.theme = theme;
+        }
+        if let Some(show_player_id) = store
+            .get("overlayShowPlayerId")
+            .and_then(|value| value.as_bool())
+        {
+            config.show_player_id = show_player_id;
+        }
+    }
+    config
 }
