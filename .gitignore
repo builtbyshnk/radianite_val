@@ -15,7 +15,8 @@ dist-ssr
 .updater-private.key.pub
 
 discord-assets
-scripts
+scripts/*
+!scripts/validate-locales.mjs
 
 # Editor directories and files
 .vscode
