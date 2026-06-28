@@ -168,3 +168,19 @@
     will-change: auto;
   }
 }
+
+html[data-app-hardened="true"],
+html[data-app-hardened="true"] body,
+html[data-app-hardened="true"] #root {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html[data-app-hardened="true"] input,
+html[data-app-hardened="true"] textarea,
+html[data-app-hardened="true"] select,
+html[data-app-hardened="true"] [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}

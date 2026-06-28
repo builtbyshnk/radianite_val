@@ -19,18 +19,45 @@ use tauri_plugin_store::StoreExt;
 const SETTINGS_STORE: &str = "settings.json";
 const DEFAULT_MINIMIZE_TO_TRAY: bool = true;
 
+#[cfg(not(debug_assertions))]
+fn prevent_default_shortcuts() -> tauri::plugin::TauriPlugin<tauri::Wry> {
+    use tauri_plugin_prevent_default::{Builder, PlatformOptions};
+
+    Builder::new()
+        .platform(
+            PlatformOptions::new()
+                .browser_accelerator_keys(false)
+                .default_context_menus(false),
+        )
+        .build()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let state = AppState::new();
     let overlay_state = state.clone();
 
-    tauri::Builder::default()
-        .manage(state)
-        .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_store::Builder::new().build())
-        .plugin(tauri_plugin_autostart::Builder::new().build())
+    let builder = {
+        let builder = tauri::Builder::default()
+            .manage(state)
+            .plugin(tauri_plugin_opener::init())
+            .plugin(tauri_plugin_process::init())
+            .plugin(tauri_plugin_updater::Builder::new().build())
+            .plugin(tauri_plugin_store::Builder::new().build())
+            .plugin(tauri_plugin_autostart::Builder::new().build());
+
+        #[cfg(not(debug_assertions))]
+        {
+            builder.plugin(prevent_default_shortcuts())
+        }
+
+        #[cfg(debug_assertions)]
+        {
+            builder
+        }
+    };
+
+    builder
         .setup(move |app| {
             let state = overlay_state.clone();
             tauri::async_runtime::spawn(async move {

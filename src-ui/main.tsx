@@ -8,12 +8,6 @@ import "@/lib/i18n";
 
 document.documentElement.classList.add("dark");
 
-if (import.meta.env.PROD) {
-  document.addEventListener("contextmenu", (event) => {
-    event.preventDefault();
-  });
-}
-
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <TooltipProvider delayDuration={200}>

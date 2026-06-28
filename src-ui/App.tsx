@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { TitleBar } from "@/components/title-bar"
 import { LiveMatchHero } from "@/components/live-match-hero"
@@ -12,9 +12,72 @@ import { SettingsDialog } from "@/components/settings-dialog"
 import { useRadianite } from "@/lib/use-radianite"
 import "./App.css"
 
+function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) {
+    return false
+  }
+
+  return (
+    target.isContentEditable ||
+    target.closest("input, textarea, select, [contenteditable='true']") !== null
+  )
+}
+
+function isBlockedProductionShortcut(event: KeyboardEvent) {
+  const key = event.key.toLowerCase()
+  const modifier = event.ctrlKey || event.metaKey
+
+  return (
+    event.key === "F5" ||
+    event.key === "F12" ||
+    (modifier && key === "r") ||
+    (modifier && key === "u") ||
+    (modifier && event.shiftKey && ["c", "i", "j"].includes(key))
+  )
+}
+
 function App() {
   const r = useRadianite()
   const [settingsOpen, setSettingsOpen] = useState(false)
+
+  useEffect(() => {
+    if (!import.meta.env.PROD) {
+      return
+    }
+
+    document.documentElement.dataset.appHardened = "true"
+
+    const preventContextMenu = (event: MouseEvent) => {
+      event.preventDefault()
+    }
+    const preventDrag = (event: DragEvent) => {
+      event.preventDefault()
+    }
+    const preventSelection = (event: Event) => {
+      if (!isEditableTarget(event.target)) {
+        event.preventDefault()
+      }
+    }
+    const preventShortcuts = (event: KeyboardEvent) => {
+      if (isBlockedProductionShortcut(event)) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+    }
+
+    window.addEventListener("contextmenu", preventContextMenu)
+    window.addEventListener("dragstart", preventDrag)
+    window.addEventListener("selectstart", preventSelection)
+    window.addEventListener("keydown", preventShortcuts, true)
+
+    return () => {
+      delete document.documentElement.dataset.appHardened
+      window.removeEventListener("contextmenu", preventContextMenu)
+      window.removeEventListener("dragstart", preventDrag)
+      window.removeEventListener("selectstart", preventSelection)
+      window.removeEventListener("keydown", preventShortcuts, true)
+    }
+  }, [])
 
   return (
     <div className="flex h-screen flex-col bg-background text-foreground">
