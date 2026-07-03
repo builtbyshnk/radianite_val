@@ -11,7 +11,8 @@ export default defineConfig({
     reducedMotion: "reduce",
   },
   webServer: {
-    command: "VITE_UI_FIXTURE=true bun run dev --host 127.0.0.1",
+    command: "bun run dev --host 127.0.0.1",
+    env: { VITE_UI_FIXTURE: "true" },
     url: "http://127.0.0.1:1420",
     reuseExistingServer: false,
   },

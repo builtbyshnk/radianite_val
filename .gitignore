@@ -21,6 +21,7 @@ scripts/*
 !scripts/validate-locales.mjs
 !scripts/benchmark-frontend.mjs
 !scripts/benchmark-frontend.ps1
+!scripts/benchmark-tauri.conf.json
 benchmark-results/
 
 # Editor directories and files

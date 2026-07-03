@@ -82,7 +82,7 @@ Pop-Location
 Build Windows installer:
 
 ```powershell
-bun run tauri build --bundles nsis --config '{"bundle":{"createUpdaterArtifacts":false}}' --ci --no-sign
+bun run tauri build --bundles nsis --config scripts/benchmark-tauri.conf.json --ci --no-sign
 ```
 
 Run authoritative benchmark:
@@ -111,6 +111,7 @@ Harness source:
 ```text
 scripts/benchmark-frontend.ps1
 scripts/benchmark-frontend.mjs
+scripts/benchmark-tauri.conf.json
 docs/frontend-migration-benchmark.schema.json
 ```
 

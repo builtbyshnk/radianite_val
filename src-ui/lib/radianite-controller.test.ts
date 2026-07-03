@@ -1,13 +1,11 @@
 import { describe, expect, it, vi } from "vitest"
 import { RadianiteController } from "@/lib/radianite-controller.svelte"
 import type { RadianiteClient } from "@/lib/radianite-client"
-import type { AppSnapshot, CoreStatus, RpcStatus, Settings } from "@/lib/types"
+import type { CoreStatus, RpcStatus, Settings } from "@/lib/types"
 
 const status: CoreStatus = { kind: "riotClientClosed", monitored: true, message: { key: "status.message.riotClientClosed" }, updatedAt: "" }
 const rpc: RpcStatus = { enabled: true, connected: false, configured: true, message: { key: "status.rpc.ready" }, locale: "en-US", updatedAt: "" }
 const settings: Settings = { runAtBoot: false, minimizeToTray: true, enableRpcOnStart: true, uiLocale: "en-US", rpcLocale: "en-US" }
-const snapshot: AppSnapshot = { diagnostics: { status, riotInstallsJsonExists: false, lockfileExists: false, lockfilePortPresent: false, localApiReady: false, sessionProductIds: [], valorantSessionPresent: false, puuidPresent: false, accessTokenReady: false, entitlementTokenReady: false, updatedAt: "" }, liveSnapshot: null, rpcStatus: rpc, overlayStatus: { enabled: false, message: { key: "status.overlay.notLoaded" }, updatedAt: "" } }
-
 describe("RadianiteController", () => {
   it("initializes listeners and releases them on destroy", async () => {
     const unlisten = vi.fn()
@@ -15,7 +13,7 @@ describe("RadianiteController", () => {
     const client: RadianiteClient = {
       invoke: async <T>(command: string) => {
         if (command === "settings_initialize") return { settings, rpcStatus: rpc } as T
-        if (command === "app_get_snapshot") return snapshot as T
+        if (command === "app_get_snapshot") return new Promise<never>(() => undefined) as T
         if (command === "riot_start_monitor") return status as T
         throw new Error(`Unexpected command: ${command}`)
       },

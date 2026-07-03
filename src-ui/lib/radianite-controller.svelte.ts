@@ -63,7 +63,11 @@ export class RadianiteController {
       this.unlisteners.push(...listeners)
       void this.client.getVersion().then((version) => { if (this.active) this.appVersion = version }).catch(() => { if (this.active) this.appVersion = null })
       const status = await this.client.invoke<CoreStatus>("riot_start_monitor")
-      if (this.active) { this.diagnostics = { ...this.diagnostics, status }; await this.refresh() }
+      if (this.active) {
+        this.diagnostics = { ...this.diagnostics, status }
+        this.backendReady = true
+        void this.refresh().catch((error) => { if (this.active) toast.error(errorText(error)) })
+      }
     } catch (error) { if (this.active) toast.error(errorText(error)) }
     finally { if (this.active) this.backendReady = true }
   }

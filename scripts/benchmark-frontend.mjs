@@ -51,7 +51,7 @@ console.log(`Performance gate: ${result.gate.passed ? "PASS" : "FAIL"}`)
 async function measureOnce(variant, runName, delay) {
   const port = 9300 + Math.floor(Math.random() * 500)
   const userData = path.join(tmpdir(), `radianite-bench-${runName}`)
-  await rm(userData, { recursive: true, force: true })
+  await removeUserData(userData)
   const started = Date.now()
   const child = spawn(variant.exe, [], { env: { ...process.env, WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${port}`, WEBVIEW2_USER_DATA_FOLDER: userData }, stdio: "ignore", windowsHide: false })
   let browser
@@ -62,6 +62,7 @@ async function measureOnce(variant, runName, delay) {
     if (!page) throw new Error("WebView2 target not found")
     await page.locator(".startup-veil-hidden").waitFor({ state: "attached", timeout: 30_000 })
     const appReadyMs = Date.now() - started
+    await page.waitForFunction(() => performance.getEntriesByName("first-contentful-paint").length > 0, undefined, { timeout: 5_000 })
     const performance = await page.evaluate(() => {
       const navigation = performance.getEntriesByType("navigation")[0]
       const fcp = performance.getEntriesByName("first-contentful-paint")[0]
@@ -72,8 +73,12 @@ async function measureOnce(variant, runName, delay) {
   } finally {
     await browser?.close().catch(() => undefined)
     if (child.pid) { try { execFileSync("taskkill", ["/PID", String(child.pid), "/T", "/F"], { stdio: "ignore" }) } catch {} }
-    await rm(userData, { recursive: true, force: true })
+    await removeUserData(userData)
   }
+}
+
+async function removeUserData(directory) {
+  await rm(directory, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 })
 }
 
 async function waitForEndpoint(port, timeout) {
@@ -129,4 +134,4 @@ function evaluateGate(data) {
 }
 function delta(before, after) { return before ? `${((after - before) / before * 100).toFixed(2)}%` : "n/a" }
 function markdown(data) { const a=data.variants.react.assets,b=data.variants.svelte.assets; return `# Frontend Migration Benchmark\n\nGenerated: ${data.generatedAt}\n\n| Metric | React | Svelte | Delta |\n|---|---:|---:|---:|\n| Initial JS raw | ${a.initialJs.rawBytes} | ${b.initialJs.rawBytes} | ${delta(a.initialJs.rawBytes,b.initialJs.rawBytes)} |\n| Initial JS gzip | ${a.initialJs.gzipBytes} | ${b.initialJs.gzipBytes} | ${delta(a.initialJs.gzipBytes,b.initialJs.gzipBytes)} |\n| Total JS raw | ${a.js.rawBytes} | ${b.js.rawBytes} | ${delta(a.js.rawBytes,b.js.rawBytes)} |\n| FCP median (ms) | ${data.summary.react.fcpMs.median} | ${data.summary.svelte.fcpMs.median} | ${delta(data.summary.react.fcpMs.median,data.summary.svelte.fcpMs.median)} |\n| App ready median (ms) | ${data.summary.react.appReadyMs.median} | ${data.summary.svelte.appReadyMs.median} | ${delta(data.summary.react.appReadyMs.median,data.summary.svelte.appReadyMs.median)} |\n| Working set median (bytes) | ${data.summary.react.workingSetBytes.median} | ${data.summary.svelte.workingSetBytes.median} | ${delta(data.summary.react.workingSetBytes.median,data.summary.svelte.workingSetBytes.median)} |\n\nGate: **${data.gate.passed ? "PASS" : "FAIL"}**\n${data.gate.failures.map((failure) => `- ${failure}`).join("\n")}\n` }
-function readWebViewVersion() { try { return execFileSync("powershell", ["-NoProfile", "-Command", "(Get-ItemProperty 'HKCU:\\Software\\Microsoft\\EdgeUpdate\\Clients\\{F1E7E4F1-7A2A-4A8C-BE3C-6B4F5F1F4A7A}' -ErrorAction SilentlyContinue).pv"], { encoding: "utf8" }).trim() || null } catch { return null } }
+function readWebViewVersion() { try { return execFileSync("powershell", ["-NoProfile", "-Command", "(Get-ItemProperty 'HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\EdgeUpdate\\Clients\\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}' -ErrorAction SilentlyContinue).pv"], { encoding: "utf8" }).trim() || null } catch { return null } }

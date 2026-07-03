@@ -71,7 +71,7 @@ These instructions apply to the whole repository. If a deeper `AGENT.md` is adde
 ## Project Shape
 
 - This is a Tauri 2 desktop app named `radianite`.
-- Frontend code lives in `src-ui/` and uses Vite, React 19, TypeScript, Tailwind CSS 4, and shadcn-style UI components.
+- Frontend code lives in `src-ui/` and uses Vite, Svelte 5, TypeScript, Tailwind CSS 4, and shadcn-svelte-style UI components.
 - Rust/Tauri code lives in `src-rs/`.
 - Static web assets live in `public/`.
 - Tauri icons, capabilities, config, and generated Rust artifacts live under `src-rs/`.
@@ -81,10 +81,10 @@ These instructions apply to the whole repository. If a deeper `AGENT.md` is adde
 
 ## Directory Structure Rules
 
-- Keep React application code under `src-ui/`.
-- Put reusable React UI primitives in `src-ui/components/`.
+- Keep Svelte application code under `src-ui/`.
+- Put reusable Svelte UI primitives in `src-ui/components/`.
 - Put shared frontend helpers in `src-ui/lib/`.
-- Keep frontend assets that are imported by React under `src-ui/assets/`; keep browser-served static assets under `public/`.
+- Keep frontend assets that are imported by Svelte under `src-ui/assets/`; keep browser-served static assets under `public/`.
 - Keep Tauri commands, app state, integrations, and platform code under `src-rs/src/`.
 - Keep Riot client integration code under `src-rs/src/riot/`.
 - Do not create new top-level source directories unless the change genuinely needs a new ownership boundary.
@@ -92,13 +92,13 @@ These instructions apply to the whole repository. If a deeper `AGENT.md` is adde
 
 ## Rust vs TypeScript
 
-Over time we want more logic in Rust (`src-rs/`) and less in TypeScript (`src-ui/`). Rust stays in `src-rs/`; `src-ui/` remains TypeScript/React for the UI. This is not about building UI in Rust.
+Over time we want more logic in Rust (`src-rs/`) and less in TypeScript (`src-ui/`). Rust stays in `src-rs/`; `src-ui/` remains TypeScript/Svelte for the UI. This is not about building UI in Rust.
 
 Before writing code, decide where it belongs:
 
 - **Core logic** always lives in Rust.
 - **Heavy and medium logic** should land in Rust when practical; expose it to the UI through Tauri commands or events instead of reimplementing it in TypeScript.
-- **TypeScript** is for the UI layer: components, layout, user input, and thin glue that calls into Rust.
+- **TypeScript/Svelte** is for the UI layer: components, layout, user input, and thin glue that calls into Rust.
 
 This is not a rule to always pick Rust. Use judgment — if something is clearly view-only or trivial frontend wiring, keep it in TypeScript.
 
