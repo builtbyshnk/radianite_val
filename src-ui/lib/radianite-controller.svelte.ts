@@ -2,6 +2,7 @@ import type { DownloadEvent, Update } from "@tauri-apps/plugin-updater"
 import { toast } from "svelte-sonner"
 
 import i18n, { applyUiLocale, detectedLocale } from "@/lib/i18n"
+import { themedOverlayUrl, type OverlayTheme } from "@/lib/overlay-themes"
 import { tauriClient, type RadianiteClient } from "@/lib/radianite-client"
 import type {
   AppSnapshot,
@@ -66,6 +67,8 @@ const defaultSettings: Settings = {
   runAtBoot: false,
   minimizeToTray: true,
   enableRpcOnStart: true,
+  overlayTheme: "nightfall",
+  overlayHideDetails: false,
   uiLocale: detectedLocale("ui"),
   rpcLocale: detectedLocale("rpc"),
 }
@@ -77,6 +80,7 @@ export class RadianiteController {
   presentation = $state<ValorantPresentation | null>(null)
   rpcStatus = $state<RpcStatus>(initialRpc)
   overlayStatus = $state<OverlayStatus>(initialOverlay)
+  overlayTheme = $state<OverlayTheme>("nightfall")
   updater = $state<UpdaterState>(initialUpdater)
   availableUpdate = $state.raw<Update | null>(null)
   busy = $state(false)
@@ -171,6 +175,7 @@ export class RadianiteController {
       await applyUiLocale(result.settings.uiLocale)
       if (this.active) {
         this.settings = result.settings
+        this.overlayTheme = result.settings.overlayTheme as OverlayTheme
         this.rpcStatus = result.rpcStatus
       }
     } catch (error) {
@@ -218,17 +223,23 @@ export class RadianiteController {
       })
     })
 
+  setOverlayTheme = (theme: OverlayTheme) => {
+    this.overlayTheme = theme
+    void this.setSetting("overlayTheme", theme)
+  }
   async copyOverlayUrl() {
-    if (!this.overlayStatus.url) return
+    const url = themedOverlayUrl(this.overlayStatus.url, this.overlayTheme)
+    if (!url) return
     try {
-      await navigator.clipboard.writeText(this.overlayStatus.url)
+      await navigator.clipboard.writeText(url)
       toast.success(i18n.t("overlay.copied"))
     } catch (error) {
       toast.error(errorText(error))
     }
   }
   async openOverlayUrl() {
-    if (this.overlayStatus.url) await this.open(this.overlayStatus.url)
+    const url = themedOverlayUrl(this.overlayStatus.url, this.overlayTheme)
+    if (url) await this.open(url)
   }
   async open(url: string) {
     try {

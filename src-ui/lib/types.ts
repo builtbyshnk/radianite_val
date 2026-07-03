@@ -141,6 +141,8 @@ export type Settings = {
   runAtBoot: boolean
   minimizeToTray: boolean
   enableRpcOnStart: boolean
+  overlayTheme: string
+  overlayHideDetails: boolean
   uiLocale: string
   rpcLocale: string
 }

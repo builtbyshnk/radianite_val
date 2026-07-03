@@ -1,67 +1,77 @@
 <script lang="ts">
   import IconBroadcast from "@tabler/icons-svelte/icons/broadcast"
   import IconCopy from "@tabler/icons-svelte/icons/copy"
-  import IconExternalLink from "@tabler/icons-svelte/icons/external-link"
   import IconHelpCircle from "@tabler/icons-svelte/icons/help-circle"
+  import OverlayThemeSelect from "@/components/overlay-theme-select.svelte"
   import Panel from "@/components/panel.svelte"
   import { Button } from "@/components/ui/button"
+  import { Switch } from "@/components/ui/switch"
   import { locale } from "@/lib/locale.svelte"
+  import { themedOverlayUrl, type OverlayTheme } from "@/lib/overlay-themes"
   import type { OverlayStatus } from "@/lib/types"
+
   let {
     overlay,
+    theme,
+    overlayHideDetails,
     onCopy,
-    onOpen,
-  }: { overlay: OverlayStatus; onCopy: () => void; onOpen: () => void } =
-    $props()
-  let url = $derived(overlay.url ?? null)
+    onThemeChange,
+    onOverlayHideDetailsChange,
+  }: {
+    overlay: OverlayStatus
+    theme: OverlayTheme
+    overlayHideDetails: boolean
+    onCopy: () => void
+    onThemeChange: (theme: OverlayTheme) => void
+    onOverlayHideDetailsChange: (value: boolean) => void
+  } = $props()
+
+  let url = $derived(themedOverlayUrl(overlay.url ?? null, theme))
+  const privacyLabel = $derived(locale.t("settings.overlayHideDetails"))
 </script>
 
 <Panel title={locale.t("overlay.title")}>
-  {#snippet icon()}<IconBroadcast />{/snippet}{#snippet action()}<span
-      class="text-muted-foreground"
-      title={locale.t("overlay.help")}><IconHelpCircle class="size-4" /></span
-    >{/snippet}
-  <div class="flex flex-col gap-3">
-    <div class="flex flex-wrap items-end gap-3">
-      <div class="min-w-0 flex-1">
-        <p class="mb-1 text-xs text-muted-foreground">
-          {locale.t("overlay.sourceUrl")}
-        </p>
-        <code
-          class="block w-full truncate rounded-md border bg-background/60 px-2.5 py-1.5 font-mono text-xs"
-          >{url ?? locale.t("overlay.notRunning")}</code
-        >
-      </div>
-      <div class="flex items-center gap-2">
-        <Button variant="outline" onclick={onCopy} disabled={!url}
-          ><IconCopy data-icon="inline-start" />{locale.t(
-            "overlay.copyUrl",
-          )}</Button
-        ><Button variant="outline" onclick={onOpen} disabled={!url}
-          ><IconExternalLink data-icon="inline-start" />{locale.t(
-            "common.open",
-          )}</Button
-        >
-      </div>
-    </div>
-    <div class="flex items-center justify-between">
-      <p class="text-xs text-muted-foreground">
-        {locale.t("overlay.suggestedSize")}
-        <span class="font-mono text-foreground">360 × 90</span>
-      </p>
-      <p class="text-xs text-muted-foreground">
-        {locale.t("overlay.livePreview")}
-      </p>
-    </div>
-    <div
-      class="flex justify-center overflow-hidden rounded-lg border bg-background/60 p-3"
+  {#snippet icon()}<IconBroadcast />{/snippet}{#snippet action()}<div
+      class="flex items-center gap-1.5"
     >
-      {#if url}<iframe
-          title={locale.t("overlay.previewTitle")}
-          src={url}
-          class="h-[90px] w-[360px] max-w-full border-0 bg-transparent"
-        ></iframe>{:else}<div
-          class="flex h-[90px] w-full items-center justify-center gap-2 text-xs text-muted-foreground"
+      <Button
+        variant="outline"
+        size="sm"
+        onclick={onCopy}
+        disabled={!url}
+        title={locale.t("overlay.copyUrl")}
+        ><IconCopy data-icon="inline-start" />{locale.t("overlay.copyUrl")}</Button
+      ><span
+        class="text-muted-foreground"
+        title={locale.t("overlay.help")}><IconHelpCircle class="size-4" /></span
+      >
+    </div>{/snippet}
+  <div class="flex flex-col gap-2">
+    <div class="grid grid-cols-2 gap-2">
+      <OverlayThemeSelect compact value={theme} onChange={onThemeChange} />
+      <label
+        class="flex min-w-0 cursor-pointer items-center justify-between gap-2 rounded-lg border bg-background/40 px-2 py-1.5"
+        title={locale.t("settings.overlayHideDetailsDescription")}
+        ><span class="truncate text-xs font-medium">{privacyLabel}</span><Switch
+          class="shrink-0"
+          checked={overlayHideDetails}
+          onCheckedChange={onOverlayHideDetailsChange}
+        /></label
+      >
+    </div>
+    <p class="text-[11px] text-muted-foreground">
+      {locale.t("overlay.suggestedSize")}
+      <span class="font-mono text-foreground">720 × 200</span>
+    </p>
+    <div class="overflow-hidden rounded-lg border bg-background/60 p-2">
+      {#if url}<div class="preview-host aspect-[720/200] w-full overflow-hidden rounded-md">
+          <iframe
+            title={locale.t("overlay.previewTitle")}
+            src={url}
+            class="preview-iframe"
+          ></iframe>
+        </div>{:else}<div
+          class="flex aspect-[720/200] w-full items-center justify-center gap-2 text-xs text-muted-foreground"
         >
           <IconBroadcast class="size-4" />{locale.t(
             "overlay.previewUnavailable",
@@ -70,3 +80,19 @@
     </div>
   </div>
 </Panel>
+
+<style>
+  .preview-host {
+    container-type: inline-size;
+  }
+
+  .preview-iframe {
+    display: block;
+    width: 720px;
+    height: 200px;
+    border: 0;
+    background: transparent;
+    transform-origin: top left;
+    transform: scale(calc(100cqw / 720px));
+  }
+</style>

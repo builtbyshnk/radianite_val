@@ -13,6 +13,8 @@ pub struct Settings {
     pub run_at_boot: bool,
     pub minimize_to_tray: bool,
     pub enable_rpc_on_start: bool,
+    pub overlay_theme: String,
+    pub overlay_hide_details: bool,
     pub ui_locale: String,
     pub rpc_locale: String,
 }
@@ -46,6 +48,11 @@ pub async fn initialize(
             .get("enableRpcOnStart")
             .and_then(|value| value.as_bool())
             .unwrap_or(true),
+        overlay_theme: valid_overlay_theme(store.get("overlayTheme").and_then(json_string)),
+        overlay_hide_details: store
+            .get("overlayHideDetails")
+            .and_then(|value| value.as_bool())
+            .unwrap_or(false),
         ui_locale: valid_locale(
             store.get("uiLocale").and_then(json_string),
             &default_ui_locale,
@@ -59,6 +66,12 @@ pub async fn initialize(
     apply_autostart(app, settings.run_at_boot)?;
     apply_ui_locale(app, &settings.ui_locale)?;
     state.set_rpc_locale(settings.rpc_locale.clone()).await;
+    state
+        .set_overlay_theme(settings.overlay_theme.clone())
+        .await;
+    state
+        .set_overlay_hide_details(settings.overlay_hide_details)
+        .await;
     let rpc_status = state.set_rpc_enabled(settings.enable_rpc_on_start).await;
     save(app, &settings)?;
 
@@ -75,6 +88,7 @@ pub async fn update(
 ) -> Result<SettingsBootstrap, String> {
     ensure_locale(&settings.ui_locale)?;
     ensure_locale(&settings.rpc_locale)?;
+    ensure_overlay_theme(&settings.overlay_theme)?;
 
     let store = app.store(SETTINGS_STORE).map_err(|err| err.to_string())?;
     let previous_ui_locale = store.get("uiLocale").and_then(json_string);
@@ -89,6 +103,12 @@ pub async fn update(
     } else {
         state.rpc_status().await
     };
+    state
+        .set_overlay_theme(settings.overlay_theme.clone())
+        .await;
+    state
+        .set_overlay_hide_details(settings.overlay_hide_details)
+        .await;
     save(app, &settings)?;
 
     Ok(SettingsBootstrap {
@@ -119,6 +139,8 @@ fn save(app: &AppHandle, settings: &Settings) -> Result<(), String> {
     store.set("runAtBoot", settings.run_at_boot);
     store.set("minimizeToTray", settings.minimize_to_tray);
     store.set("enableRpcOnStart", settings.enable_rpc_on_start);
+    store.set("overlayTheme", settings.overlay_theme.clone());
+    store.set("overlayHideDetails", settings.overlay_hide_details);
     store.set("uiLocale", settings.ui_locale.clone());
     store.set("rpcLocale", settings.rpc_locale.clone());
     store.save().map_err(|err| err.to_string())?;
@@ -133,6 +155,19 @@ fn valid_locale(stored: Option<String>, fallback: &str) -> String {
     stored
         .filter(|locale| ensure_locale(locale).is_ok())
         .unwrap_or_else(|| fallback.to_string())
+}
+
+fn valid_overlay_theme(stored: Option<String>) -> String {
+    stored
+        .filter(|theme| ensure_overlay_theme(theme).is_ok())
+        .unwrap_or_else(|| "nightfall".to_string())
+}
+
+fn ensure_overlay_theme(theme: &str) -> Result<(), String> {
+    match theme {
+        "nightfall" | "catppuccin" | "evergreen" | "solarized" | "porcelain" | "rose" => Ok(()),
+        _ => Err(format!("unsupported overlay theme: {theme}")),
+    }
 }
 
 fn ensure_locale(locale: &str) -> Result<(), String> {

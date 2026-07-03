@@ -15,12 +15,17 @@ use crate::{
 
 const DEFAULT_OVERLAY_PORT: u16 = 48271;
 const BIND_HOST: &str = "127.0.0.1";
+const OVERLAY_HTML: &str = include_str!("overlay/index.html");
+const OVERLAY_CSS: &str = include_str!("overlay/overlay.css");
+const OVERLAY_JS: &str = include_str!("overlay/overlay.js");
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OverlaySnapshot {
     pub status: &'static str,
     pub message: String,
+    pub theme: String,
+    pub hide_details: bool,
     pub rank: Option<RankSnapshot>,
     pub player: PlayerIdentity,
     pub updated_at: String,
@@ -109,9 +114,25 @@ async fn handle_connection(mut stream: TcpStream, state: AppState) -> std::io::R
         "/overlay/rank" => {
             write_response(&mut stream, 200, "text/html; charset=utf-8", OVERLAY_HTML).await
         }
+        "/overlay/overlay.css" => {
+            write_response(&mut stream, 200, "text/css; charset=utf-8", OVERLAY_CSS).await
+        }
+        "/overlay/overlay.js" => {
+            write_response(
+                &mut stream,
+                200,
+                "text/javascript; charset=utf-8",
+                OVERLAY_JS,
+            )
+            .await
+        }
         "/overlay/state" => {
-            let snapshot =
-                overlay_snapshot_from_parts(&state.status().await, state.live_snapshot().await);
+            let snapshot = overlay_snapshot_from_parts(
+                &state.status().await,
+                state.live_snapshot().await,
+                state.overlay_theme().await,
+                state.overlay_hide_details().await,
+            );
             let body = serde_json::to_string(&snapshot).unwrap_or_else(|err| {
                 format!(
                     r#"{{"status":"error","message":"overlay JSON serialization failed: {err}","rank":null,"player":{{"puuidPresent":false,"gameName":null,"gameTag":null}},"updatedAt":"{}"}}"#,
@@ -128,12 +149,16 @@ async fn handle_connection(mut stream: TcpStream, state: AppState) -> std::io::R
 pub fn overlay_snapshot_from_parts(
     core_status: &CoreStatus,
     live_snapshot: Option<LiveSnapshot>,
+    theme: String,
+    hide_details: bool,
 ) -> OverlaySnapshot {
     if let Some(snapshot) = live_snapshot {
         if let Some(rank) = snapshot.rank {
             return OverlaySnapshot {
                 status: "ready",
                 message: t!("overlay.rankAvailable").to_string(),
+                theme,
+                hide_details,
                 rank: Some(rank),
                 player: snapshot.player,
                 updated_at: snapshot.updated_at,
@@ -143,6 +168,8 @@ pub fn overlay_snapshot_from_parts(
         return OverlaySnapshot {
             status: "waiting",
             message: t!("overlay.waitingRank").to_string(),
+            theme,
+            hide_details,
             rank: None,
             player: snapshot.player,
             updated_at: snapshot.updated_at,
@@ -161,6 +188,8 @@ pub fn overlay_snapshot_from_parts(
             .detail
             .clone()
             .unwrap_or_else(|| t!(core_status.message.key.as_str()).to_string()),
+        theme,
+        hide_details,
         rank: None,
         player: PlayerIdentity::default(),
         updated_at: core_status.updated_at.clone(),
@@ -190,235 +219,11 @@ async fn write_response(
     stream.shutdown().await
 }
 
-const OVERLAY_HTML: &str = r##"<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Radianite Rank Overlay</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: transparent;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
-      background: transparent;
-    }
-
-    body {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 8px;
-    }
-
-    .card {
-      width: 344px;
-      min-height: 74px;
-      display: grid;
-      grid-template-columns: 64px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      padding: 8px 10px 8px 8px;
-      background: linear-gradient(90deg, rgba(17, 20, 28, 0.92), rgba(25, 29, 39, 0.86));
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
-      color: #f7f8fb;
-    }
-
-    .iconWrap {
-      width: 60px;
-      height: 60px;
-      display: grid;
-      place-items: center;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .icon {
-      width: 54px;
-      height: 54px;
-      object-fit: contain;
-      filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.5));
-    }
-
-    .fallbackIcon {
-      width: 34px;
-      height: 34px;
-      border: 6px solid rgba(138, 92, 246, 0.88);
-      transform: rotate(45deg);
-    }
-
-    .content {
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .topline {
-      min-width: 0;
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      font-weight: 900;
-      line-height: 1;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.55);
-    }
-
-    .rank {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 21px;
-      letter-spacing: 0;
-    }
-
-    .rr {
-      flex: 0 0 auto;
-      font-size: 20px;
-      color: #ffffff;
-    }
-
-    .subline {
-      min-height: 16px;
-      font-size: 12px;
-      font-weight: 800;
-      color: rgba(255, 255, 255, 0.82);
-      text-transform: uppercase;
-      letter-spacing: 0;
-    }
-
-    .delta {
-      width: max-content;
-      max-width: 100%;
-      padding: 3px 8px;
-      font-size: 13px;
-      font-weight: 900;
-      line-height: 1;
-      color: #fff;
-      background: rgba(94, 234, 165, 0.9);
-    }
-
-    .delta.negative {
-      background: rgba(255, 50, 64, 0.96);
-    }
-
-    .delta.neutral {
-      background: rgba(255, 255, 255, 0.14);
-      color: rgba(255, 255, 255, 0.78);
-    }
-
-    .waiting .card {
-      opacity: 0.88;
-    }
-  </style>
-</head>
-<body>
-  <section class="card" aria-label="Radianite rank overlay">
-    <div class="iconWrap">
-      <img class="icon" id="rankIcon" alt="" hidden />
-      <div class="fallbackIcon" id="fallbackIcon"></div>
-    </div>
-    <div class="content">
-      <div class="topline">
-        <div class="rank" id="rankName">Waiting</div>
-        <div class="rr" id="rankRR"></div>
-      </div>
-      <div class="subline" id="subline">Radianite overlay</div>
-      <div class="delta neutral" id="delta">Waiting for rank</div>
-    </div>
-  </section>
-  <script>
-    const rankIcon = document.getElementById("rankIcon");
-    const fallbackIcon = document.getElementById("fallbackIcon");
-    const rankName = document.getElementById("rankName");
-    const rankRR = document.getElementById("rankRR");
-    const subline = document.getElementById("subline");
-    const delta = document.getElementById("delta");
-
-    function setWaiting(message) {
-      document.body.classList.add("waiting");
-      rankIcon.hidden = true;
-      fallbackIcon.hidden = false;
-      rankName.textContent = "Waiting";
-      rankRR.textContent = "";
-      subline.textContent = "Radianite overlay";
-      delta.textContent = message || "Waiting for rank";
-      delta.className = "delta neutral";
-    }
-
-    function formatDelta(value) {
-      if (value > 0) return "Last Match: +" + value + "pts";
-      if (value < 0) return "Last Match: " + value + "pts";
-      return "Last Match: 0pts";
-    }
-
-    function render(data) {
-      if (!data || data.status !== "ready" || !data.rank) {
-        setWaiting(data && data.message);
-        return;
-      }
-
-      document.body.classList.remove("waiting");
-      const rank = data.rank;
-      rankName.textContent = rank.tierName || (rank.tier ? "Tier " + rank.tier : "Unrated");
-      rankRR.textContent = typeof rank.rankedRating === "number" ? rank.rankedRating + "RR" : "";
-      subline.textContent = data.player && data.player.gameName
-        ? data.player.gameName + (data.player.gameTag ? "#" + data.player.gameTag : "")
-        : "Current rank";
-
-      if (rank.iconUrl) {
-        rankIcon.src = rank.iconUrl;
-        rankIcon.hidden = false;
-        fallbackIcon.hidden = true;
-      } else {
-        rankIcon.hidden = true;
-        fallbackIcon.hidden = false;
-      }
-
-      if (typeof rank.lastMatchDelta === "number") {
-        delta.textContent = formatDelta(rank.lastMatchDelta);
-        delta.className = rank.lastMatchDelta < 0 ? "delta negative" : "delta";
-      } else {
-        delta.textContent = "Last Match: unavailable";
-        delta.className = "delta neutral";
-      }
-    }
-
-    async function refresh() {
-      try {
-        const response = await fetch("/overlay/state", { cache: "no-store" });
-        render(await response.json());
-      } catch (_err) {
-        setWaiting("Overlay disconnected");
-      }
-    }
-
-    refresh();
-    setInterval(refresh, 2000);
-  </script>
-</body>
-</html>
-"##;
-
 #[cfg(test)]
 mod tests {
     use serde_json::json;
 
-    use super::overlay_snapshot_from_parts;
+    use super::{overlay_snapshot_from_parts, OVERLAY_CSS, OVERLAY_HTML, OVERLAY_JS};
     use crate::riot::state::{
         CoreStatus, CoreStatusKind, LiveSnapshot, MatchPhase, PartySnapshot, PlayerIdentity,
         RankSnapshot,
@@ -463,25 +268,45 @@ mod tests {
     }
 
     #[test]
+    fn embeds_themeable_overlay_assets() {
+        assert!(OVERLAY_HTML.contains("/overlay/overlay.css"));
+        assert!(OVERLAY_HTML.contains("/overlay/overlay.js"));
+        assert!(OVERLAY_JS.contains("themes.has(data?.theme)"));
+        for theme in ["catppuccin", "evergreen", "solarized", "porcelain", "rose"] {
+            assert!(OVERLAY_CSS.contains(&format!(r#"data-theme="{theme}""#)));
+        }
+    }
+
+    #[test]
     fn renders_ready_rank_overlay_state() {
         let status = CoreStatus::new(CoreStatusKind::ValorantReady, true, "ready");
-        let rendered =
-            serde_json::to_value(overlay_snapshot_from_parts(&status, Some(live_snapshot())))
-                .expect("overlay state should serialize");
+        let rendered = serde_json::to_value(overlay_snapshot_from_parts(
+            &status,
+            Some(live_snapshot()),
+            "rose".to_string(),
+            true,
+        ))
+        .expect("overlay state should serialize");
 
         assert_eq!(rendered["status"], "ready");
         assert_eq!(rendered["rank"]["tierName"], "Diamond 1");
         assert_eq!(rendered["rank"]["rankedRating"], 20);
         assert_eq!(rendered["rank"]["lastMatchDelta"], 20);
         assert_eq!(rendered["rank"]["iconUrl"], "https://example.test/rank.png");
+        assert_eq!(rendered["hideDetails"], true);
+        assert_eq!(rendered["theme"], "rose");
     }
 
     #[test]
     fn overlay_state_excludes_internal_sensitive_fields() {
         let status = CoreStatus::new(CoreStatusKind::ValorantReady, true, "ready");
-        let rendered =
-            serde_json::to_string(&overlay_snapshot_from_parts(&status, Some(live_snapshot())))
-                .expect("overlay state should serialize");
+        let rendered = serde_json::to_string(&overlay_snapshot_from_parts(
+            &status,
+            Some(live_snapshot()),
+            "nightfall".to_string(),
+            false,
+        ))
+        .expect("overlay state should serialize");
 
         assert!(!rendered.contains("accessToken"));
         assert!(!rendered.contains("entitlement"));
@@ -496,8 +321,13 @@ mod tests {
         let mut snapshot = live_snapshot();
         snapshot.rank = None;
 
-        let rendered = serde_json::to_value(overlay_snapshot_from_parts(&status, Some(snapshot)))
-            .expect("overlay state should serialize");
+        let rendered = serde_json::to_value(overlay_snapshot_from_parts(
+            &status,
+            Some(snapshot),
+            "nightfall".to_string(),
+            false,
+        ))
+        .expect("overlay state should serialize");
 
         assert_eq!(rendered["status"], "waiting");
         assert_eq!(rendered["rank"], json!(null));

@@ -132,7 +132,7 @@
                 </div>
                 <p class="text-xs text-muted-foreground">
                   {locale.t("overlay.suggestedSize")}
-                  <span class="font-mono text-foreground">360 × 90</span>
+                  <span class="font-mono text-foreground">720 × 200</span>
                 </p>
               </div>
             {:else if active === "discord"}{@render Heading(

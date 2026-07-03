@@ -28,6 +28,8 @@ pub struct AppState {
     monitor: Arc<Mutex<Option<MonitorHandle>>>,
     discord: Arc<Mutex<DiscordRpcManager>>,
     overlay_status: Arc<RwLock<OverlayStatus>>,
+    overlay_theme: Arc<RwLock<String>>,
+    overlay_hide_details: Arc<RwLock<bool>>,
     overlay_server: Arc<Mutex<Option<JoinHandle<()>>>>,
     content_cache: ValorantContentCache,
     public_cache: Arc<OnceLock<PublicCacheContext>>,
@@ -73,6 +75,8 @@ impl AppState {
                 None,
                 LocalizedMessage::key("status.overlay.notStarted"),
             ))),
+            overlay_theme: Arc::new(RwLock::new("nightfall".to_string())),
+            overlay_hide_details: Arc::new(RwLock::new(false)),
             overlay_server: Arc::new(Mutex::new(None)),
             content_cache: ValorantContentCache::default(),
             public_cache: Arc::new(OnceLock::new()),
@@ -159,6 +163,22 @@ impl AppState {
 
     pub async fn overlay_status(&self) -> OverlayStatus {
         self.overlay_status.read().await.clone()
+    }
+
+    pub async fn overlay_theme(&self) -> String {
+        self.overlay_theme.read().await.clone()
+    }
+
+    pub async fn set_overlay_theme(&self, theme: String) {
+        *self.overlay_theme.write().await = theme;
+    }
+
+    pub async fn overlay_hide_details(&self) -> bool {
+        *self.overlay_hide_details.read().await
+    }
+
+    pub async fn set_overlay_hide_details(&self, hide: bool) {
+        *self.overlay_hide_details.write().await = hide;
     }
 
     pub async fn app_snapshot(&self) -> AppSnapshot {

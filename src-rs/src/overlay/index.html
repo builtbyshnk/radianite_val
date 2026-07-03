@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en" data-theme="nightfall">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Radianite Rank Overlay</title>
+    <link rel="stylesheet" href="/overlay/overlay.css" />
+  </head>
+  <body class="waiting">
+    <section class="overlay" aria-label="Radianite rank overlay">
+      <div class="rail">
+        <header class="headline">
+          <div class="headlineTitle">
+            <span class="rank" id="rankName">Waiting</span>
+            <span class="spark" aria-hidden="true"></span>
+            <span class="rr" id="rankRR"></span>
+          </div>
+        </header>
+        <div class="details">
+          <div class="detail player">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8c0-3.3 3.1-6 7-6s7 2.7 7 6" />
+            </svg>
+            <span id="playerName">Radianite overlay</span>
+          </div>
+          <div class="divider" aria-hidden="true"></div>
+          <div class="detail match">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m4 17 5-5 4 4 7-8m-5 0h5v5" />
+            </svg>
+            <span>Last match</span>
+            <strong class="delta neutral" id="delta">Waiting</strong>
+          </div>
+          <div class="divider optional" aria-hidden="true"></div>
+          <div class="detail status optional">
+            <span class="statusMark" aria-hidden="true"></span>
+            <span id="statusText">Live rank</span>
+          </div>
+        </div>
+      </div>
+      <div class="crest" aria-hidden="true">
+        <div class="crestInner">
+          <img class="rankIcon" id="rankIcon" alt="" hidden />
+          <div class="fallbackIcon" id="fallbackIcon">
+            <i></i><i></i><i></i><i></i><i></i><i></i>
+          </div>
+        </div>
+      </div>
+    </section>
+    <script src="/overlay/overlay.js"></script>
+  </body>
+</html>

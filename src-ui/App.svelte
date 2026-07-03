@@ -82,8 +82,12 @@
           <div class="flex flex-col gap-3">
             <CoreStatusCard diagnostics={r.diagnostics} /><OverlayCard
               overlay={r.overlayStatus}
+              theme={r.overlayTheme}
+              overlayHideDetails={r.settings.overlayHideDetails}
               onCopy={() => r.copyOverlayUrl()}
-              onOpen={() => r.openOverlayUrl()}
+              onThemeChange={r.setOverlayTheme}
+              onOverlayHideDetailsChange={(value) =>
+                r.setSetting("overlayHideDetails", value)}
             />
           </div>
         </div>

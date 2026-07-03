@@ -16,6 +16,8 @@ const settings: Settings = {
   runAtBoot: false,
   minimizeToTray: true,
   enableRpcOnStart: true,
+  overlayTheme: "nightfall",
+  overlayHideDetails: false,
   uiLocale: "en-US",
   rpcLocale: "en-US",
 }
