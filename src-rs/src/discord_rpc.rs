@@ -13,7 +13,7 @@ use crate::riot::{
 };
 
 const DEFAULT_DISCORD_APP_ID: &str = "1520041097945153566";
-const DEFAULT_GITHUB_URL: &str = "https://github.com/radcolor-dev/radianite_val";
+const DEFAULT_GITHUB_URL: &str = "https://radcolor-dev.github.io/radianite_val/";
 
 #[derive(Debug, Clone)]
 pub struct RpcConfig {
@@ -364,13 +364,10 @@ fn render_activity<'a>(
     }
 
     if let Some(github_url) = github_url {
-        activity = activity
-            .details_url(github_url)
-            .state_url(github_url)
-            .buttons(vec![Button::new(
-                t!("rpc.button.get", locale = locale).to_string(),
-                github_url,
-            )]);
+        activity = activity.buttons(vec![Button::new(
+            t!("rpc.button.get", locale = locale).to_string(),
+            github_url,
+        )]);
     }
 
     let preview = RpcPreview {
