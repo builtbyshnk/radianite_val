@@ -4,7 +4,9 @@ class LocaleState {
   revision = $state(0)
 
   constructor() {
-    i18n.on("languageChanged", () => { this.revision += 1 })
+    i18n.on("languageChanged", () => {
+      this.revision += 1
+    })
   }
 
   t(key: string, options?: Record<string, unknown>) {

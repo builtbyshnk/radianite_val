@@ -23,7 +23,9 @@ const settings: Settings = {
 const status = (kind: CoreStatus["kind"], monitored = true): CoreStatus => ({
   kind,
   monitored,
-  message: { key: `status.message.${kind === "valorantReady" ? "valorantReady" : "riotClientClosed"}` },
+  message: {
+    key: `status.message.${kind === "valorantReady" ? "valorantReady" : "riotClientClosed"}`,
+  },
   updatedAt: "2026-01-15T12:00:00.000Z",
 })
 
@@ -46,16 +48,32 @@ const liveSnapshot = (phase: LiveSnapshot["phase"]): LiveSnapshot => ({
   updatedAt: "2026-01-15T12:00:00.000Z",
 })
 
-const phase = fixture === "live" ? "ingame" : fixture === "matchmaking" ? "matchmaking" : fixture === "menus" ? "menus" : null
+const phase =
+  fixture === "live"
+    ? "ingame"
+    : fixture === "matchmaking"
+      ? "matchmaking"
+      : fixture === "menus"
+        ? "menus"
+        : null
 const snapshot = phase ? liveSnapshot(phase) : null
-const coreStatus = phase ? status("valorantReady") : status("riotClientClosed", false)
+const coreStatus = phase
+  ? status("valorantReady")
+  : status("riotClientClosed", false)
 const rpcStatus: RpcStatus = {
   enabled: true,
   connected: Boolean(snapshot),
   configured: true,
   locale: "en-US",
   message: { key: snapshot ? "status.rpc.connected" : "status.rpc.ready" },
-  preview: snapshot ? { name: "VALORANT", details: "Competitive", state: "Ascent", startedAt: 1_768_478_400_000 } : null,
+  preview: snapshot
+    ? {
+        name: "VALORANT",
+        details: "Competitive",
+        state: "Ascent",
+        startedAt: 1_768_478_400_000,
+      }
+    : null,
   updatedAt: "2026-01-15T12:00:00.000Z",
 }
 
@@ -97,29 +115,47 @@ const presentation: ValorantPresentation = {
 
 export function installTestFixture() {
   mockWindows("main")
-  mockIPC(async (command, payload) => {
-    if (fixture === "startup" && (command === "riot_start_monitor" || command === "settings_initialize")) {
-      return new Promise(() => undefined)
-    }
-    switch (command) {
-      case "plugin:app|version": return "0.1.6"
-      case "settings_initialize": return { settings, rpcStatus }
-      case "settings_set": return { settings: (payload as { settings: Settings }).settings, rpcStatus }
-      case "riot_start_monitor": return coreStatus
-      case "riot_stop_monitor": return { ...coreStatus, monitored: false }
-      case "app_get_snapshot": return appSnapshot
-      case "valorant_get_presentation": return presentation
-      case "discord_rpc_set_enabled": return { ...rpcStatus, enabled: !rpcStatus.enabled }
-      case "plugin:updater|check":
-        return {
-          rid: 1,
-          currentVersion: "0.1.6",
-          version: "0.2.0",
-          date: "2026-01-15 12:00:00 UTC",
-          body: "## Highlights\n\n- Faster startup\n- Improved live match details",
-          rawJson: {},
-        }
-      default: return null
-    }
-  }, { shouldMockEvents: true })
+  mockIPC(
+    async (command, payload) => {
+      if (
+        fixture === "startup" &&
+        (command === "riot_start_monitor" || command === "settings_initialize")
+      ) {
+        return new Promise(() => undefined)
+      }
+      switch (command) {
+        case "plugin:app|version":
+          return "0.1.6"
+        case "settings_initialize":
+          return { settings, rpcStatus }
+        case "settings_set":
+          return {
+            settings: (payload as { settings: Settings }).settings,
+            rpcStatus,
+          }
+        case "riot_start_monitor":
+          return coreStatus
+        case "riot_stop_monitor":
+          return { ...coreStatus, monitored: false }
+        case "app_get_snapshot":
+          return appSnapshot
+        case "valorant_get_presentation":
+          return presentation
+        case "discord_rpc_set_enabled":
+          return { ...rpcStatus, enabled: !rpcStatus.enabled }
+        case "plugin:updater|check":
+          return {
+            rid: 1,
+            currentVersion: "0.1.6",
+            version: "0.2.0",
+            date: "2026-01-15 12:00:00 UTC",
+            body: "## Highlights\n\n- Faster startup\n- Improved live match details",
+            rawJson: {},
+          }
+        default:
+          return null
+      }
+    },
+    { shouldMockEvents: true },
+  )
 }

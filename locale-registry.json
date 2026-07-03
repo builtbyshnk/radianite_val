@@ -6,9 +6,7 @@
       "nativeName": "English (United States)",
       "englishName": "English (United States)",
       "direction": "ltr",
-      "contributors": [
-        "Radianite contributors"
-      ],
+      "contributors": ["Radianite contributors"],
       "ui": true,
       "rpc": true
     },
@@ -17,9 +15,7 @@
       "nativeName": "العربية",
       "englishName": "Arabic",
       "direction": "rtl",
-      "contributors": [
-        "@Ozama#8188 (valorant-rpc)"
-      ],
+      "contributors": ["@Ozama#8188 (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -41,9 +37,7 @@
       "nativeName": "Español (España)",
       "englishName": "Spanish (Spain)",
       "direction": "ltr",
-      "contributors": [
-        "@Rubiz#0822 (valorant-rpc)"
-      ],
+      "contributors": ["@Rubiz#0822 (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -52,9 +46,7 @@
       "nativeName": "Français",
       "englishName": "French",
       "direction": "ltr",
-      "contributors": [
-        "@Hurdenn#2777 (valorant-rpc)"
-      ],
+      "contributors": ["@Hurdenn#2777 (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -63,9 +55,7 @@
       "nativeName": "हिन्दी",
       "englishName": "Hindi",
       "direction": "ltr",
-      "contributors": [
-        "community (valorant-rpc)"
-      ],
+      "contributors": ["community (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -74,9 +64,7 @@
       "nativeName": "Italiano",
       "englishName": "Italian",
       "direction": "ltr",
-      "contributors": [
-        "@zaykenyon (valorant-rpc)"
-      ],
+      "contributors": ["@zaykenyon (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -85,9 +73,7 @@
       "nativeName": "日本語",
       "englishName": "Japanese",
       "direction": "ltr",
-      "contributors": [
-        "@Yossi#1114 (valorant-rpc)"
-      ],
+      "contributors": ["@Yossi#1114 (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -108,9 +94,7 @@
       "nativeName": "Nederlands",
       "englishName": "Dutch",
       "direction": "ltr",
-      "contributors": [
-        "community (valorant-rpc)"
-      ],
+      "contributors": ["community (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -119,9 +103,7 @@
       "nativeName": "Polski",
       "englishName": "Polish",
       "direction": "ltr",
-      "contributors": [
-        "@kyanbasu (valorant-rpc)"
-      ],
+      "contributors": ["@kyanbasu (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -130,9 +112,7 @@
       "nativeName": "Português (Brasil)",
       "englishName": "Portuguese (Brazil)",
       "direction": "ltr",
-      "contributors": [
-        "@pessimismo (valorant-rpc)"
-      ],
+      "contributors": ["@pessimismo (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -165,9 +145,7 @@
       "nativeName": "简体中文",
       "englishName": "Chinese (Simplified)",
       "direction": "ltr",
-      "contributors": [
-        "deepseek (valorant-rpc)"
-      ],
+      "contributors": ["deepseek (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -176,9 +154,7 @@
       "nativeName": "繁體中文",
       "englishName": "Chinese (Traditional)",
       "direction": "ltr",
-      "contributors": [
-        "@ScarZ (valorant-rpc)"
-      ],
+      "contributors": ["@ScarZ (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -187,9 +163,7 @@
       "nativeName": "Bahasa Melayu",
       "englishName": "Malay",
       "direction": "ltr",
-      "contributors": [
-        "community (valorant-rpc)"
-      ],
+      "contributors": ["community (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -198,9 +172,7 @@
       "nativeName": "Dansk",
       "englishName": "Danish",
       "direction": "ltr",
-      "contributors": [
-        "community (valorant-rpc)"
-      ],
+      "contributors": ["community (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -209,9 +181,7 @@
       "nativeName": "Español (México)",
       "englishName": "Spanish (Mexico)",
       "direction": "ltr",
-      "contributors": [
-        "@pessimismo (valorant-rpc)"
-      ],
+      "contributors": ["@pessimismo (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -220,9 +190,7 @@
       "nativeName": "Čeština",
       "englishName": "Czech",
       "direction": "ltr",
-      "contributors": [
-        "community (valorant-rpc)"
-      ],
+      "contributors": ["community (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -231,9 +199,7 @@
       "nativeName": "Bahasa Indonesia",
       "englishName": "Indonesian",
       "direction": "ltr",
-      "contributors": [
-        "@sryo#9955 (valorant-rpc)"
-      ],
+      "contributors": ["@sryo#9955 (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -242,9 +208,7 @@
       "nativeName": "Tiếng Việt",
       "englishName": "Vietnamese",
       "direction": "ltr",
-      "contributors": [
-        "@Mistral#9699 (valorant-rpc)"
-      ],
+      "contributors": ["@Mistral#9699 (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -253,9 +217,7 @@
       "nativeName": "Suomi",
       "englishName": "Finnish",
       "direction": "ltr",
-      "contributors": [
-        "community (valorant-rpc)"
-      ],
+      "contributors": ["community (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -264,9 +226,7 @@
       "nativeName": "Filipino",
       "englishName": "Filipino",
       "direction": "ltr",
-      "contributors": [
-        "community (valorant-rpc)"
-      ],
+      "contributors": ["community (valorant-rpc)"],
       "ui": false,
       "rpc": true
     },
@@ -287,9 +247,7 @@
       "nativeName": "Svenska",
       "englishName": "Swedish",
       "direction": "ltr",
-      "contributors": [
-        "community (valorant-rpc)"
-      ],
+      "contributors": ["community (valorant-rpc)"],
       "ui": false,
       "rpc": true
     }

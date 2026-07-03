@@ -7,13 +7,24 @@
   "scripts": {
     "dev": "vite",
     "check": "svelte-check --tsconfig ./tsconfig.json",
+    "lint": "eslint src-ui tests *.config.ts eslint.config.js svelte.config.js",
+    "format": "prettier --write \"src-ui/**/*.{svelte,ts,css,json}\" \"tests/**/*.{svelte,ts,css,json}\" \"*.{js,ts,json}\"",
+    "format:check": "prettier --check \"src-ui/**/*.{svelte,ts,css,json}\" \"tests/**/*.{svelte,ts,css,json}\" \"*.{js,ts,json}\"",
     "build": "bun run check && vite build",
     "locales:check": "node scripts/validate-locales.mjs",
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "vitest run",
     "test:visual": "playwright test",
-    "benchmark:windows": "powershell -ExecutionPolicy Bypass -File scripts/benchmark-frontend.ps1"
+    "benchmark:windows": "powershell -ExecutionPolicy Bypass -File scripts/benchmark-frontend.ps1",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,ts,svelte}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{css,json,md}": "prettier --write"
   },
   "dependencies": {
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
@@ -37,18 +48,28 @@
     "tw-animate-css": "^1.4.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.55.0",
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
     "@tauri-apps/cli": "^2.11.4",
     "@testing-library/svelte": "^5.4.2",
     "@types/pngjs": "^6.0.5",
+    "eslint": "^10.6.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-svelte": "^3.20.0",
+    "globals": "^17.7.0",
+    "husky": "^9.1.7",
     "jsdom": "^29.1.1",
+    "lint-staged": "^17.0.8",
     "pixelmatch": "^7.2.0",
     "pngjs": "^7.0.0",
+    "prettier": "^3.9.4",
+    "prettier-plugin-svelte": "^4.1.1",
     "shadcn-svelte": "^1.3.0",
     "svelte": "^5.43.8",
     "svelte-check": "^4.3.3",
     "typescript": "~5.8.3",
+    "typescript-eslint": "^8.62.1",
     "vite": "^7.3.6",
     "vitest": "^4.1.9"
   }

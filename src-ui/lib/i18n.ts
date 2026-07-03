@@ -29,7 +29,11 @@ const resources = Object.fromEntries(
   Object.entries(modules)
     .filter(([path]) => !path.endsWith("/_template.json"))
     .map(([path, translation]) => {
-      const tag = path.split("/").pop()?.replace(/\.json$/, "") ?? ""
+      const tag =
+        path
+          .split("/")
+          .pop()
+          ?.replace(/\.json$/, "") ?? ""
       return [tag, { translation }]
     }),
 )

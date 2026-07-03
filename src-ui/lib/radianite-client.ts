@@ -17,7 +17,8 @@ export interface RadianiteClient {
 
 export const tauriClient: RadianiteClient = {
   invoke,
-  listen: <T>(event: string, handler: (payload: T) => void) => listen<T>(event, ({ payload }) => handler(payload)),
+  listen: <T>(event: string, handler: (payload: T) => void) =>
+    listen<T>(event, ({ payload }) => handler(payload)),
   getVersion,
   convertFileSrc,
   openUrl,

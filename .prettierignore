@@ -1,0 +1,6 @@
+dist
+node_modules
+src-rs/target
+test-results
+benchmark-results
+bun.lock
