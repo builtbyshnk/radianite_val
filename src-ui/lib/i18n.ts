@@ -1,5 +1,4 @@
 import i18n from "i18next"
-import { initReactI18next } from "react-i18next"
 
 import registryData from "../../locale-registry.json"
 
@@ -84,7 +83,7 @@ export async function applyUiLocale(tag: string) {
   return resolved
 }
 
-void i18n.use(initReactI18next).init({
+void i18n.init({
   resources,
   lng: FALLBACK_LOCALE,
   fallbackLng: FALLBACK_LOCALE,

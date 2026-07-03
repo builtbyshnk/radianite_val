@@ -17,7 +17,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx",
+    "allowJs": true,
+    "checkJs": true,
 
     /* Linting */
     "strict": true,
@@ -25,6 +26,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src-ui"],
+  "include": ["src-ui/**/*.d.ts", "src-ui/**/*.ts", "src-ui/**/*.svelte"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
