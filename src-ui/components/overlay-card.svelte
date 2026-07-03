@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { IconBroadcast, IconCopy, IconExternalLink, IconHelpCircle } from "@tabler/icons-svelte"
+  import IconBroadcast from "@tabler/icons-svelte/icons/broadcast"
+  import IconCopy from "@tabler/icons-svelte/icons/copy"
+  import IconExternalLink from "@tabler/icons-svelte/icons/external-link"
+  import IconHelpCircle from "@tabler/icons-svelte/icons/help-circle"
   import Panel from "@/components/panel.svelte"
   import { Button } from "@/components/ui/button"
   import { locale } from "@/lib/locale.svelte"

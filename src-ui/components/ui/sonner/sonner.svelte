@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { Toaster as Sonner, type ToasterProps as SonnerProps } from "svelte-sonner";
-	import { IconAlertOctagon, IconAlertTriangle, IconCircleCheck, IconInfoCircle, IconLoader2 } from "@tabler/icons-svelte";
+	import IconAlertOctagon from "@tabler/icons-svelte/icons/alert-octagon";
+	import IconAlertTriangle from "@tabler/icons-svelte/icons/alert-triangle";
+	import IconCircleCheck from "@tabler/icons-svelte/icons/circle-check";
+	import IconInfoCircle from "@tabler/icons-svelte/icons/info-circle";
+	import IconLoader2 from "@tabler/icons-svelte/icons/loader-2";
 
 	let { ...restProps }: SonnerProps = $props();
 </script>

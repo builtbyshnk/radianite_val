@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { IconBrandDiscord, IconBroadcast, IconClockHour4, IconInfoCircle, IconTargetArrow } from "@tabler/icons-svelte"
+  import IconBrandDiscord from "@tabler/icons-svelte/icons/brand-discord"
+  import IconBroadcast from "@tabler/icons-svelte/icons/broadcast"
+  import IconClockHour4 from "@tabler/icons-svelte/icons/clock-hour-4"
+  import IconInfoCircle from "@tabler/icons-svelte/icons/info-circle"
+  import IconTargetArrow from "@tabler/icons-svelte/icons/target-arrow"
   import Panel from "@/components/panel.svelte"
   import RelativeTime from "@/components/relative-time.svelte"
   import { locale } from "@/lib/locale.svelte"

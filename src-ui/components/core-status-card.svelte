@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { IconActivity, IconCircleCheck, IconCircleX } from "@tabler/icons-svelte"
+  import IconActivity from "@tabler/icons-svelte/icons/activity"
+  import IconCircleCheck from "@tabler/icons-svelte/icons/circle-check"
+  import IconCircleX from "@tabler/icons-svelte/icons/circle-x"
   import Panel from "@/components/panel.svelte"
   import { locale } from "@/lib/locale.svelte"
   import type { DiagnosticSnapshot } from "@/lib/types"

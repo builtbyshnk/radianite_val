@@ -1,6 +1,12 @@
 <script lang="ts">
   import { getCurrentWindow } from "@tauri-apps/api/window"
-  import { IconMinus, IconPlayerPlay, IconPlayerStop, IconRefresh, IconSettings, IconSquare, IconX } from "@tabler/icons-svelte"
+  import IconMinus from "@tabler/icons-svelte/icons/minus"
+  import IconPlayerPlay from "@tabler/icons-svelte/icons/player-play"
+  import IconPlayerStop from "@tabler/icons-svelte/icons/player-stop"
+  import IconRefresh from "@tabler/icons-svelte/icons/refresh"
+  import IconSettings from "@tabler/icons-svelte/icons/settings"
+  import IconSquare from "@tabler/icons-svelte/icons/square"
+  import IconX from "@tabler/icons-svelte/icons/x"
   import AppIcon from "@/components/app-icon.svelte"
   import { Button } from "@/components/ui/button"
   import { statusPill } from "@/lib/format"

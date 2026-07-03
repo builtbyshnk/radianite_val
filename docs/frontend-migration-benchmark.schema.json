@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://radcolor.dev/schemas/frontend-migration-benchmark.json",
+  "title": "Radianite frontend migration benchmark",
+  "type": "object",
+  "required": ["schemaVersion", "generatedAt", "machine", "method", "variants", "runtime", "summary", "gate"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "machine": { "type": "object" },
+    "method": { "type": "object" },
+    "variants": { "type": "object", "required": ["react", "svelte"] },
+    "runtime": { "type": "object", "required": ["react", "svelte"] },
+    "summary": { "type": "object", "required": ["react", "svelte"] },
+    "gate": {
+      "type": "object",
+      "required": ["passed", "failures"],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "failures": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

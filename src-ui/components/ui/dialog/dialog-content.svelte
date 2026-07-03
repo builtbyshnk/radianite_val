@@ -6,7 +6,7 @@
 	import { cn, type WithoutChildrenOrChild } from "@/lib/utils.js";
 	import type { ComponentProps } from "svelte";
 	import { Button } from "@/components/ui/button/index.js";
-	import { IconX } from '@tabler/icons-svelte';
+	import IconX from '@tabler/icons-svelte/icons/x';
 
 	let {
 		ref = $bindable(null),

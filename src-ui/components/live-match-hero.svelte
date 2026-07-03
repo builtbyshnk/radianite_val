@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { IconCircleDot, IconMap2, IconShield, IconSwords, IconUser, IconUsersGroup, IconWorld } from "@tabler/icons-svelte"
+  import IconCircleDot from "@tabler/icons-svelte/icons/circle-dot"
+  import IconMap2 from "@tabler/icons-svelte/icons/map-2"
+  import IconShield from "@tabler/icons-svelte/icons/shield"
+  import IconSwords from "@tabler/icons-svelte/icons/swords"
+  import IconUser from "@tabler/icons-svelte/icons/user"
+  import IconUsersGroup from "@tabler/icons-svelte/icons/users-group"
+  import IconWorld from "@tabler/icons-svelte/icons/world"
   import AppIcon from "@/components/app-icon.svelte"
   import StatCell from "@/components/stat-cell.svelte"
   import { phaseLabel, playerName, queueLabel } from "@/lib/format"

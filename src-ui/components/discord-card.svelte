@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { IconBrandDiscord, IconPlayerPlay, IconPlayerStop } from "@tabler/icons-svelte"
+  import IconBrandDiscord from "@tabler/icons-svelte/icons/brand-discord"
+  import IconPlayerPlay from "@tabler/icons-svelte/icons/player-play"
+  import IconPlayerStop from "@tabler/icons-svelte/icons/player-stop"
   import AppIcon from "@/components/app-icon.svelte"
   import Panel from "@/components/panel.svelte"
   import { Button } from "@/components/ui/button"

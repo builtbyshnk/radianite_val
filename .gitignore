@@ -19,6 +19,9 @@ test-results
 discord-assets
 scripts/*
 !scripts/validate-locales.mjs
+!scripts/benchmark-frontend.mjs
+!scripts/benchmark-frontend.ps1
+benchmark-results/
 
 # Editor directories and files
 .vscode

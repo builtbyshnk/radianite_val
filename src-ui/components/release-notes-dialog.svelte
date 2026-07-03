@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { IconCalendarEvent, IconExternalLink, IconLoader2, IconRocket } from "@tabler/icons-svelte"
+  import IconCalendarEvent from "@tabler/icons-svelte/icons/calendar-event"
+  import IconExternalLink from "@tabler/icons-svelte/icons/external-link"
+  import IconLoader2 from "@tabler/icons-svelte/icons/loader-2"
+  import IconRocket from "@tabler/icons-svelte/icons/rocket"
   import DOMPurify from "dompurify"
   import { marked } from "marked"
   import { untrack } from "svelte"

@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { IconCalendarEvent, IconClockCheck, IconDownload, IconRefresh, IconRocket, IconShieldCheck, IconSparkles, IconTag } from "@tabler/icons-svelte"
+  import IconCalendarEvent from "@tabler/icons-svelte/icons/calendar-event"
+  import IconClockCheck from "@tabler/icons-svelte/icons/clock-check"
+  import IconDownload from "@tabler/icons-svelte/icons/download"
+  import IconRefresh from "@tabler/icons-svelte/icons/refresh"
+  import IconRocket from "@tabler/icons-svelte/icons/rocket"
+  import IconShieldCheck from "@tabler/icons-svelte/icons/shield-check"
+  import IconSparkles from "@tabler/icons-svelte/icons/sparkles"
+  import IconTag from "@tabler/icons-svelte/icons/tag"
   import Panel from "@/components/panel.svelte"
   import RelativeTime from "@/components/relative-time.svelte"
   import { Button } from "@/components/ui/button"

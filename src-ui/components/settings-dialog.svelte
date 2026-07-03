@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { IconBrandDiscord, IconBroadcast, IconCopy, IconExternalLink, IconHeart, IconInfoCircle, IconSettings } from "@tabler/icons-svelte"
+  import IconBrandDiscord from "@tabler/icons-svelte/icons/brand-discord"
+  import IconBroadcast from "@tabler/icons-svelte/icons/broadcast"
+  import IconCopy from "@tabler/icons-svelte/icons/copy"
+  import IconExternalLink from "@tabler/icons-svelte/icons/external-link"
+  import IconHeart from "@tabler/icons-svelte/icons/heart"
+  import IconInfoCircle from "@tabler/icons-svelte/icons/info-circle"
+  import IconSettings from "@tabler/icons-svelte/icons/settings"
   import * as Dialog from "@/components/ui/dialog"
   import * as Select from "@/components/ui/select"
   import { Button } from "@/components/ui/button"
