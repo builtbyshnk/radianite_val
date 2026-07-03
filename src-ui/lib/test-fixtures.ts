@@ -55,7 +55,7 @@ const rpcStatus: RpcStatus = {
   configured: true,
   locale: "en-US",
   message: { key: snapshot ? "status.rpc.connected" : "status.rpc.ready" },
-  preview: snapshot ? { name: "VALORANT", details: "Competitive", state: "Ascent", startedAt: 1_768_478_400 } : null,
+  preview: snapshot ? { name: "VALORANT", details: "Competitive", state: "Ascent", startedAt: 1_768_478_400_000 } : null,
   updatedAt: "2026-01-15T12:00:00.000Z",
 }
 
