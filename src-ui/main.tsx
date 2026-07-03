@@ -6,6 +6,11 @@ import { Toaster } from "@/components/ui/sonner";
 import { useTranslation } from "react-i18next";
 import "@/lib/i18n";
 
+if (import.meta.env.VITE_UI_FIXTURE === "true") {
+  const { installTestFixture } = await import("@/lib/test-fixtures")
+  installTestFixture()
+}
+
 document.documentElement.classList.add("dark");
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
