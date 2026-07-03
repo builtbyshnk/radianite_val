@@ -231,7 +231,7 @@ impl AppState {
     }
 
     pub async fn apply_poll_result(&self, result: PollResult) -> AppliedChanges {
-        let (status_change, snapshot_change, snapshot_for_rpc) = {
+        let (status_change, snapshot_change, snapshot_for_rpc, snapshot_cleared) = {
             let mut inner = self.inner.write().await;
             let mut live_snapshot = result.live_snapshot;
             if let Some(snapshot) = &mut live_snapshot {
@@ -253,13 +253,28 @@ impl AppState {
             inner.diagnostics = result.diagnostics;
             inner.live_snapshot = live_snapshot.clone();
 
-            (status_change, snapshot_change, live_snapshot)
+            let snapshot_cleared = snapshot_change == Some(None);
+            (
+                status_change,
+                snapshot_change,
+                live_snapshot,
+                snapshot_cleared,
+            )
         };
 
         let rpc_status = if let Some(snapshot) = snapshot_for_rpc.as_ref() {
             let mut discord = self.discord.lock().await;
             let before = discord.status();
             let after = discord.update_snapshot(snapshot);
+            if after != before {
+                Some(after)
+            } else {
+                None
+            }
+        } else if snapshot_cleared {
+            let mut discord = self.discord.lock().await;
+            let before = discord.status();
+            let after = discord.clear_snapshot();
             if after != before {
                 Some(after)
             } else {
@@ -330,8 +345,10 @@ fn same_live_session(previous: &LiveSnapshot, current: &LiveSnapshot) -> bool {
 #[cfg(test)]
 mod tests {
     use crate::riot::state::{
-        LiveSnapshot, MatchPhase, PartySnapshot, PlayerIdentity, ScoreSnapshot,
+        CoreStatus, CoreStatusKind, DiagnosticSnapshot, LiveSnapshot, LocalizedMessage, MatchPhase,
+        PartySnapshot, PlayerIdentity, ScoreSnapshot,
     };
+    use crate::riot::watcher::PollResult;
 
     use super::{assign_session_started_at, AppState};
 
@@ -399,5 +416,40 @@ mod tests {
         );
         assert!(snapshot.live_snapshot.is_none());
         assert!(!snapshot.overlay_status.enabled);
+    }
+
+    #[tokio::test]
+    async fn clears_rpc_preview_when_valorant_session_ends() {
+        let state = AppState::new();
+        let ready = CoreStatus::new(
+            CoreStatusKind::ValorantReady,
+            true,
+            LocalizedMessage::key("status.message.ready"),
+        );
+        state
+            .apply_poll_result(PollResult {
+                diagnostics: DiagnosticSnapshot::empty(ready.clone()),
+                status: ready,
+                live_snapshot: Some(snapshot(MatchPhase::Ingame)),
+            })
+            .await;
+        assert!(state.rpc_status().await.preview.is_some());
+
+        let closed = CoreStatus::new(
+            CoreStatusKind::RiotClientOnly,
+            true,
+            LocalizedMessage::key("status.message.riotOnly"),
+        );
+        let changes = state
+            .apply_poll_result(PollResult {
+                diagnostics: DiagnosticSnapshot::empty(closed.clone()),
+                status: closed,
+                live_snapshot: None,
+            })
+            .await;
+
+        assert_eq!(changes.live_snapshot, Some(None));
+        assert!(changes.rpc_status.is_some());
+        assert!(state.rpc_status().await.preview.is_none());
     }
 }

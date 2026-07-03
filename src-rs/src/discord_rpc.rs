@@ -248,6 +248,47 @@ impl DiscordRpcManager {
         self.status()
     }
 
+    pub fn clear_snapshot(&mut self) -> RpcStatus {
+        if self.status.preview.is_none() {
+            return self.status();
+        }
+
+        self.status.preview = None;
+        if !self.enabled {
+            return self.status();
+        }
+
+        let result = self
+            .client
+            .as_mut()
+            .map(|client| {
+                client
+                    .clear_activity()
+                    .map_err(|err| format!("Discord activity update failed: {err}"))
+            })
+            .unwrap_or(Ok(()));
+
+        self.status = match result {
+            Ok(()) => RpcStatus::new(
+                true,
+                self.client.is_some(),
+                self.config.configured(),
+                LocalizedMessage::key("status.rpc.waiting"),
+            ),
+            Err(message) => {
+                self.client = None;
+                RpcStatus::new(
+                    true,
+                    false,
+                    self.config.configured(),
+                    LocalizedMessage::technical("status.rpc.updateFailed", message),
+                )
+            }
+        };
+        self.status.locale = self.locale.clone();
+        self.status()
+    }
+
     fn refresh_preview(&mut self, snapshot: &LiveSnapshot) {
         let (_, preview) = render_activity(
             snapshot,
