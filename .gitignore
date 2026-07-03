@@ -17,6 +17,7 @@ dist-ssr
 discord-assets
 scripts/*
 !scripts/validate-locales.mjs
+!scripts/generate-release-notes.mjs
 
 # Editor directories and files
 .vscode

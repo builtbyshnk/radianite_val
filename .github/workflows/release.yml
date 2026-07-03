@@ -19,10 +19,13 @@ jobs:
 
     permissions:
       contents: write
+      models: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -39,6 +42,19 @@ jobs:
 
       - name: Install frontend dependencies
         run: bun install --frozen-lockfile
+
+      - name: Generate AI release notes
+        id: release_notes
+        if: github.event_name != 'workflow_dispatch' || inputs.buildOnly != true
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: |
+          bun scripts/generate-release-notes.mjs
+          "body<<RELEASE_NOTES_EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Get-Content release-notes.md | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "RELEASE_NOTES_EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Build Tauri bundle only
         if: github.event_name == 'workflow_dispatch' && inputs.buildOnly == true
@@ -63,7 +79,7 @@ jobs:
           updaterJsonPreferNsis: true
           tagName: v__VERSION__
           releaseName: "Radianite v__VERSION__"
-          releaseBody: "See the assets to download and install this version. The in-app updater uses the attached latest.json metadata."
+          releaseBody: ${{ steps.release_notes.outputs.body }}
           releaseDraft: true
           prerelease: false
           assetNamePattern: "[name]_[version]_[platform]_[arch].[ext]"
