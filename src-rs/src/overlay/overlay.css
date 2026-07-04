@@ -171,6 +171,7 @@ body {
   top: 64px;
   bottom: auto;
   height: 60px;
+  justify-content: center;
 }
 
 .hide-details .rail::before {
@@ -178,13 +179,22 @@ body {
 }
 
 .hide-details .headline {
-  flex: 0 0 60px;
-  height: 60px;
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  padding-block: 0;
 }
 
 .hide-details .headline::after {
   display: none;
 }
+
+.hide-details .crest {
+  left: 74px;
+  top: calc(64px + 30px);
+  transform: translateY(-50%);
+}
+
 .hide-details .details { display: none; }
 
 body:not(.hide-details) .crest {
