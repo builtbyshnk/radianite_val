@@ -959,6 +959,9 @@ pub async fn run_monitor_loop(state: AppState, app: AppHandle, mut stop_rx: ones
         if let Some(status) = changes.status {
             let _ = app.emit("riot:status", status);
         }
+        if let Some(diagnostics) = changes.diagnostics {
+            let _ = app.emit("riot:diagnostics", diagnostics);
+        }
         if let Some(snapshot) = changes.live_snapshot {
             let _ = app.emit("riot:snapshot", snapshot);
         }

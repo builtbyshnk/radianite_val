@@ -126,6 +126,9 @@ export class RadianiteController {
         this.client.listen<CoreStatus>("riot:status", (status) => {
           this.diagnostics = { ...this.diagnostics, status }
         }),
+        this.client.listen<DiagnosticSnapshot>("riot:diagnostics", (diagnostics) => {
+          this.diagnostics = diagnostics
+        }),
         this.client.listen<LiveSnapshot | null>("riot:snapshot", (snapshot) => {
           this.snapshot = snapshot
           this.lastSync = new Date()

@@ -49,6 +49,7 @@ struct MonitorHandle {
 pub struct AppliedChanges {
     pub status: Option<CoreStatus>,
     pub live_snapshot: Option<Option<LiveSnapshot>>,
+    pub diagnostics: Option<DiagnosticSnapshot>,
     pub rpc_status: Option<RpcStatus>,
 }
 
@@ -251,36 +252,43 @@ impl AppState {
     }
 
     pub async fn apply_poll_result(&self, result: PollResult) -> AppliedChanges {
-        let (status_change, snapshot_change, snapshot_for_rpc, snapshot_cleared) = {
-            let mut inner = self.inner.write().await;
-            let mut live_snapshot = result.live_snapshot;
-            if let Some(snapshot) = &mut live_snapshot {
-                assign_session_started_at(inner.live_snapshot.as_ref(), snapshot);
-            }
+        let (status_change, snapshot_change, diagnostics_change, snapshot_for_rpc, snapshot_cleared) =
+            {
+                let mut inner = self.inner.write().await;
+                let mut live_snapshot = result.live_snapshot;
+                if let Some(snapshot) = &mut live_snapshot {
+                    assign_session_started_at(inner.live_snapshot.as_ref(), snapshot);
+                }
 
-            let status_change = if inner.status != result.status {
-                Some(result.status.clone())
-            } else {
-                None
+                let status_change = if inner.status != result.status {
+                    Some(result.status.clone())
+                } else {
+                    None
+                };
+                let snapshot_change = if inner.live_snapshot != live_snapshot {
+                    Some(live_snapshot.clone())
+                } else {
+                    None
+                };
+                let diagnostics_change = if inner.diagnostics != result.diagnostics {
+                    Some(result.diagnostics.clone())
+                } else {
+                    None
+                };
+
+                inner.status = result.status;
+                inner.diagnostics = result.diagnostics;
+                inner.live_snapshot = live_snapshot.clone();
+
+                let snapshot_cleared = snapshot_change == Some(None);
+                (
+                    status_change,
+                    snapshot_change,
+                    diagnostics_change,
+                    live_snapshot,
+                    snapshot_cleared,
+                )
             };
-            let snapshot_change = if inner.live_snapshot != live_snapshot {
-                Some(live_snapshot.clone())
-            } else {
-                None
-            };
-
-            inner.status = result.status;
-            inner.diagnostics = result.diagnostics;
-            inner.live_snapshot = live_snapshot.clone();
-
-            let snapshot_cleared = snapshot_change == Some(None);
-            (
-                status_change,
-                snapshot_change,
-                live_snapshot,
-                snapshot_cleared,
-            )
-        };
 
         let rpc_status = if let Some(snapshot) = snapshot_for_rpc.as_ref() {
             let mut discord = self.discord.lock().await;
@@ -307,6 +315,7 @@ impl AppState {
         AppliedChanges {
             status: status_change,
             live_snapshot: snapshot_change,
+            diagnostics: diagnostics_change,
             rpc_status,
         }
     }

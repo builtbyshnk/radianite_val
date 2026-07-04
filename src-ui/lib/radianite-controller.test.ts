@@ -55,7 +55,18 @@ describe("RadianiteController", () => {
     expect(controller.appVersion).toBe("0.1.6")
     handlers.get("riot:status")?.({ ...status, kind: "valorantLaunching" })
     expect(controller.diagnostics.status.kind).toBe("valorantLaunching")
+    handlers.get("riot:diagnostics")?.({
+      ...controller.diagnostics,
+      localApiReady: true,
+      valorantSessionPresent: true,
+      accessTokenReady: true,
+      entitlementTokenReady: true,
+    })
+    expect(controller.diagnostics.localApiReady).toBe(true)
+    expect(controller.diagnostics.valorantSessionPresent).toBe(true)
+    expect(controller.diagnostics.accessTokenReady).toBe(true)
+    expect(controller.diagnostics.entitlementTokenReady).toBe(true)
     controller.destroy()
-    expect(unlisten).toHaveBeenCalledTimes(3)
+    expect(unlisten).toHaveBeenCalledTimes(4)
   })
 })
