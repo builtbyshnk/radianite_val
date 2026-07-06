@@ -15,6 +15,7 @@ const fixture = query.get("fixture") ?? "disconnected"
 const settings: Settings = {
   runAtBoot: false,
   minimizeToTray: true,
+  lowResourceMode: false,
   enableRpcOnStart: true,
   overlayTheme: "nightfall",
   overlayHideDetails: false,

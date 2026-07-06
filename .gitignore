@@ -21,6 +21,7 @@ scripts/*
 !scripts/validate-locales.mjs
 !scripts/benchmark-frontend.mjs
 !scripts/benchmark-frontend.ps1
+!scripts/benchmark-background.mjs
 !scripts/benchmark-tauri.conf.json
 benchmark-results/
 

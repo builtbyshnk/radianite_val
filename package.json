@@ -17,6 +17,7 @@
     "test": "vitest run",
     "test:visual": "playwright test",
     "benchmark:windows": "powershell -ExecutionPolicy Bypass -File scripts/benchmark-frontend.ps1",
+    "benchmark:background": "node scripts/benchmark-background.mjs",
     "prepare": "husky"
   },
   "lint-staged": {

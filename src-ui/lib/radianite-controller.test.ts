@@ -20,6 +20,7 @@ const rpc: RpcStatus = {
 const settings: Settings = {
   runAtBoot: false,
   minimizeToTray: true,
+  lowResourceMode: false,
   enableRpcOnStart: true,
   overlayTheme: "nightfall",
   overlayHideDetails: false,
@@ -29,14 +30,20 @@ const settings: Settings = {
 describe("RadianiteController", () => {
   it("initializes listeners and releases them on destroy", async () => {
     const unlisten = vi.fn()
+    const closeWindow = vi.fn(async () => undefined)
     const handlers = new Map<string, (payload: unknown) => void>()
     const client: RadianiteClient = {
-      invoke: async <T>(command: string) => {
+      invoke: async <T>(command: string, args?: Record<string, unknown>) => {
         if (command === "settings_initialize")
           return { settings, rpcStatus: rpc } as T
         if (command === "app_get_snapshot")
           return new Promise<never>(() => undefined) as T
         if (command === "riot_start_monitor") return status as T
+        if (command === "settings_set")
+          return {
+            settings: (args as { settings: Settings }).settings,
+            rpcStatus: rpc,
+          } as T
         throw new Error(`Unexpected command: ${command}`)
       },
       listen: async <T>(event: string, handler: (payload: T) => void) => {
@@ -46,6 +53,7 @@ describe("RadianiteController", () => {
       getVersion: async () => "0.1.6",
       convertFileSrc: (value) => value,
       openUrl: async () => undefined,
+      closeWindow,
       relaunch: async () => undefined,
       checkForUpdate: async () => null,
     }
@@ -66,6 +74,8 @@ describe("RadianiteController", () => {
     expect(controller.diagnostics.valorantSessionPresent).toBe(true)
     expect(controller.diagnostics.accessTokenReady).toBe(true)
     expect(controller.diagnostics.entitlementTokenReady).toBe(true)
+    await controller.setSetting("lowResourceMode", true)
+    expect(closeWindow).toHaveBeenCalledOnce()
     controller.destroy()
     expect(unlisten).toHaveBeenCalledTimes(4)
   })

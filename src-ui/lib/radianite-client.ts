@@ -1,6 +1,7 @@
 import { getVersion } from "@tauri-apps/api/app"
 import { convertFileSrc, invoke } from "@tauri-apps/api/core"
 import { listen } from "@tauri-apps/api/event"
+import { getCurrentWindow } from "@tauri-apps/api/window"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { relaunch } from "@tauri-apps/plugin-process"
 import { check, type Update } from "@tauri-apps/plugin-updater"
@@ -11,6 +12,7 @@ export interface RadianiteClient {
   getVersion(): Promise<string>
   convertFileSrc(path: string): string
   openUrl(url: string): Promise<void>
+  closeWindow(): Promise<void>
   relaunch(): Promise<void>
   checkForUpdate(): Promise<Update | null>
 }
@@ -22,6 +24,7 @@ export const tauriClient: RadianiteClient = {
   getVersion,
   convertFileSrc,
   openUrl,
+  closeWindow: () => getCurrentWindow().close(),
   relaunch,
   checkForUpdate: check,
 }

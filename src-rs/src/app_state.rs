@@ -5,7 +5,7 @@ use std::{
 
 use tauri::AppHandle;
 use tokio::{
-    sync::{oneshot, Mutex, RwLock},
+    sync::{oneshot, Mutex, MutexGuard, RwLock},
     task::JoinHandle,
 };
 
@@ -31,6 +31,7 @@ pub struct AppState {
     overlay_theme: Arc<RwLock<String>>,
     overlay_hide_details: Arc<RwLock<bool>>,
     overlay_server: Arc<Mutex<Option<JoinHandle<()>>>>,
+    settings_lock: Arc<Mutex<()>>,
     content_cache: ValorantContentCache,
     public_cache: Arc<OnceLock<PublicCacheContext>>,
 }
@@ -79,9 +80,14 @@ impl AppState {
             overlay_theme: Arc::new(RwLock::new("nightfall".to_string())),
             overlay_hide_details: Arc::new(RwLock::new(false)),
             overlay_server: Arc::new(Mutex::new(None)),
+            settings_lock: Arc::new(Mutex::new(())),
             content_cache: ValorantContentCache::default(),
             public_cache: Arc::new(OnceLock::new()),
         }
+    }
+
+    pub async fn lock_settings(&self) -> MutexGuard<'_, ()> {
+        self.settings_lock.lock().await
     }
 
     pub async fn start_overlay_server(&self) -> OverlayStatus {

@@ -1,7 +1,8 @@
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::{
     app_state::AppState,
+    lifecycle::UiLifecycle,
     riot::{
         state::{
             AppSnapshot, CoreStatus, DiagnosticSnapshot, LiveSnapshot, OverlayStatus, RpcStatus,
@@ -130,7 +131,11 @@ pub async fn settings_initialize(
     default_ui_locale: String,
     default_rpc_locale: String,
 ) -> Result<SettingsBootstrap, String> {
-    settings::initialize(&app, &state, default_ui_locale, default_rpc_locale).await
+    let bootstrap =
+        settings::initialize(&app, &state, default_ui_locale, default_rpc_locale).await?;
+    app.state::<UiLifecycle>()
+        .set_low_resource_mode(bootstrap.settings.low_resource_mode);
+    Ok(bootstrap)
 }
 
 #[tauri::command]
@@ -139,5 +144,8 @@ pub async fn settings_set(
     state: State<'_, AppState>,
     settings: Settings,
 ) -> Result<SettingsBootstrap, String> {
-    settings::update(&app, &state, settings).await
+    let bootstrap = settings::update(&app, &state, settings).await?;
+    app.state::<UiLifecycle>()
+        .apply_user_setting(bootstrap.settings.low_resource_mode);
+    Ok(bootstrap)
 }

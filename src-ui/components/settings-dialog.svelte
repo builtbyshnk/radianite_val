@@ -93,6 +93,11 @@
                   settings.runAtBoot,
                   (value) => onSetSetting("runAtBoot", value),
                 )}{@render SettingRow(
+                  locale.t("settings.lowResourceMode"),
+                  locale.t("settings.lowResourceModeDescription"),
+                  settings.lowResourceMode,
+                  (value) => onSetSetting("lowResourceMode", value),
+                )}{@render SettingRow(
                   locale.t("settings.minimizeToTray"),
                   locale.t("settings.minimizeToTrayDescription"),
                   settings.minimizeToTray,
