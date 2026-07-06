@@ -51,7 +51,7 @@ jobs:
 
       - name: Build and publish Tauri release
         if: github.event_name != 'workflow_dispatch' || inputs.buildOnly != true
-        uses: tauri-apps/tauri-action@v0.6.2
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -59,11 +59,11 @@ jobs:
         with:
           tauriScript: bun run tauri
           args: --bundles nsis
-          includeUpdaterJson: true
+          uploadUpdaterJson: true
           updaterJsonPreferNsis: true
           tagName: v__VERSION__
           releaseName: "Radianite v__VERSION__"
           releaseBody: "See the assets to download and install this version. The in-app updater uses the attached latest.json metadata."
           releaseDraft: true
           prerelease: false
-          assetNamePattern: "[name]_[version]_[platform]_[arch].[ext]"
+          releaseAssetNamePattern: "[name]_[version]_[platform]_[arch].[ext]"
