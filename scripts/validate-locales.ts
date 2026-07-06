@@ -1,13 +1,29 @@
-import { access, readFile, readdir } from "node:fs/promises"
 import { constants } from "node:fs"
+import { access, readFile, readdir } from "node:fs/promises"
 import path from "node:path"
 import process from "node:process"
 
+interface LocaleMetadata {
+  tag: string
+  nativeName: string
+  englishName: string
+  direction: "ltr" | "rtl"
+  ui: boolean
+  rpc: boolean
+}
+
+interface LocaleRegistry {
+  fallbackLocale: string
+  locales: LocaleMetadata[]
+}
+
+type TranslationTree = { [key: string]: string | TranslationTree }
+
 const root = process.cwd()
-const registry = JSON.parse(await readFile(path.join(root, "locale-registry.json"), "utf8"))
+const registry = await readJson<LocaleRegistry>(path.join(root, "locale-registry.json"))
 const fallback = registry.fallbackLocale
 
-function flatten(value, prefix = "", out = new Map()) {
+function flatten(value: TranslationTree, prefix = "", out = new Map<string, string>()) {
   for (const [key, entry] of Object.entries(value)) {
     if (key.startsWith("$") || key === "_version") continue
     const full = prefix ? `${prefix}.${key}` : key
@@ -18,11 +34,14 @@ function flatten(value, prefix = "", out = new Map()) {
   return out
 }
 
-function placeholders(value, pattern) {
-  return [...value.matchAll(pattern)].map((match) => match[1]).sort().join(",")
+function placeholders(value: string, pattern: RegExp) {
+  return [...value.matchAll(pattern)]
+    .map((match) => match[1])
+    .sort()
+    .join(",")
 }
 
-async function exists(file) {
+async function exists(file: string) {
   try {
     await access(file, constants.F_OK)
     return true
@@ -31,8 +50,8 @@ async function exists(file) {
   }
 }
 
-async function readJson(file) {
-  return JSON.parse(await readFile(file, "utf8"))
+async function readJson<T = TranslationTree>(file: string): Promise<T> {
+  return JSON.parse(await readFile(file, "utf8")) as T
 }
 
 const uiDir = path.join(root, "src-ui/locales/ui")
@@ -45,7 +64,7 @@ if (!(await exists(rustFallbackPath))) throw new Error(`Missing Rust fallback ca
 
 const uiFallback = flatten(await readJson(uiFallbackPath))
 const rustFallback = flatten(await readJson(rustFallbackPath))
-const tags = new Set()
+const tags = new Set<string>()
 let uiCatalogs = 0
 let rustCatalogs = 0
 
@@ -62,7 +81,7 @@ for (const locale of registry.locales) {
     for (const [key, value] of translated) {
       if (!uiFallback.has(key)) throw new Error(`${locale.tag} UI has unknown key ${key}`)
       if (value === "") continue
-      const expected = placeholders(uiFallback.get(key), /{{\s*([\w.-]+)(?:\s*,[^}]*)?\s*}}/g)
+      const expected = placeholders(uiFallback.get(key)!, /{{\s*([\w.-]+)(?:\s*,[^}]*)?\s*}}/g)
       const actual = placeholders(value, /{{\s*([\w.-]+)(?:\s*,[^}]*)?\s*}}/g)
       if (expected !== actual) throw new Error(`${locale.tag} UI placeholder mismatch at ${key}: expected [${expected}], got [${actual}]`)
     }
@@ -75,7 +94,7 @@ for (const locale of registry.locales) {
     for (const [key, value] of translated) {
       if (!rustFallback.has(key)) throw new Error(`${locale.tag} Rust catalog has unknown key ${key}`)
       if (value === "") continue
-      const expected = placeholders(rustFallback.get(key), /%{([\w.-]+)}/g)
+      const expected = placeholders(rustFallback.get(key)!, /%{([\w.-]+)}/g)
       const actual = placeholders(value, /%{([\w.-]+)}/g)
       if (expected !== actual) throw new Error(`${locale.tag} Rust placeholder mismatch at ${key}: expected [${expected}], got [${actual}]`)
     }

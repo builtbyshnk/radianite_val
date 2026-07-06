@@ -10,20 +10,13 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-playwright-report
-test-results
 *.local
 .updater-private.key
 .updater-private.key.pub
 
 discord-assets
 scripts/*
-!scripts/validate-locales.mjs
-!scripts/benchmark-frontend.mjs
-!scripts/benchmark-frontend.ps1
-!scripts/benchmark-background.mjs
-!scripts/benchmark-tauri.conf.json
-benchmark-results/
+!scripts/validate-locales.ts
 
 # Editor directories and files
 .vscode
