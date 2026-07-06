@@ -97,11 +97,6 @@
                   locale.t("settings.lowResourceModeDescription"),
                   settings.lowResourceMode,
                   (value) => onSetSetting("lowResourceMode", value),
-                )}{@render SettingRow(
-                  locale.t("settings.minimizeToTray"),
-                  locale.t("settings.minimizeToTrayDescription"),
-                  settings.minimizeToTray,
-                  (value) => onSetSetting("minimizeToTray", value),
                 )}
               </div>
             {:else if active === "overlay"}{@render Heading(

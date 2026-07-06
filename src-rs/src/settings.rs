@@ -3,15 +3,15 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_store::StoreExt;
 
-use crate::{app_state::AppState, riot::state::RpcStatus, shortcut};
+use crate::{app_state::AppState, riot::state::RpcStatus};
 
 pub const SETTINGS_STORE: &str = "settings.json";
+const LEGACY_BACKGROUND_SHORTCUT: &str = "Radianite Background.lnk";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
     pub run_at_boot: bool,
-    pub minimize_to_tray: bool,
     pub low_resource_mode: bool,
     pub enable_rpc_on_start: bool,
     pub overlay_theme: String,
@@ -34,6 +34,7 @@ pub async fn initialize(
     default_rpc_locale: String,
 ) -> Result<SettingsBootstrap, String> {
     let _guard = state.lock_settings().await;
+    remove_legacy_background_shortcut(app);
     let store = app.store(SETTINGS_STORE).map_err(|err| err.to_string())?;
     let stored_run_at_boot = store.get("runAtBoot").and_then(|value| value.as_bool());
     let run_at_boot = app
@@ -42,14 +43,18 @@ pub async fn initialize(
         .unwrap_or(stored_run_at_boot.unwrap_or(false));
     let settings = Settings {
         run_at_boot,
-        minimize_to_tray: store
-            .get("minimizeToTray")
-            .and_then(|value| value.as_bool())
-            .unwrap_or(true),
-        low_resource_mode: store
-            .get("lowResourceMode")
-            .and_then(|value| value.as_bool())
-            .unwrap_or(false),
+        low_resource_mode: match (
+            store
+                .get("lowResourceMode")
+                .and_then(|value| value.as_bool()),
+            store
+                .get("minimizeToTray")
+                .and_then(|value| value.as_bool()),
+        ) {
+            (Some(low_resource), Some(minimize_to_tray)) => low_resource || minimize_to_tray,
+            (Some(value), None) | (None, Some(value)) => value,
+            (None, None) => true,
+        },
         enable_rpc_on_start: store
             .get("enableRpcOnStart")
             .and_then(|value| value.as_bool())
@@ -100,16 +105,6 @@ pub async fn update(
     let store = app.store(SETTINGS_STORE).map_err(|err| err.to_string())?;
     let previous_ui_locale = store.get("uiLocale").and_then(json_string);
     let previous_rpc_locale = store.get("rpcLocale").and_then(json_string);
-    let previous_low_resource_mode = store
-        .get("lowResourceMode")
-        .and_then(|value| value.as_bool())
-        .unwrap_or(false);
-
-    let shortcut_changed = previous_low_resource_mode != settings.low_resource_mode;
-    if shortcut_changed {
-        apply_background_shortcut(app, settings.low_resource_mode).await?;
-    }
-
     let result = async {
         apply_autostart(app, settings.run_at_boot)?;
         if previous_ui_locale.as_deref() != Some(settings.ui_locale.as_str()) {
@@ -133,12 +128,7 @@ pub async fn update(
 
     let rpc_status = match result {
         Ok(status) => status,
-        Err(err) => {
-            if shortcut_changed {
-                let _ = apply_background_shortcut(app, previous_low_resource_mode).await;
-            }
-            return Err(err);
-        }
+        Err(err) => return Err(err),
     };
 
     Ok(SettingsBootstrap {
@@ -148,10 +138,21 @@ pub async fn update(
 }
 
 pub fn low_resource_mode_enabled(app: &AppHandle) -> bool {
-    app.get_store(SETTINGS_STORE)
-        .and_then(|store| store.get("lowResourceMode"))
-        .and_then(|value| value.as_bool())
-        .unwrap_or(false)
+    let Some(store) = app.get_store(SETTINGS_STORE) else {
+        return true;
+    };
+    match (
+        store
+            .get("lowResourceMode")
+            .and_then(|value| value.as_bool()),
+        store
+            .get("minimizeToTray")
+            .and_then(|value| value.as_bool()),
+    ) {
+        (Some(low_resource), Some(minimize_to_tray)) => low_resource || minimize_to_tray,
+        (Some(value), None) | (None, Some(value)) => value,
+        (None, None) => true,
+    }
 }
 
 fn apply_autostart(app: &AppHandle, enabled: bool) -> Result<(), String> {
@@ -169,10 +170,16 @@ fn apply_autostart(app: &AppHandle, enabled: bool) -> Result<(), String> {
     Ok(())
 }
 
-async fn apply_background_shortcut(app: &AppHandle, enabled: bool) -> Result<(), String> {
-    let desktop_dir = app.path().desktop_dir().map_err(|err| err.to_string())?;
-    let executable = std::env::current_exe().map_err(|err| err.to_string())?;
-    shortcut::set_background_shortcut(desktop_dir, executable, enabled).await
+fn remove_legacy_background_shortcut(app: &AppHandle) {
+    let Ok(desktop_dir) = app.path().desktop_dir() else {
+        return;
+    };
+    let shortcut = desktop_dir.join(LEGACY_BACKGROUND_SHORTCUT);
+    if let Err(err) = std::fs::remove_file(shortcut) {
+        if err.kind() != std::io::ErrorKind::NotFound {
+            eprintln!("failed to remove legacy background shortcut: {err}");
+        }
+    }
 }
 
 fn apply_ui_locale(app: &AppHandle, locale: &str) -> Result<(), String> {
@@ -184,7 +191,7 @@ fn apply_ui_locale(app: &AppHandle, locale: &str) -> Result<(), String> {
 fn save(app: &AppHandle, settings: &Settings) -> Result<(), String> {
     let store = app.store(SETTINGS_STORE).map_err(|err| err.to_string())?;
     store.set("runAtBoot", settings.run_at_boot);
-    store.set("minimizeToTray", settings.minimize_to_tray);
+    store.delete("minimizeToTray");
     store.set("lowResourceMode", settings.low_resource_mode);
     store.set("enableRpcOnStart", settings.enable_rpc_on_start);
     store.set("overlayTheme", settings.overlay_theme.clone());

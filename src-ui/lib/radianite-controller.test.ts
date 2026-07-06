@@ -19,8 +19,7 @@ const rpc: RpcStatus = {
 }
 const settings: Settings = {
   runAtBoot: false,
-  minimizeToTray: true,
-  lowResourceMode: false,
+  lowResourceMode: true,
   enableRpcOnStart: true,
   overlayTheme: "nightfall",
   overlayHideDetails: false,
@@ -74,8 +73,8 @@ describe("RadianiteController", () => {
     expect(controller.diagnostics.valorantSessionPresent).toBe(true)
     expect(controller.diagnostics.accessTokenReady).toBe(true)
     expect(controller.diagnostics.entitlementTokenReady).toBe(true)
-    await controller.setSetting("lowResourceMode", true)
-    expect(closeWindow).toHaveBeenCalledOnce()
+    await controller.setSetting("lowResourceMode", false)
+    expect(closeWindow).not.toHaveBeenCalled()
     controller.destroy()
     expect(unlisten).toHaveBeenCalledTimes(4)
   })

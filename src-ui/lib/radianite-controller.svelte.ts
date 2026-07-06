@@ -65,8 +65,7 @@ const initialUpdater: UpdaterState = {
 }
 const defaultSettings: Settings = {
   runAtBoot: false,
-  minimizeToTray: true,
-  lowResourceMode: false,
+  lowResourceMode: true,
   enableRpcOnStart: true,
   overlayTheme: "nightfall",
   overlayHideDetails: false,
@@ -127,9 +126,12 @@ export class RadianiteController {
         this.client.listen<CoreStatus>("riot:status", (status) => {
           this.diagnostics = { ...this.diagnostics, status }
         }),
-        this.client.listen<DiagnosticSnapshot>("riot:diagnostics", (diagnostics) => {
-          this.diagnostics = diagnostics
-        }),
+        this.client.listen<DiagnosticSnapshot>(
+          "riot:diagnostics",
+          (diagnostics) => {
+            this.diagnostics = diagnostics
+          },
+        ),
         this.client.listen<LiveSnapshot | null>("riot:snapshot", (snapshot) => {
           this.snapshot = snapshot
           this.lastSync = new Date()
@@ -268,13 +270,6 @@ export class RadianiteController {
       this.settings = result.settings
       this.rpcStatus = result.rpcStatus
       if (key === "uiLocale") await this.loadPresentation()
-      if (key === "lowResourceMode" && value) {
-        try {
-          await this.client.closeWindow()
-        } catch (error) {
-          toast.error(errorText(error))
-        }
-      }
     } catch (error) {
       this.settings = previous
       if (key === "uiLocale") await applyUiLocale(previous.uiLocale)
