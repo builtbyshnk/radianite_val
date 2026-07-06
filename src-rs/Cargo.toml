@@ -36,7 +36,12 @@ tauri-plugin-autostart = "2"
 tauri-plugin-prevent-default = { version = "5.0.2", features = ["platform-windows"] }
 tauri-plugin-single-instance = "2"
 
+[profile.dev]
+incremental = true
+
 [profile.release]
 codegen-units = 1
+lto = true
+opt-level = 3
 panic = "abort"
 strip = true
