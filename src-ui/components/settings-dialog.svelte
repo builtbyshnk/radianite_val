@@ -51,21 +51,23 @@
 
 <Dialog.Root bind:open
   ><Dialog.Content
-    class="flex h-[38rem] max-h-[calc(100%-2rem)] max-w-[calc(100%-2rem)] gap-0 overflow-hidden p-0 sm:max-w-4xl"
+    class="flex h-[38rem] max-h-[calc(100%-2rem)] max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl sm:flex-row"
     ><Dialog.Title class="sr-only">{locale.t("settings.title")}</Dialog.Title
     ><Dialog.Description class="sr-only"
       >{locale.t("settings.description")}</Dialog.Description
     >
-    <nav class="flex w-52 shrink-0 flex-col gap-1 border-e bg-sidebar/60 p-3">
+    <nav
+      class="flex shrink-0 gap-1 overflow-x-auto border-b bg-sidebar/60 p-3 sm:w-52 sm:flex-col sm:overflow-visible sm:border-e sm:border-b-0"
+    >
       <span
-        class="px-2.5 py-2 text-xs font-semibold tracking-[0.15em] text-muted-foreground uppercase"
+        class="hidden px-2.5 py-2 text-xs font-semibold tracking-[0.15em] text-muted-foreground uppercase sm:block"
         >{locale.t("settings.title")}</span
       >{#each nav as item}<button
           type="button"
           onclick={() => (active = item.id)}
           class:bg-sidebar-accent={active === item.id}
           class:text-foreground={active === item.id}
-          class="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-start text-xs font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent/50 hover:text-foreground"
+          class="flex shrink-0 items-center gap-2.5 rounded-md px-2.5 py-2 text-start text-xs font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent/50 hover:text-foreground"
           ><item.icon class="size-4" />{locale.t(item.key)}</button
         >{/each}
     </nav>
