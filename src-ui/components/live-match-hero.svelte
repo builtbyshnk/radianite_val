@@ -137,13 +137,11 @@
           <AppIcon
             class="ms-auto size-10 rounded-lg opacity-90"
           />{#if map !== empty}<p
-              class="mt-2 text-xs font-medium tracking-[0.3em] text-muted-foreground"
+              class="mt-2 text-xs font-medium text-muted-foreground"
             >
               {locale.t("match.mapHeading")}
             </p>
-            <p
-              class="text-4xl font-bold tracking-wide text-foreground/90 uppercase"
-            >
+            <p class="text-4xl font-bold text-foreground/90 uppercase">
               {map}
             </p>{/if}
         </div>{/if}
