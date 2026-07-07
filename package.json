@@ -10,7 +10,7 @@
     "lint": "eslint src-ui scripts *.config.ts eslint.config.js svelte.config.js",
     "format": "prettier --write \"src-ui/**/*.{svelte,ts,css,json}\" \"scripts/**/*.ts\" \"*.{js,ts,json}\"",
     "format:check": "prettier --check \"src-ui/**/*.{svelte,ts,css,json}\" \"scripts/**/*.ts\" \"*.{js,ts,json}\"",
-    "build": "bun run check && vite build",
+    "build": "bun run check && bun run locales:check && vite build",
     "locales:check": "bun scripts/validate-locales.ts",
     "preview": "vite preview",
     "tauri": "tauri",
