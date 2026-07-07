@@ -120,6 +120,9 @@
                     variant="outline"
                     onclick={onCopyOverlay}
                     disabled={!overlay.url}
+                    title={overlay.url
+                      ? locale.t("overlay.copyUrl")
+                      : locale.t("overlay.notRunning")}
                     ><IconCopy data-icon="inline-start" />{locale.t(
                       "overlay.copyUrl",
                     )}</Button
@@ -127,6 +130,9 @@
                     variant="outline"
                     onclick={onOpenOverlay}
                     disabled={!overlay.url}
+                    title={overlay.url
+                      ? locale.t("common.open")
+                      : locale.t("overlay.notRunning")}
                     ><IconExternalLink data-icon="inline-start" />{locale.t(
                       "common.open",
                     )}</Button

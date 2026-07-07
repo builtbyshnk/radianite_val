@@ -39,11 +39,14 @@
         size="sm"
         onclick={onCopy}
         disabled={!url}
-        title={locale.t("overlay.copyUrl")}
-        ><IconCopy data-icon="inline-start" />{locale.t("overlay.copyUrl")}</Button
-      ><span
-        class="text-muted-foreground"
-        title={locale.t("overlay.help")}><IconHelpCircle class="size-4" /></span
+        title={url
+          ? locale.t("overlay.copyUrl")
+          : locale.t("overlay.notRunning")}
+        ><IconCopy data-icon="inline-start" />{locale.t(
+          "overlay.copyUrl",
+        )}</Button
+      ><span class="text-muted-foreground" title={locale.t("overlay.help")}
+        ><IconHelpCircle class="size-4" /></span
       >
     </div>{/snippet}
   <div class="flex flex-col gap-2">
@@ -64,7 +67,9 @@
       <span class="font-mono text-foreground">720 × 200</span>
     </p>
     <div class="overflow-hidden rounded-lg border bg-background/60 p-2">
-      {#if url}<div class="preview-host aspect-[720/200] w-full overflow-hidden rounded-md">
+      {#if url}<div
+          class="preview-host aspect-[720/200] w-full overflow-hidden rounded-md"
+        >
           <iframe
             title={locale.t("overlay.previewTitle")}
             src={url}
