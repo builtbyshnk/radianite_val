@@ -44,14 +44,14 @@
   data-tauri-drag-region
   class="flex h-12 shrink-0 items-center justify-between gap-3 border-b bg-background/80 px-3 backdrop-blur"
 >
-  <div data-tauri-drag-region class="flex items-center gap-3">
+  <div data-tauri-drag-region class="flex min-w-0 items-center gap-3">
     <AppIcon class="size-5 rounded-sm" /><span
-      class="text-sm font-semibold tracking-wide">Radianite</span
+      class="truncate text-sm font-semibold tracking-wide">Radianite</span
     ><span class="font-mono text-xs text-muted-foreground"
       >v{version ?? "—"}</span
     ><span
       class={cn(
-        "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+        "hidden items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium sm:flex",
         tones[pill.tone],
       )}
       ><span class="size-1.5 rounded-full bg-current"></span>{pill.label}</span
@@ -71,27 +71,33 @@
       variant="outline"
       onclick={onRefresh}
       disabled={busy}
+      aria-label={locale.t("titleBar.refresh")}
+      title={locale.t("titleBar.refresh")}
       class="h-8"
-      ><IconRefresh data-icon="inline-start" />{locale.t(
-        "titleBar.refresh",
-      )}</Button
+      ><IconRefresh data-icon="inline-start" /><span class="hidden sm:inline"
+        >{locale.t("titleBar.refresh")}</span
+      ></Button
     >
     {#if status.monitored}<Button
         size="sm"
         onclick={onStopMonitor}
         disabled={busy}
+        aria-label={locale.t("titleBar.stopMonitoring")}
+        title={locale.t("titleBar.stopMonitoring")}
         class="h-8 bg-primary text-primary-foreground hover:bg-primary/85"
-        ><IconPlayerStop data-icon="inline-start" />{locale.t(
-          "titleBar.stopMonitoring",
-        )}</Button
+        ><IconPlayerStop data-icon="inline-start" /><span
+          class="hidden sm:inline">{locale.t("titleBar.stopMonitoring")}</span
+        ></Button
       >{:else}<Button
         size="sm"
         onclick={onStartMonitor}
         disabled={busy}
+        aria-label={locale.t("titleBar.startMonitoring")}
+        title={locale.t("titleBar.startMonitoring")}
         class="h-8"
-        ><IconPlayerPlay data-icon="inline-start" />{locale.t(
-          "titleBar.startMonitoring",
-        )}</Button
+        ><IconPlayerPlay data-icon="inline-start" /><span
+          class="hidden sm:inline">{locale.t("titleBar.startMonitoring")}</span
+        ></Button
       >{/if}
     <div class="ms-1 flex items-center">
       <button
