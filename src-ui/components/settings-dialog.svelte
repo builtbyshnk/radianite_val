@@ -190,13 +190,13 @@
                 <Button
                   variant="outline"
                   onclick={() =>
-                    onOpenUrl("https://github.com/radcolor-dev/radianite_val")}
+                    onOpenUrl("https://github.com/builtbyshnk/radianite_val")}
                   ><IconExternalLink data-icon="inline-start" />{locale.t(
                     "settings.repository",
                   )}</Button
                 ><Button
                   variant="outline"
-                  onclick={() => onOpenUrl("https://radcolor.dev")}
+                  onclick={() => onOpenUrl("https://builtbyshnk.github.io/radianite_val/")}
                   ><IconExternalLink data-icon="inline-start" />{locale.t(
                     "settings.website",
                   )}</Button

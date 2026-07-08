@@ -35,7 +35,7 @@
   let version = $derived(notes.version.replace(/^v/i, "")),
     releaseUrl = $derived(
       notes.url ??
-        `https://github.com/radcolor-dev/radianite_val/releases/tag/v${version}`,
+        `https://github.com/builtbyshnk/radianite_val/releases/tag/v${version}`,
     )
   let html = $derived(
     DOMPurify.sanitize(
@@ -53,7 +53,7 @@
     const controller = new AbortController()
     loading = true
     fetch(
-      `https://api.github.com/repos/radcolor-dev/radianite_val/releases/tags/v${version}`,
+      `https://api.github.com/repos/builtbyshnk/radianite_val/releases/tags/v${version}`,
       { signal: controller.signal },
     )
       .then((r) => {
