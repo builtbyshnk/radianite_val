@@ -1,0 +1,4 @@
+# Exclude frontend assets from GitHub language statistics.
+*.css linguist-detectable=false
+*.html linguist-detectable=false
+*.js linguist-detectable=false
