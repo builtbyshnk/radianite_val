@@ -130,10 +130,7 @@ impl LocalClient {
         puuid: &str,
     ) -> Result<Option<Value>, LocalClientError> {
         let (_, presences) = self.get_json::<ChatPresences>("/chat/v4/presences").await?;
-        let presence = presences
-            .presences
-            .into_iter()
-            .find(|presence| presence.puuid.as_deref() == Some(puuid));
+        let presence = own_valorant_presence(presences, puuid);
 
         let Some(presence) = presence else {
             return Ok(None);
@@ -217,15 +214,26 @@ struct ChatPresences {
 #[serde(rename_all = "camelCase")]
 struct ChatPresence {
     puuid: Option<String>,
+    product: Option<String>,
     private: Option<String>,
     state: Option<String>,
+}
+
+fn own_valorant_presence(presences: ChatPresences, puuid: &str) -> Option<ChatPresence> {
+    presences.presences.into_iter().find(|presence| {
+        presence.puuid.as_deref() == Some(puuid)
+            && presence
+                .product
+                .as_deref()
+                .is_some_and(|product| product.eq_ignore_ascii_case("valorant"))
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
 
-    use super::{EntitlementsToken, LocalClient};
+    use super::{own_valorant_presence, ChatPresences, EntitlementsToken, LocalClient};
     use crate::riot::lockfile::RiotLockfile;
 
     #[test]
@@ -242,6 +250,25 @@ mod tests {
 
         assert_eq!(parsed.access_token, "access.jwt");
         assert_eq!(parsed.entitlements_token, "entitlement.jwt");
+    }
+
+    #[test]
+    fn selects_valorant_presence_when_account_has_multiple_products() {
+        let presences = serde_json::from_str::<ChatPresences>(
+            r#"{
+                "presences": [
+                    { "puuid": "player", "product": "riot_client", "state": "chat" },
+                    { "puuid": "player", "product": "valorant", "state": "away", "private": "e30=" }
+                ]
+            }"#,
+        )
+        .expect("presence payload should parse");
+
+        let presence = own_valorant_presence(presences, "player")
+            .expect("VALORANT presence should be selected");
+
+        assert_eq!(presence.product.as_deref(), Some("valorant"));
+        assert_eq!(presence.state.as_deref(), Some("away"));
     }
 
     #[test]

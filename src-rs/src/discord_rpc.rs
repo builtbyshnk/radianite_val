@@ -509,6 +509,20 @@ fn large_asset(
     locale: &str,
     content: Option<&ValorantContent>,
 ) -> RenderedAsset {
+    if snapshot.is_idle {
+        return RenderedAsset {
+            image: "game_icon_yellow".to_string(),
+            text: t!("rpc.asset.game", locale = locale).to_string(),
+        };
+    }
+
+    if snapshot.phase == MatchPhase::Matchmaking {
+        return RenderedAsset {
+            image: "game_icon_white".to_string(),
+            text: t!("rpc.asset.game", locale = locale).to_string(),
+        };
+    }
+
     match snapshot.phase {
         MatchPhase::Pregame => snapshot
             .agent_name
@@ -875,7 +889,7 @@ mod tests {
 
         assert_eq!(
             state_text(&snapshot, "en-US", None),
-            "SILVER 2 (47rr) - Away"
+            "SILVER 2 (47rr) / Away"
         );
     }
 
@@ -926,6 +940,29 @@ mod tests {
         assert_eq!(large.text, "Ascent");
         assert_eq!(small.image, "agent_kayo");
         assert_eq!(small.text, "KAY/O");
+    }
+
+    #[test]
+    fn renders_yellow_game_art_while_away() {
+        let mut snapshot = snapshot(MatchPhase::Menus);
+        snapshot.is_idle = true;
+
+        let large = large_asset(&snapshot, &asset_config(), "en-US", None);
+
+        assert_eq!(large.image, "game_icon_yellow");
+        assert_eq!(large.text, "VALORANT w/ Radianite");
+    }
+
+    #[test]
+    fn renders_white_game_art_only_while_queueing() {
+        let queueing = snapshot(MatchPhase::Matchmaking);
+        let menus = snapshot(MatchPhase::Menus);
+
+        let queueing_large = large_asset(&queueing, &asset_config(), "en-US", None);
+        let menus_large = large_asset(&menus, &asset_config(), "en-US", None);
+
+        assert_eq!(queueing_large.image, "game_icon_white");
+        assert_eq!(menus_large.image, "game_icon");
     }
 
     #[test]

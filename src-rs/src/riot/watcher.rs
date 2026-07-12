@@ -1134,7 +1134,10 @@ fn normalize_live_snapshot(
         phase,
         is_idle: presence.is_some_and(|presence| {
             presence.get("isIdle").and_then(Value::as_bool) == Some(true)
-                || presence.get("chatState").and_then(Value::as_str) == Some("away")
+                || presence
+                    .get("chatState")
+                    .and_then(Value::as_str)
+                    .is_some_and(|state| state.eq_ignore_ascii_case("away"))
         }),
         is_valid: presence
             .and_then(|presence| presence.get("isValid"))
@@ -1350,9 +1353,9 @@ mod tests {
     }
 
     #[test]
-    fn treats_away_chat_state_as_idle() {
+    fn treats_capitalized_away_chat_state_as_idle() {
         let presence = json!({
-            "chatState": "away",
+            "chatState": "Away",
             "isIdle": false,
             "isValid": true
         });

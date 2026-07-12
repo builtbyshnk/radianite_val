@@ -19,7 +19,7 @@
   "rpc.state.live": "Live",
   "rpc.state.away": "Away",
   "rpc.state.rank": "%{rank} (%{rr}rr)",
-  "rpc.state.join": "%{rank} - %{party}",
+  "rpc.state.join": "%{rank} / %{party}",
   "rpc.asset.range": "The Range",
   "rpc.asset.game": "VALORANT w/ Radianite",
   "rpc.asset.menu": "Radianite",
