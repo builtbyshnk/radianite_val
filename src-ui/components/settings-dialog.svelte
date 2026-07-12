@@ -5,6 +5,7 @@
   import IconExternalLink from "@tabler/icons-svelte/icons/external-link"
   import IconHeart from "@tabler/icons-svelte/icons/heart"
   import IconInfoCircle from "@tabler/icons-svelte/icons/info-circle"
+  import IconPalette from "@tabler/icons-svelte/icons/palette"
   import IconSettings from "@tabler/icons-svelte/icons/settings"
   import * as Dialog from "@/components/ui/dialog"
   import * as Select from "@/components/ui/select"
@@ -14,7 +15,8 @@
   import { locale } from "@/lib/locale.svelte"
   import { rpcLocales, uiLocales } from "@/lib/i18n"
   import type { OverlayStatus, SettingKey, Settings } from "@/lib/types"
-  type Tab = "general" | "overlay" | "discord" | "donate" | "about"
+  type Tab =
+    "general" | "appearance" | "overlay" | "discord" | "donate" | "about"
   let {
     open = $bindable(),
     onOpenChange,
@@ -41,6 +43,7 @@
   let active = $state<Tab>("general")
   const nav = [
     { id: "general", key: "settings.nav.general", icon: IconSettings },
+    { id: "appearance", key: "settings.nav.appearance", icon: IconPalette },
     { id: "overlay", key: "settings.nav.overlay", icon: IconBroadcast },
     { id: "discord", key: "settings.nav.discord", icon: IconBrandDiscord },
     { id: "donate", key: "settings.nav.donate", icon: IconHeart },
@@ -100,11 +103,66 @@
                   settings.startMinimized,
                   (value) => onSetSetting("startMinimized", value),
                   !settings.runAtBoot,
+                )}{@render SelectRow(
+                  locale.t("settings.closeBehavior"),
+                  locale.t("settings.closeBehaviorDescription"),
+                  settings.lowResourceMode ? "tray" : "quit",
+                  [
+                    {
+                      value: "tray",
+                      label: locale.t("settings.closeBehaviorTray"),
+                    },
+                    {
+                      value: "quit",
+                      label: locale.t("settings.closeBehaviorQuit"),
+                    },
+                  ],
+                  (value) => onSetSetting("lowResourceMode", value === "tray"),
                 )}{@render SettingRow(
-                  locale.t("settings.lowResourceMode"),
-                  locale.t("settings.lowResourceModeDescription"),
-                  settings.lowResourceMode,
-                  (value) => onSetSetting("lowResourceMode", value),
+                  locale.t("settings.automaticUpdateChecks"),
+                  locale.t("settings.automaticUpdateChecksDescription"),
+                  settings.automaticUpdateChecks,
+                  (value) => onSetSetting("automaticUpdateChecks", value),
+                )}{@render SettingRow(
+                  locale.t("settings.rememberWindowState"),
+                  locale.t("settings.rememberWindowStateDescription"),
+                  settings.rememberWindowState,
+                  (value) => onSetSetting("rememberWindowState", value),
+                )}
+              </div>
+            {:else if active === "appearance"}{@render Heading(
+                locale.t("settings.appearanceTitle"),
+                locale.t("settings.appearanceDescription"),
+              )}
+              <div class="flex flex-col gap-3">
+                {@render SelectRow(
+                  locale.t("settings.interfaceScale"),
+                  locale.t("settings.interfaceScaleDescription"),
+                  settings.interfaceScale,
+                  [
+                    {
+                      value: "compact",
+                      label: locale.t("settings.interfaceScaleCompact"),
+                    },
+                    {
+                      value: "default",
+                      label: locale.t("settings.interfaceScaleDefault"),
+                    },
+                    {
+                      value: "comfortable",
+                      label: locale.t("settings.interfaceScaleComfortable"),
+                    },
+                  ],
+                  (value) =>
+                    onSetSetting(
+                      "interfaceScale",
+                      value as Settings["interfaceScale"],
+                    ),
+                )}{@render SettingRow(
+                  locale.t("settings.reduceMotion"),
+                  locale.t("settings.reduceMotionDescription"),
+                  settings.reduceMotion,
+                  (value) => onSetSetting("reduceMotion", value),
                 )}
               </div>
             {:else if active === "overlay"}{@render Heading(
@@ -237,6 +295,33 @@
       ></span
     ><Switch {checked} onCheckedChange={onchange} {disabled} /></label
   >{/snippet}
+{#snippet SelectRow(
+  title: string,
+  description: string,
+  value: string,
+  options: Array<{ value: string; label: string }>,
+  onchange: (value: string) => void,
+)}<div
+    class="flex items-center justify-between gap-4 rounded-lg border bg-background/40 px-4 py-3.5"
+  >
+    <span class="flex flex-col gap-1"
+      ><span class="text-xs font-medium">{title}</span><span
+        class="text-xs text-muted-foreground">{description}</span
+      ></span
+    ><Select.Root type="single" {value} onValueChange={onchange}
+      ><Select.Trigger class="min-w-36" aria-label={title}
+        ><span data-slot="select-value" class="flex-1 text-start"
+          >{options.find((option) => option.value === value)?.label}</span
+        ></Select.Trigger
+      ><Select.Content align="end"
+        ><Select.Group
+          >{#each options as option}<Select.Item value={option.value}
+              >{option.label}</Select.Item
+            >{/each}</Select.Group
+        ></Select.Content
+      ></Select.Root
+    >
+  </div>{/snippet}
 {#snippet LocaleRow(
   title: string,
   description: string,

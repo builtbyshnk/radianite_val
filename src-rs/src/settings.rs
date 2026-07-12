@@ -13,6 +13,10 @@ const LEGACY_BACKGROUND_SHORTCUT: &str = "Radianite Background.lnk";
 pub struct Settings {
     pub run_at_boot: bool,
     pub start_minimized: bool,
+    pub automatic_update_checks: bool,
+    pub reduce_motion: bool,
+    pub interface_scale: String,
+    pub remember_window_state: bool,
     pub low_resource_mode: bool,
     pub enable_rpc_on_start: bool,
     pub overlay_theme: String,
@@ -46,6 +50,19 @@ pub async fn initialize(
         run_at_boot,
         start_minimized: store
             .get("startMinimized")
+            .and_then(|value| value.as_bool())
+            .unwrap_or(false),
+        automatic_update_checks: store
+            .get("automaticUpdateChecks")
+            .and_then(|value| value.as_bool())
+            .unwrap_or(false),
+        reduce_motion: store
+            .get("reduceMotion")
+            .and_then(|value| value.as_bool())
+            .unwrap_or(false),
+        interface_scale: valid_interface_scale(store.get("interfaceScale").and_then(json_string)),
+        remember_window_state: store
+            .get("rememberWindowState")
             .and_then(|value| value.as_bool())
             .unwrap_or(false),
         low_resource_mode: match (
@@ -106,6 +123,7 @@ pub async fn update(
     ensure_locale(&settings.ui_locale)?;
     ensure_locale(&settings.rpc_locale)?;
     ensure_overlay_theme(&settings.overlay_theme)?;
+    ensure_interface_scale(&settings.interface_scale)?;
 
     let store = app.store(SETTINGS_STORE).map_err(|err| err.to_string())?;
     let previous_ui_locale = store.get("uiLocale").and_then(json_string);
@@ -167,6 +185,13 @@ pub fn start_minimized_enabled(app: &AppHandle) -> bool {
         .unwrap_or(false)
 }
 
+pub fn remember_window_state_enabled(app: &AppHandle) -> bool {
+    app.get_store(SETTINGS_STORE)
+        .and_then(|store| store.get("rememberWindowState"))
+        .and_then(|value| value.as_bool())
+        .unwrap_or(false)
+}
+
 fn apply_autostart(app: &AppHandle, enabled: bool) -> Result<(), String> {
     if std::env::var_os("RADIANITE_RESOURCE_BENCHMARK").is_some() {
         return Ok(());
@@ -204,6 +229,10 @@ fn save(app: &AppHandle, settings: &Settings) -> Result<(), String> {
     let store = app.store(SETTINGS_STORE).map_err(|err| err.to_string())?;
     store.set("runAtBoot", settings.run_at_boot);
     store.set("startMinimized", settings.start_minimized);
+    store.set("automaticUpdateChecks", settings.automatic_update_checks);
+    store.set("reduceMotion", settings.reduce_motion);
+    store.set("interfaceScale", settings.interface_scale.clone());
+    store.set("rememberWindowState", settings.remember_window_state);
     store.delete("minimizeToTray");
     store.set("lowResourceMode", settings.low_resource_mode);
     store.set("enableRpcOnStart", settings.enable_rpc_on_start);
@@ -229,6 +258,19 @@ fn valid_overlay_theme(stored: Option<String>) -> String {
     stored
         .filter(|theme| ensure_overlay_theme(theme).is_ok())
         .unwrap_or_else(|| "nightfall".to_string())
+}
+
+fn valid_interface_scale(stored: Option<String>) -> String {
+    stored
+        .filter(|scale| ensure_interface_scale(scale).is_ok())
+        .unwrap_or_else(|| "default".to_string())
+}
+
+fn ensure_interface_scale(scale: &str) -> Result<(), String> {
+    match scale {
+        "compact" | "default" | "comfortable" => Ok(()),
+        _ => Err(format!("unsupported interface scale: {scale}")),
+    }
 }
 
 fn ensure_overlay_theme(theme: &str) -> Result<(), String> {

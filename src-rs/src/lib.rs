@@ -17,6 +17,7 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Manager, RunEvent,
 };
+use tauri_plugin_window_state::{StateFlags, WindowExt};
 
 #[cfg(not(debug_assertions))]
 fn prevent_default_shortcuts() -> tauri::plugin::TauriPlugin<tauri::Wry> {
@@ -63,6 +64,14 @@ pub fn run() {
             .plugin(tauri_plugin_updater::Builder::new().build())
             .plugin(tauri_plugin_store::Builder::new().build())
             .plugin(
+                tauri_plugin_window_state::Builder::new()
+                    .with_state_flags(
+                        StateFlags::SIZE | StateFlags::POSITION | StateFlags::MAXIMIZED,
+                    )
+                    .skip_initial_state("main")
+                    .build(),
+            )
+            .plugin(
                 tauri_plugin_autostart::Builder::new()
                     .arg(AUTOSTART_ARG)
                     .build(),
@@ -97,6 +106,13 @@ pub fn run() {
             let lifecycle = app.state::<UiLifecycle>().inner().clone();
             let low_resource_mode = settings::low_resource_mode_enabled(app.handle());
             lifecycle.set_low_resource_mode(low_resource_mode);
+            if settings::remember_window_state_enabled(app.handle()) {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.restore_state(
+                        StateFlags::SIZE | StateFlags::POSITION | StateFlags::MAXIMIZED,
+                    );
+                }
+            }
             if !autostart_launch || !settings::start_minimized_enabled(app.handle()) {
                 lifecycle.show_main_window(app.handle());
             }

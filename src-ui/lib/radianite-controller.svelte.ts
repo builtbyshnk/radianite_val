@@ -66,6 +66,10 @@ const initialUpdater: UpdaterState = {
 const defaultSettings: Settings = {
   runAtBoot: false,
   startMinimized: false,
+  automaticUpdateChecks: false,
+  reduceMotion: false,
+  interfaceScale: "default",
+  rememberWindowState: false,
   lowResourceMode: true,
   enableRpcOnStart: true,
   overlayTheme: "nightfall",
@@ -97,6 +101,8 @@ export class RadianiteController {
   timer: ReturnType<typeof setInterval> | null = null
   active = false
   presentationRequest = 0
+  presentationKey: string | null = null
+  visibilityHandler = () => this.syncClock()
 
   constructor(private client: RadianiteClient = tauriClient) {}
   get initializing() {
@@ -105,20 +111,39 @@ export class RadianiteController {
 
   async initialize() {
     this.active = true
-    this.timer = setInterval(() => {
-      this.now = Date.now()
-    }, 1000)
+    document.addEventListener("visibilitychange", this.visibilityHandler)
+    this.syncClock()
     await Promise.allSettled([
       this.initializeBackend(),
       this.initializeSettings(),
     ])
+    if (this.active && this.settings.automaticUpdateChecks)
+      void this.checkForUpdate(true)
   }
 
   destroy() {
     this.active = false
     this.presentationRequest += 1
     this.unlisteners.splice(0).forEach((unlisten) => unlisten())
+    document.removeEventListener("visibilitychange", this.visibilityHandler)
+    this.stopClock()
+  }
+
+  private syncClock() {
+    if (!this.active || document.hidden) {
+      this.stopClock()
+      return
+    }
+    this.now = Date.now()
+    if (!this.timer)
+      this.timer = setInterval(() => {
+        this.now = Date.now()
+      }, 1000)
+  }
+
+  private stopClock() {
     if (this.timer) clearInterval(this.timer)
+    this.timer = null
   }
 
   private async initializeBackend() {
@@ -182,6 +207,7 @@ export class RadianiteController {
       await applyUiLocale(result.settings.uiLocale)
       if (this.active) {
         this.settings = result.settings
+        applyInterfacePreferences(result.settings)
         this.overlayTheme = result.settings.overlayTheme as OverlayTheme
         this.rpcStatus = result.rpcStatus
       }
@@ -262,6 +288,7 @@ export class RadianiteController {
     const localeChange = key === "uiLocale" || key === "rpcLocale"
     if (localeChange) this.busy = true
     this.settings = next
+    applyInterfacePreferences(next)
     try {
       const result = await this.client.invoke<SettingsBootstrap>(
         "settings_set",
@@ -269,10 +296,12 @@ export class RadianiteController {
       )
       await applyUiLocale(result.settings.uiLocale)
       this.settings = result.settings
+      applyInterfacePreferences(result.settings)
       this.rpcStatus = result.rpcStatus
-      if (key === "uiLocale") await this.loadPresentation()
+      if (key === "uiLocale") await this.loadPresentation(true)
     } catch (error) {
       this.settings = previous
+      applyInterfacePreferences(previous)
       if (key === "uiLocale") await applyUiLocale(previous.uiLocale)
       toast.error(errorText(error))
     } finally {
@@ -280,7 +309,7 @@ export class RadianiteController {
     }
   }
 
-  async checkForUpdate() {
+  async checkForUpdate(silent = false) {
     this.updater = {
       ...this.updater,
       status: "checking",
@@ -315,7 +344,7 @@ export class RadianiteController {
         message: message("errors.generic", undefined, detail),
       }
       this.lastChecked = new Date()
-      toast.error(detail)
+      if (!silent) toast.error(detail)
     }
   }
 
@@ -372,13 +401,22 @@ export class RadianiteController {
     }
   }
 
-  private async loadPresentation() {
-    const request = ++this.presentationRequest
+  private async loadPresentation(force = false) {
     const snapshot = this.snapshot
     if (!snapshot) {
+      this.presentationKey = null
       this.presentation = null
       return
     }
+    const key = [
+      this.settings.uiLocale,
+      snapshot.agentId ?? "",
+      snapshot.mapId ?? "",
+      snapshot.rank?.tier ?? "",
+    ].join(":")
+    if (!force && key === this.presentationKey) return
+    this.presentationKey = key
+    const request = ++this.presentationRequest
     this.presentation = null
     try {
       const value = await this.client.invoke<ValorantPresentation>(
@@ -393,10 +431,17 @@ export class RadianiteController {
       if (this.active && request === this.presentationRequest)
         this.presentation = mapAssets(value, this.client)
     } catch {
-      if (this.active && request === this.presentationRequest)
+      if (this.active && request === this.presentationRequest) {
+        this.presentationKey = null
         this.presentation = null
+      }
     }
   }
+}
+
+function applyInterfacePreferences(settings: Settings) {
+  document.documentElement.dataset.interfaceScale = settings.interfaceScale
+  document.documentElement.dataset.reduceMotion = String(settings.reduceMotion)
 }
 
 function mapAssets(

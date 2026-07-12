@@ -140,6 +140,10 @@ export type UpdaterState = {
 export type Settings = {
   runAtBoot: boolean
   startMinimized: boolean
+  automaticUpdateChecks: boolean
+  reduceMotion: boolean
+  interfaceScale: "compact" | "default" | "comfortable"
+  rememberWindowState: boolean
   lowResourceMode: boolean
   enableRpcOnStart: boolean
   overlayTheme: string

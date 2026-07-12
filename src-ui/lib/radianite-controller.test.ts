@@ -20,6 +20,10 @@ const rpc: RpcStatus = {
 const settings: Settings = {
   runAtBoot: false,
   startMinimized: false,
+  automaticUpdateChecks: false,
+  reduceMotion: false,
+  interfaceScale: "default",
+  rememberWindowState: false,
   lowResourceMode: true,
   enableRpcOnStart: true,
   overlayTheme: "nightfall",
@@ -31,6 +35,7 @@ describe("RadianiteController", () => {
   it("initializes listeners and releases them on destroy", async () => {
     const unlisten = vi.fn()
     const closeWindow = vi.fn(async () => undefined)
+    const presentationCalls = vi.fn()
     const handlers = new Map<string, (payload: unknown) => void>()
     const client: RadianiteClient = {
       invoke: async <T>(command: string, args?: Record<string, unknown>) => {
@@ -44,6 +49,10 @@ describe("RadianiteController", () => {
             settings: (args as { settings: Settings }).settings,
             rpcStatus: rpc,
           } as T
+        if (command === "valorant_get_presentation") {
+          presentationCalls()
+          return {} as T
+        }
         throw new Error(`Unexpected command: ${command}`)
       },
       listen: async <T>(event: string, handler: (payload: T) => void) => {
@@ -76,6 +85,23 @@ describe("RadianiteController", () => {
     expect(controller.diagnostics.entitlementTokenReady).toBe(true)
     await controller.setSetting("lowResourceMode", false)
     expect(closeWindow).not.toHaveBeenCalled()
+    await controller.setSetting("interfaceScale", "compact")
+    await controller.setSetting("reduceMotion", true)
+    expect(document.documentElement.dataset.interfaceScale).toBe("compact")
+    expect(document.documentElement.dataset.reduceMotion).toBe("true")
+    const snapshot = {
+      agentId: "agent",
+      mapId: "map",
+      rank: { tier: 12 },
+    }
+    handlers.get("riot:snapshot")?.(snapshot)
+    handlers.get("riot:snapshot")?.(snapshot)
+    await vi.waitFor(() => expect(presentationCalls).toHaveBeenCalledTimes(1))
+    handlers.get("riot:snapshot")?.({
+      ...snapshot,
+      rank: { tier: 13 },
+    })
+    await vi.waitFor(() => expect(presentationCalls).toHaveBeenCalledTimes(2))
     controller.destroy()
     expect(unlisten).toHaveBeenCalledTimes(4)
   })
