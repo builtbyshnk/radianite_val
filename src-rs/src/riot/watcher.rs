@@ -1056,7 +1056,7 @@ fn normalize_live_snapshot(
     rank: Option<RankSnapshot>,
 ) -> LiveSnapshot {
     let phase = presence.map(match_phase).unwrap_or(MatchPhase::Menus);
-    let queue_id = presence.and_then(|presence| {
+    let mut queue_id = presence.and_then(|presence| {
         first_str(
             presence,
             &[
@@ -1109,6 +1109,15 @@ fn normalize_live_snapshot(
             )
         }),
     };
+
+    if phase == MatchPhase::Menus
+        && party
+            .state
+            .as_deref()
+            .is_some_and(|state| state.eq_ignore_ascii_case("CUSTOM_GAME_SETUP"))
+    {
+        queue_id = Some("custom".to_string());
+    }
 
     let score = presence.and_then(|presence| {
         let ally = first_u32(
@@ -1325,6 +1334,29 @@ mod tests {
         });
 
         assert_eq!(match_phase(&presence), MatchPhase::Matchmaking);
+    }
+
+    #[test]
+    fn custom_game_setup_overrides_stale_queue_id() {
+        let presence = json!({
+            "sessionLoopState": "MENUS",
+            "isIdle": true,
+            "partyPresenceData": {
+                "partyState": "CUSTOM_GAME_SETUP",
+                "queueId": "deathmatch"
+            }
+        });
+
+        let snapshot = normalize_live_snapshot(
+            Some(&presence),
+            PlayerIdentity::default(),
+            Some("ap".to_string()),
+            Some("ap".to_string()),
+            None,
+        );
+
+        assert_eq!(snapshot.queue_id.as_deref(), Some("custom"));
+        assert_eq!(snapshot.queue_key.as_deref(), Some("custom"));
     }
 
     #[test]
