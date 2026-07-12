@@ -12,6 +12,7 @@ const LEGACY_BACKGROUND_SHORTCUT: &str = "Radianite Background.lnk";
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
     pub run_at_boot: bool,
+    pub start_minimized: bool,
     pub low_resource_mode: bool,
     pub enable_rpc_on_start: bool,
     pub overlay_theme: String,
@@ -43,6 +44,10 @@ pub async fn initialize(
         .unwrap_or(stored_run_at_boot.unwrap_or(false));
     let settings = Settings {
         run_at_boot,
+        start_minimized: store
+            .get("startMinimized")
+            .and_then(|value| value.as_bool())
+            .unwrap_or(false),
         low_resource_mode: match (
             store
                 .get("lowResourceMode")
@@ -155,6 +160,13 @@ pub fn low_resource_mode_enabled(app: &AppHandle) -> bool {
     }
 }
 
+pub fn start_minimized_enabled(app: &AppHandle) -> bool {
+    app.get_store(SETTINGS_STORE)
+        .and_then(|store| store.get("startMinimized"))
+        .and_then(|value| value.as_bool())
+        .unwrap_or(false)
+}
+
 fn apply_autostart(app: &AppHandle, enabled: bool) -> Result<(), String> {
     if std::env::var_os("RADIANITE_RESOURCE_BENCHMARK").is_some() {
         return Ok(());
@@ -191,6 +203,7 @@ fn apply_ui_locale(app: &AppHandle, locale: &str) -> Result<(), String> {
 fn save(app: &AppHandle, settings: &Settings) -> Result<(), String> {
     let store = app.store(SETTINGS_STORE).map_err(|err| err.to_string())?;
     store.set("runAtBoot", settings.run_at_boot);
+    store.set("startMinimized", settings.start_minimized);
     store.delete("minimizeToTray");
     store.set("lowResourceMode", settings.low_resource_mode);
     store.set("enableRpcOnStart", settings.enable_rpc_on_start);

@@ -139,6 +139,7 @@ export type UpdaterState = {
 
 export type Settings = {
   runAtBoot: boolean
+  startMinimized: boolean
   lowResourceMode: boolean
   enableRpcOnStart: boolean
   overlayTheme: string

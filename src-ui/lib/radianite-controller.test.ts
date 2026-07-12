@@ -19,6 +19,7 @@ const rpc: RpcStatus = {
 }
 const settings: Settings = {
   runAtBoot: false,
+  startMinimized: false,
   lowResourceMode: true,
   enableRpcOnStart: true,
   overlayTheme: "nightfall",

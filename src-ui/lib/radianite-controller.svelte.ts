@@ -65,6 +65,7 @@ const initialUpdater: UpdaterState = {
 }
 const defaultSettings: Settings = {
   runAtBoot: false,
+  startMinimized: false,
   lowResourceMode: true,
   enableRpcOnStart: true,
   overlayTheme: "nightfall",

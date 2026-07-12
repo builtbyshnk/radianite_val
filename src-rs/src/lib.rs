@@ -33,7 +33,7 @@ fn prevent_default_shortcuts() -> tauri::plugin::TauriPlugin<tauri::Wry> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let context = tauri::generate_context!();
+    let mut context = tauri::generate_context!();
     let main_window = context
         .config()
         .app
@@ -42,6 +42,15 @@ pub fn run() {
         .find(|window| window.label == "main")
         .cloned()
         .expect("main window configuration is missing");
+    context
+        .config_mut()
+        .app
+        .windows
+        .iter_mut()
+        .find(|window| window.label == "main")
+        .expect("main window configuration is missing")
+        .visible = false;
+    let autostart_launch = std::env::args().any(|arg| arg == AUTOSTART_ARG);
     let state = AppState::new();
     let lifecycle = UiLifecycle::new(main_window);
 
@@ -88,6 +97,9 @@ pub fn run() {
             let lifecycle = app.state::<UiLifecycle>().inner().clone();
             let low_resource_mode = settings::low_resource_mode_enabled(app.handle());
             lifecycle.set_low_resource_mode(low_resource_mode);
+            if !autostart_launch || !settings::start_minimized_enabled(app.handle()) {
+                lifecycle.show_main_window(app.handle());
+            }
             tauri::async_runtime::spawn(async move {
                 state.start_overlay_server().await;
                 state.start_monitor(app_handle).await;

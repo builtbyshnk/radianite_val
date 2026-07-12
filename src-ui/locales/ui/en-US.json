@@ -229,6 +229,8 @@
     "appLanguageDescription": "Choose the language used by the Radianite interface and tray menu.",
     "runAtBoot": "Run at boot",
     "runAtBootDescription": "Launch Radianite automatically when you sign in to Windows.",
+    "startMinimized": "Start minimized",
+    "startMinimizedDescription": "Keep Radianite in the system tray when it starts at sign-in.",
     "lowResourceMode": "Low-resource mode on exit",
     "lowResourceModeDescription": "Closing Radianite removes the graphical interface while monitoring, Discord RPC, and the OBS overlay continue from the system tray.",
     "overlayDescription": "Add this URL as a Browser Source in OBS to show your live rank.",

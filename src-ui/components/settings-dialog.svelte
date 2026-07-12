@@ -95,6 +95,12 @@
                   settings.runAtBoot,
                   (value) => onSetSetting("runAtBoot", value),
                 )}{@render SettingRow(
+                  locale.t("settings.startMinimized"),
+                  locale.t("settings.startMinimizedDescription"),
+                  settings.startMinimized,
+                  (value) => onSetSetting("startMinimized", value),
+                  !settings.runAtBoot,
+                )}{@render SettingRow(
                   locale.t("settings.lowResourceMode"),
                   locale.t("settings.lowResourceModeDescription"),
                   settings.lowResourceMode,
@@ -219,13 +225,17 @@
   description: string,
   checked: boolean,
   onchange: (value: boolean) => void,
+  disabled = false,
 )}<label
-    class="flex cursor-pointer items-center justify-between gap-4 rounded-lg border bg-background/40 px-4 py-3.5"
+    class:cursor-pointer={!disabled}
+    class:cursor-not-allowed={disabled}
+    class:opacity-50={disabled}
+    class="flex items-center justify-between gap-4 rounded-lg border bg-background/40 px-4 py-3.5"
     ><span class="flex flex-col gap-1"
       ><span class="text-xs font-medium">{title}</span><span
         class="text-xs text-muted-foreground">{description}</span
       ></span
-    ><Switch {checked} onCheckedChange={onchange} /></label
+    ><Switch {checked} onCheckedChange={onchange} {disabled} /></label
   >{/snippet}
 {#snippet LocaleRow(
   title: string,
