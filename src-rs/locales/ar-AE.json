@@ -1,8 +1,8 @@
 {
   "_version": 1,
-  "rpc.phase.menu": "%{mode} / القائمة",
-  "rpc.phase.queue": "%{mode} / طابور",
-  "rpc.phase.pregame": "%{mode} / إختيار عميل",
+  "rpc.phase.menu": "%{mode} - القائمة",
+  "rpc.phase.queue": "%{mode} - طابور",
+  "rpc.phase.pregame": "%{mode} - إختيار عميل",
   "rpc.party.solo": "فردي %{size}/%{max}",
   "rpc.party.group": "في بارتي %{size}/%{max}",
   "rpc.state.rank": "%{rank} (%{rr}rr)",

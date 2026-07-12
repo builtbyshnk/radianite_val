@@ -1,8 +1,8 @@
 {
   "_version": 1,
-  "rpc.phase.menu": "%{mode} / Menu",
-  "rpc.phase.queue": "%{mode} / Queue",
-  "rpc.phase.pregame": "%{mode} / Pumipili",
+  "rpc.phase.menu": "%{mode} - Menu",
+  "rpc.phase.queue": "%{mode} - Queue",
+  "rpc.phase.pregame": "%{mode} - Pumipili",
   "rpc.party.solo": "Solo %{size}/%{max}",
   "rpc.party.group": "Nasa Party %{size}/%{max}",
   "rpc.state.rank": "%{rank} (%{rr}rr)",

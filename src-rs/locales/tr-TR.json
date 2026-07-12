@@ -1,8 +1,8 @@
 {
   "_version": 1,
-  "rpc.phase.menu": "%{mode} / Menü",
-  "rpc.phase.queue": "%{mode} / Sırada",
-  "rpc.phase.pregame": "%{mode} / Ajan Seçiyor",
+  "rpc.phase.menu": "%{mode} - Menü",
+  "rpc.phase.queue": "%{mode} - Sırada",
+  "rpc.phase.pregame": "%{mode} - Ajan Seçiyor",
   "rpc.party.solo": "Solo %{size}/%{max}",
   "rpc.party.group": "Takımda %{size}/%{max}",
   "rpc.state.rank": "%{rank} (%{rr}kp)",

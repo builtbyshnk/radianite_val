@@ -1,8 +1,8 @@
 {
   "_version": 1,
-  "rpc.phase.menu": "%{mode} / Menu",
-  "rpc.phase.queue": "%{mode} / Kø",
-  "rpc.phase.pregame": "%{mode} / Vælger",
+  "rpc.phase.menu": "%{mode} - Menu",
+  "rpc.phase.queue": "%{mode} - Kø",
+  "rpc.phase.pregame": "%{mode} - Vælger",
   "rpc.party.solo": "Solo %{size}/%{max}",
   "rpc.party.group": "I et hold %{size}/%{max}",
   "rpc.state.rank": "%{rank} (%{rr}rr)",

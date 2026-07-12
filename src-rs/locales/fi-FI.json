@@ -1,8 +1,8 @@
 {
   "_version": 1,
-  "rpc.phase.menu": "%{mode} / Valikko",
-  "rpc.phase.queue": "%{mode} / Jono",
-  "rpc.phase.pregame": "%{mode} / Valitaan",
+  "rpc.phase.menu": "%{mode} - Valikko",
+  "rpc.phase.queue": "%{mode} - Jono",
+  "rpc.phase.pregame": "%{mode} - Valitaan",
   "rpc.party.solo": "Solo %{size}/%{max}",
   "rpc.party.group": "Ryhmässä %{size}/%{max}",
   "rpc.state.rank": "%{rank} (%{rr}rr)",

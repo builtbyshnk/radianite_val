@@ -1,8 +1,8 @@
 {
   "_version": 1,
-  "rpc.phase.menu": "%{mode} / Menu",
-  "rpc.phase.queue": "%{mode} / Trong hàng chờ",
-  "rpc.phase.pregame": "%{mode} / Đang chọn",
+  "rpc.phase.menu": "%{mode} - Menu",
+  "rpc.phase.queue": "%{mode} - Trong hàng chờ",
+  "rpc.phase.pregame": "%{mode} - Đang chọn",
   "rpc.party.solo": "Solo %{size}/%{max}",
   "rpc.party.group": "Trong một tổ đội %{size}/%{max}",
   "rpc.state.rank": "%{rank} (%{rr}rr)",

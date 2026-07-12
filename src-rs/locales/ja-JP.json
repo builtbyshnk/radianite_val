@@ -1,8 +1,8 @@
 {
   "_version": 1,
-  "rpc.phase.menu": "%{mode} / メニュー",
-  "rpc.phase.queue": "%{mode} / マッチを検索中",
-  "rpc.phase.pregame": "%{mode} / 選択中",
+  "rpc.phase.menu": "%{mode} - メニュー",
+  "rpc.phase.queue": "%{mode} - マッチを検索中",
+  "rpc.phase.pregame": "%{mode} - 選択中",
   "rpc.party.solo": "ソロ %{size}/%{max}",
   "rpc.party.group": "パーティーに参加中 %{size}/%{max}",
   "rpc.state.rank": "%{rank} (%{rr}rr)",

@@ -1,8 +1,8 @@
 {
   "_version": 1,
-  "rpc.phase.menu": "%{mode} / Menu",
-  "rpc.phase.queue": "%{mode} / Kolejka",
-  "rpc.phase.pregame": "%{mode} / Wybieranie",
+  "rpc.phase.menu": "%{mode} - Menu",
+  "rpc.phase.queue": "%{mode} - Kolejka",
+  "rpc.phase.pregame": "%{mode} - Wybieranie",
   "rpc.party.solo": "Solo %{size}/%{max}",
   "rpc.party.group": "W Grupie %{size}/%{max}",
   "rpc.state.rank": "%{rank} (%{rr}or)",

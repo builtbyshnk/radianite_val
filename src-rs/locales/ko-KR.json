@@ -1,8 +1,8 @@
 {
   "_version": 1,
-  "rpc.phase.menu": "%{mode} / 메뉴",
-  "rpc.phase.queue": "%{mode} / 매칭중",
-  "rpc.phase.pregame": "%{mode} / 선택중",
+  "rpc.phase.menu": "%{mode} - 메뉴",
+  "rpc.phase.queue": "%{mode} - 매칭중",
+  "rpc.phase.pregame": "%{mode} - 선택중",
   "rpc.party.solo": "솔로 %{size}/%{max}",
   "rpc.party.group": "파티 참가중 %{size}/%{max}",
   "rpc.state.rank": "%{rank} (%{rr}rr)",

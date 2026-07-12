@@ -1,8 +1,8 @@
 {
   "_version": 1,
-  "rpc.phase.menu": "%{mode} / Menu",
-  "rpc.phase.queue": "%{mode} / Wachtrij",
-  "rpc.phase.pregame": "%{mode} / Selecteren",
+  "rpc.phase.menu": "%{mode} - Menu",
+  "rpc.phase.queue": "%{mode} - Wachtrij",
+  "rpc.phase.pregame": "%{mode} - Selecteren",
   "rpc.party.solo": "Solo %{size}/%{max}",
   "rpc.party.group": "In een groep %{size}/%{max}",
   "rpc.state.rank": "%{rank} (%{rr}rr)",

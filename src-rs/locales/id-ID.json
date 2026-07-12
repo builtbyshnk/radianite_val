@@ -1,8 +1,8 @@
 {
   "_version": 1,
-  "rpc.phase.menu": "%{mode} / Menu",
-  "rpc.phase.queue": "%{mode} / Antre",
-  "rpc.phase.pregame": "%{mode} / Memilih",
+  "rpc.phase.menu": "%{mode} - Menu",
+  "rpc.phase.queue": "%{mode} - Antre",
+  "rpc.phase.pregame": "%{mode} - Memilih",
   "rpc.party.solo": "Solo %{size}/%{max}",
   "rpc.party.group": "Dalam Party %{size}/%{max}",
   "rpc.state.rank": "%{rank} (%{rr}rr)",

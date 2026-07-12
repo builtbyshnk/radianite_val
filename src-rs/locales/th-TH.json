@@ -1,8 +1,8 @@
 {
   "_version": 1,
-  "rpc.phase.menu": "%{mode} / เมนู",
-  "rpc.phase.queue": "%{mode} / อยู่ในคิว",
-  "rpc.phase.pregame": "%{mode} / กำลังเลือกเอเจนท์",
+  "rpc.phase.menu": "%{mode} - เมนู",
+  "rpc.phase.queue": "%{mode} - อยู่ในคิว",
+  "rpc.phase.pregame": "%{mode} - กำลังเลือกเอเจนท์",
   "rpc.party.solo": "เดี่ยว %{size}/%{max}",
   "rpc.party.group": "อยู่ในปาร์ตี้ %{size}/%{max}",
   "rpc.state.rank": "%{rank} (%{rr}rr)",

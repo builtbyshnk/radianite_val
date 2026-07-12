@@ -837,7 +837,7 @@ mod tests {
     fn renders_matchmaking_details() {
         assert_eq!(
             details_text(&snapshot(MatchPhase::Matchmaking), "en-US", None),
-            "Competitive / Queueing"
+            "Competitive - Queueing"
         );
     }
 
@@ -857,7 +857,7 @@ mod tests {
 
         assert_eq!(
             state_text(&snapshot, "en-US", None),
-            "SILVER 2 (47rr) / Solo 1/5"
+            "SILVER 2 (47rr) - Solo 1/5"
         );
     }
 
@@ -889,7 +889,7 @@ mod tests {
 
         assert_eq!(
             state_text(&snapshot, "en-US", None),
-            "SILVER 2 (47rr) / Away"
+            "SILVER 2 (47rr) - Away"
         );
     }
 
@@ -913,7 +913,7 @@ mod tests {
 
         assert_eq!(
             details_text(&snapshot, "en-US", None),
-            "Ascent / Competitive (7-4)"
+            "Ascent - Competitive (7-4)"
         );
     }
 
@@ -1042,9 +1042,9 @@ mod tests {
     #[test]
     fn blank_catalogs_still_use_localized_static_strings() {
         let cases = [
-            ("de-DE", "Gewertet / Warteschlange"),
-            ("es-ES", "Competitivo / Cola"),
-            ("ja-JP", "コンペティティブ / マッチを検索中"),
+            ("de-DE", "Gewertet - Warteschlange"),
+            ("es-ES", "Competitivo - Cola"),
+            ("ja-JP", "コンペティティブ - マッチを検索中"),
         ];
 
         for (locale, expected) in cases {

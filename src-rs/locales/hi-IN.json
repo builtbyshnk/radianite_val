@@ -1,8 +1,8 @@
 {
   "_version": 1,
-  "rpc.phase.menu": "%{mode} / Menu",
-  "rpc.phase.queue": "%{mode} / Queue",
-  "rpc.phase.pregame": "%{mode} / चुन रहे हैं",
+  "rpc.phase.menu": "%{mode} - Menu",
+  "rpc.phase.queue": "%{mode} - Queue",
+  "rpc.phase.pregame": "%{mode} - चुन रहे हैं",
   "rpc.party.solo": "Solo %{size}/%{max}",
   "rpc.party.group": "Party में %{size}/%{max}",
   "rpc.state.rank": "%{rank} (%{rr}rr)",

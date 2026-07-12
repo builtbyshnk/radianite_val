@@ -1,8 +1,8 @@
 {
   "_version": 1,
-  "rpc.phase.menu": "%{mode} / Меню",
-  "rpc.phase.queue": "%{mode} / Очередь",
-  "rpc.phase.pregame": "%{mode} / Выбор...",
+  "rpc.phase.menu": "%{mode} - Меню",
+  "rpc.phase.queue": "%{mode} - Очередь",
+  "rpc.phase.pregame": "%{mode} - Выбор...",
   "rpc.party.solo": "Соло %{size}/%{max}",
   "rpc.party.group": "В группе %{size}/%{max}",
   "rpc.state.rank": "%{rank} (%{rr}rr)",

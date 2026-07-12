@@ -1,8 +1,8 @@
 {
   "_version": 1,
-  "rpc.phase.menu": "%{mode} / 主選單",
-  "rpc.phase.queue": "%{mode} / 列隊等待中",
-  "rpc.phase.pregame": "%{mode} / 選擇中",
+  "rpc.phase.menu": "%{mode} - 主選單",
+  "rpc.phase.queue": "%{mode} - 列隊等待中",
+  "rpc.phase.pregame": "%{mode} - 選擇中",
   "rpc.party.solo": "單人 %{size}/%{max}",
   "rpc.party.group": "在房間中 %{size}/%{max}",
   "rpc.state.rank": "%{rank} (%{rr}競技評分)",
