@@ -34,6 +34,7 @@
   "rpc.mode.custom": "Custom",
   "rpc.mode.snowball": "Snowball Fight",
   "rpc.mode.swiftplay": "Swiftplay",
+  "rpc.mode.premier": "Premier",
   "rpc.mode.hurm": "Team Deathmatch",
   "rpc.mode.retake": "Retake",
   "rpc.mode.knockout": "Knockout",

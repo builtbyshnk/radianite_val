@@ -667,7 +667,8 @@ fn mode_asset_key(queue: &str) -> &'static str {
         "snowball" | "snowballfight" => "snowball",
         "spikerush" | "quickbomb" => "spikerush",
         "swiftplay" => "swiftplay",
-        "hurm" | "teamdeathmatch" => "hurm",
+        "premier" => "premier",
+        "hurm" | "teamdeathmatch" => "tdm",
         "retake" | "fortcollins" => "retake",
         "knockout" | "dodgeball" => "knockout",
         "aros" | "allrandomonesite" => "aros",
@@ -690,6 +691,7 @@ fn queue_label(queue: &str, locale: &str) -> String {
         "custom" | "" => Some("rpc.mode.custom"),
         "snowball" | "snowballfight" => Some("rpc.mode.snowball"),
         "swiftplay" => Some("rpc.mode.swiftplay"),
+        "premier" => Some("rpc.mode.premier"),
         "hurm" | "teamdeathmatch" => Some("rpc.mode.hurm"),
         "retake" | "fortcollins" => Some("rpc.mode.retake"),
         "knockout" | "dodgeball" => Some("rpc.mode.knockout"),
@@ -1010,7 +1012,9 @@ mod tests {
             ("retake", "mode_retake", "Retake"),
             ("fortcollins", "mode_retake", "Retake"),
             ("dodgeball", "mode_knockout", "Knockout"),
-            ("hurm", "mode_hurm", "Team Deathmatch"),
+            ("premier", "mode_premier", "Premier"),
+            ("hurm", "mode_tdm", "Team Deathmatch"),
+            ("teamdeathmatch", "mode_tdm", "Team Deathmatch"),
         ];
 
         for (queue, image, text) in cases {
