@@ -116,6 +116,7 @@ img, video { max-width: 100%; display: block; }
   color: var(--on-primary);
 }
 .btn-primary:hover { background: var(--primary-strong); }
+.btn-icon { flex: 0 0 auto; margin-right: 8px; }
 
 .btn-ghost {
   background: transparent;
