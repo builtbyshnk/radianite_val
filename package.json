@@ -8,14 +8,17 @@
     "dev": "vite",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "lint": "eslint src-ui scripts *.config.ts eslint.config.js svelte.config.js",
+    "lint:rust": "cargo clippy --manifest-path src-rs/Cargo.toml -- -D warnings",
     "format": "prettier --write \"src-ui/**/*.{svelte,ts,css,json}\" \"scripts/**/*.ts\" \"*.{js,ts,json}\"",
     "format:check": "prettier --check \"src-ui/**/*.{svelte,ts,css,json}\" \"scripts/**/*.ts\" \"*.{js,ts,json}\"",
+    "format:rust:check": "cargo fmt --manifest-path src-rs/Cargo.toml --check",
     "build": "bun run check && bun run locales:check && vite build",
     "locales:check": "bun scripts/validate-locales.ts",
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "vitest run",
-    "prepare": "husky"
+    "prepare": "husky",
+    "precommit": "bunx lint-staged && bun run check && bun run format:rust:check && bun run lint:rust"
   },
   "lint-staged": {
     "*.{js,ts,svelte}": [
