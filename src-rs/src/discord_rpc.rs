@@ -555,7 +555,7 @@ fn small_asset(
         MatchPhase::Pregame => mode_asset(snapshot, assets, locale)
             .or_else(|| rank_asset(snapshot, assets, locale, content))
             .unwrap_or_else(|| menu_asset(assets, locale)),
-        MatchPhase::Ingame | MatchPhase::Range => snapshot
+        MatchPhase::Ingame => snapshot
             .agent_name
             .as_deref()
             .map(|agent| RenderedAsset {
@@ -565,10 +565,18 @@ fn small_asset(
             .or_else(|| rank_asset(snapshot, assets, locale, content))
             .or_else(|| mode_asset(snapshot, assets, locale))
             .unwrap_or_else(|| menu_asset(assets, locale)),
+        MatchPhase::Range => RenderedAsset {
+            image: format!("{}range", assets.mode_prefix),
+            text: t!("rpc.asset.range", locale = locale).to_string(),
+        },
         MatchPhase::Replay => mode_asset(snapshot, assets, locale)
             .or_else(|| rank_asset(snapshot, assets, locale, content))
             .unwrap_or_else(|| menu_asset(assets, locale)),
-        MatchPhase::Menus | MatchPhase::Matchmaking => {
+        MatchPhase::Matchmaking => RenderedAsset {
+            image: format!("{}discovery", assets.mode_prefix),
+            text: mode_text(snapshot, locale),
+        },
+        MatchPhase::Menus => {
             if snapshot.queue_id.as_deref() == Some("competitive") {
                 rank_asset(snapshot, assets, locale, content)
                     .or_else(|| mode_asset(snapshot, assets, locale))
@@ -945,6 +953,17 @@ mod tests {
     }
 
     #[test]
+    fn renders_range_mode_art_instead_of_agent() {
+        let mut snapshot = snapshot(MatchPhase::Range);
+        snapshot.agent_name = Some("Phoenix".to_string());
+
+        let small = small_asset(&snapshot, &asset_config(), "en-US", None);
+
+        assert_eq!(small.image, "mode_range");
+        assert_eq!(small.text, "The Range");
+    }
+
+    #[test]
     fn renders_yellow_game_art_while_away() {
         let mut snapshot = snapshot(MatchPhase::Menus);
         snapshot.is_idle = true;
@@ -965,6 +984,17 @@ mod tests {
 
         assert_eq!(queueing_large.image, "game_icon_white");
         assert_eq!(menus_large.image, "game_icon");
+    }
+
+    #[test]
+    fn renders_discovery_small_art_while_queueing() {
+        let mut snapshot = snapshot(MatchPhase::Matchmaking);
+        snapshot.queue_id = Some("swiftplay".to_string());
+
+        let small = small_asset(&snapshot, &asset_config(), "en-US", None);
+
+        assert_eq!(small.image, "mode_discovery");
+        assert_eq!(small.text, "Swiftplay");
     }
 
     #[test]
