@@ -2,3 +2,7 @@
 *.css linguist-detectable=false
 *.html linguist-detectable=false
 *.js linguist-detectable=false
+
+# Exclude NSIS installer scripts from GitHub language statistics.
+*.nsi linguist-detectable=false
+*.nsh linguist-detectable=false
