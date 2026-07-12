@@ -857,7 +857,7 @@ mod tests {
 
         assert_eq!(
             state_text(&snapshot, "en-US", None),
-            "SILVER 2 (47rr) - Solo 1/5"
+            "SILVER 2 (47rr) / Solo 1/5"
         );
     }
 
