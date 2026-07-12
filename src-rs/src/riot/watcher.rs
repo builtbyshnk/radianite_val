@@ -96,6 +96,7 @@ pub struct PollingEventSource {
     phase_match_id: Option<PhaseMatchId>,
     coregame_metadata: Option<CoregameMetadata>,
     cached_rank: Option<RankSnapshot>,
+    cached_queue_id: Option<String>,
     active_season_id: Option<String>,
     last_rank_fetch: Option<Instant>,
     last_phase: Option<MatchPhase>,
@@ -208,6 +209,7 @@ impl PollingEventSource {
             phase_match_id: None,
             coregame_metadata: None,
             cached_rank: None,
+            cached_queue_id: None,
             active_season_id: None,
             last_rank_fetch: None,
             last_phase: None,
@@ -413,6 +415,12 @@ impl PollingEventSource {
             shard.clone(),
             self.cached_rank.clone(),
         );
+        if live_snapshot.queue_id.is_none() && live_snapshot.is_idle {
+            live_snapshot.queue_id.clone_from(&self.cached_queue_id);
+            live_snapshot.queue_key = live_snapshot.queue_id.as_deref().map(normalize_queue_key);
+        } else if live_snapshot.queue_id.is_some() {
+            self.cached_queue_id.clone_from(&live_snapshot.queue_id);
+        }
 
         let valorant_client = match (region.clone(), shard.clone()) {
             (Some(region), Some(shard)) => self.valorant_client(region, shard, tokens),
@@ -1124,6 +1132,14 @@ fn normalize_live_snapshot(
 
     LiveSnapshot {
         phase,
+        is_idle: presence.is_some_and(|presence| {
+            presence.get("isIdle").and_then(Value::as_bool) == Some(true)
+                || presence.get("chatState").and_then(Value::as_str) == Some("away")
+        }),
+        is_valid: presence
+            .and_then(|presence| presence.get("isValid"))
+            .and_then(Value::as_bool)
+            .unwrap_or(true),
         player,
         region,
         shard,
@@ -1331,6 +1347,25 @@ mod tests {
         assert_eq!(snapshot.party.size, Some(2));
         assert_eq!(snapshot.match_id.as_deref(), Some("live-match"));
         assert_eq!(snapshot.score.expect("score").ally, 7);
+    }
+
+    #[test]
+    fn treats_away_chat_state_as_idle() {
+        let presence = json!({
+            "chatState": "away",
+            "isIdle": false,
+            "isValid": true
+        });
+
+        let snapshot = normalize_live_snapshot(
+            Some(&presence),
+            PlayerIdentity::default(),
+            Some("ap".to_string()),
+            Some("ap".to_string()),
+            None,
+        );
+
+        assert!(snapshot.is_idle);
     }
 
     #[test]

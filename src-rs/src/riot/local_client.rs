@@ -135,7 +135,10 @@ impl LocalClient {
             .into_iter()
             .find(|presence| presence.puuid.as_deref() == Some(puuid));
 
-        let Some(private) = presence.and_then(|presence| presence.private) else {
+        let Some(presence) = presence else {
+            return Ok(None);
+        };
+        let Some(private) = presence.private else {
             return Ok(None);
         };
 
@@ -147,9 +150,15 @@ impl LocalClient {
                 LocalClientError::transport(format!("Riot private presence decode failed: {err}"))
             })?;
 
-        let value = serde_json::from_slice::<Value>(&decoded).map_err(|err| {
+        let mut value = serde_json::from_slice::<Value>(&decoded).map_err(|err| {
             LocalClientError::transport(format!("Riot private presence JSON parse failed: {err}"))
         })?;
+        if let Some(object) = value.as_object_mut() {
+            object.insert(
+                "chatState".to_string(),
+                presence.state.map_or(Value::Null, Value::String),
+            );
+        }
 
         Ok(Some(value))
     }
@@ -209,6 +218,7 @@ struct ChatPresences {
 struct ChatPresence {
     puuid: Option<String>,
     private: Option<String>,
+    state: Option<String>,
 }
 
 #[cfg(test)]

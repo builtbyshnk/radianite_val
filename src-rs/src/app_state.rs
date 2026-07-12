@@ -395,6 +395,8 @@ mod tests {
     fn snapshot(phase: MatchPhase) -> LiveSnapshot {
         LiveSnapshot {
             phase,
+            is_idle: false,
+            is_valid: true,
             player: PlayerIdentity::default(),
             region: Some("ap".to_string()),
             shard: Some("ap".to_string()),

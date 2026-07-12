@@ -163,6 +163,8 @@ impl OverlayStatus {
 #[serde(rename_all = "camelCase")]
 pub struct LiveSnapshot {
     pub phase: MatchPhase,
+    pub is_idle: bool,
+    pub is_valid: bool,
     pub player: PlayerIdentity,
     pub region: Option<String>,
     pub shard: Option<String>,

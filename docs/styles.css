@@ -236,7 +236,10 @@ img, video { max-width: 100%; display: block; }
 }
 .hero-title { font-size: clamp(1.7rem, 3.2vw, 2.4rem); font-weight: 700; }
 .hero-desc { color: var(--text-muted); font-size: 0.96rem; margin-top: 14px; }
-.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+.hero-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; width: min(100%, 360px); }
+.btn-download { width: 100%; }
+.support-actions { display: flex; gap: 12px; }
+.support-actions .btn { flex: 1; }
 .hero-note {
   margin-top: 18px;
   font-size: 0.76rem;
@@ -359,7 +362,7 @@ img, video { max-width: 100%; display: block; }
 }
 .cta-inner h2 { font-size: clamp(1.5rem, 2.8vw, 2.1rem); font-weight: 700; }
 .cta-inner > p { color: var(--text-muted); margin-top: 10px; }
-.cta-inner .hero-actions { margin-top: 24px; justify-content: center; }
+.cta-inner .hero-actions { margin-top: 24px; align-items: stretch; }
 
 /* ===== Footer ===== */
 .site-footer {
@@ -440,7 +443,6 @@ img, video { max-width: 100%; display: block; }
   .bento { grid-template-columns: 1fr; }
   .steps { grid-template-columns: 1fr; }
   .btn { width: 100%; }
-  .hero-actions { flex-direction: column; }
 }
 
 @media (prefers-reduced-motion: reduce) {

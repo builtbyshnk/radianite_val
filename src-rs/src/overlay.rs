@@ -232,6 +232,8 @@ mod tests {
     fn live_snapshot() -> LiveSnapshot {
         LiveSnapshot {
             phase: MatchPhase::Menus,
+            is_idle: false,
+            is_valid: true,
             player: PlayerIdentity {
                 puuid_present: true,
                 game_name: Some("name".to_string()),

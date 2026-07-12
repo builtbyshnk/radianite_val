@@ -17,6 +17,7 @@
   "rpc.party.duo": "Duo %{size}/%{max}",
   "rpc.party.group": "In Party %{size}/%{max}",
   "rpc.state.live": "Live",
+  "rpc.state.away": "Away",
   "rpc.state.rank": "%{rank} (%{rr}rr)",
   "rpc.state.join": "%{rank} - %{party}",
   "rpc.asset.range": "The Range",

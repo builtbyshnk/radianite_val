@@ -334,8 +334,12 @@ fn render_activity<'a>(
     locale: &str,
     content: Option<&ValorantContent>,
 ) -> (Activity<'a>, RpcPreview) {
-    let details = truncate_discord(&details_text(snapshot, locale, content));
-    let state = truncate_discord(&state_text(snapshot, locale, content));
+    let details = snapshot
+        .is_valid
+        .then(|| truncate_discord(&details_text(snapshot, locale, content)));
+    let state = snapshot
+        .is_valid
+        .then(|| truncate_discord(&state_text(snapshot, locale, content)));
     let large = large_asset(snapshot, assets, locale, content);
     let small = small_asset(snapshot, assets, locale, content);
     let mut rendered_assets = Assets::new()
@@ -351,9 +355,14 @@ fn render_activity<'a>(
     let mut activity = Activity::new()
         .activity_type(ActivityType::Playing)
         .name(t!("rpc.name", locale = locale).to_string())
-        .details(details.clone())
-        .state(state.clone())
         .assets(rendered_assets);
+
+    if let Some(details) = &details {
+        activity = activity.details(details.clone());
+    }
+    if let Some(state) = &state {
+        activity = activity.state(state.clone());
+    }
 
     if let Some(started_at) = snapshot
         .session_started_at
@@ -372,8 +381,8 @@ fn render_activity<'a>(
 
     let preview = RpcPreview {
         name: t!("rpc.name", locale = locale).to_string(),
-        details,
-        state,
+        details: details.unwrap_or_default(),
+        state: state.unwrap_or_default(),
         started_at: snapshot
             .session_started_at
             .as_deref()
@@ -450,7 +459,9 @@ fn state_text(snapshot: &LiveSnapshot, locale: &str, content: Option<&ValorantCo
         }
     }
 
-    if let Some(size) = snapshot.party.size {
+    if snapshot.is_idle {
+        parts.push(t!("rpc.state.away", locale = locale).to_string());
+    } else if let Some(size) = snapshot.party.size {
         let max = snapshot.party.max_size.unwrap_or(size);
         let key = match size {
             1 => "rpc.party.solo",
@@ -783,6 +794,8 @@ mod tests {
     fn snapshot(phase: MatchPhase) -> LiveSnapshot {
         LiveSnapshot {
             phase,
+            is_idle: false,
+            is_valid: true,
             player: PlayerIdentity::default(),
             region: Some("ap".to_string()),
             shard: Some("ap".to_string()),
@@ -844,6 +857,38 @@ mod tests {
 
         snapshot.party.size = Some(3);
         assert_eq!(state_text(&snapshot, "en-US", None), "In Party 3/5");
+    }
+
+    #[test]
+    fn replaces_party_status_with_away_when_idle() {
+        let mut snapshot = snapshot(MatchPhase::Menus);
+        snapshot.is_idle = true;
+        snapshot.rank = Some(RankSnapshot {
+            tier: Some(15),
+            tier_name: Some("Silver 2".to_string()),
+            ranked_rating: Some(47),
+            last_match_delta: None,
+            leaderboard_rank: None,
+            season_id: None,
+            icon_url: None,
+        });
+
+        assert_eq!(
+            state_text(&snapshot, "en-US", None),
+            "SILVER 2 (47rr) - Away"
+        );
+    }
+
+    #[test]
+    fn omits_details_and_state_while_valorant_is_loading() {
+        let mut snapshot = snapshot(MatchPhase::Menus);
+        snapshot.is_valid = false;
+
+        let (_, preview) = render_activity(&snapshot, &asset_config(), None, "en-US", None);
+
+        assert_eq!(preview.name, "VALORANT w/ Radianite");
+        assert!(preview.details.is_empty());
+        assert!(preview.state.is_empty());
     }
 
     #[test]
