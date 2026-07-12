@@ -732,9 +732,8 @@ pub fn rank_from_mmr(mmr: &Value, season_id: Option<&str>) -> Option<RankSnapsho
         .pointer("/QueueSkills/competitive/SeasonalInfoBySeasonID")
         .and_then(Value::as_object)?;
 
-    let seasonal = season_id
-        .and_then(|id| seasons.get(id))
-        .or_else(|| seasons.values().next_back())?;
+    let season_id = season_id?;
+    let seasonal = seasons.get(season_id)?;
 
     let tier = u32_path(seasonal, &["CompetitiveTier"]);
     let ranked_rating = i32_path(seasonal, &["RankedRating"]);
@@ -750,7 +749,7 @@ pub fn rank_from_mmr(mmr: &Value, season_id: Option<&str>) -> Option<RankSnapsho
         ranked_rating,
         last_match_delta: None,
         leaderboard_rank,
-        season_id: season_id.map(str::to_string),
+        season_id: Some(season_id.to_string()),
         icon_url: None,
     })
 }
@@ -780,6 +779,14 @@ pub fn rank_from_competitive_updates(updates: &Value) -> Option<RankSnapshot> {
         season_id: None,
         icon_url: None,
     })
+}
+
+pub fn season_id_from_competitive_updates(updates: &Value) -> Option<String> {
+    updates
+        .get("Matches")
+        .and_then(Value::as_array)
+        .and_then(|matches| matches.first())
+        .and_then(|match_update| str_path(match_update, &["SeasonID"]))
 }
 
 pub fn str_path(value: &Value, path: &[&str]) -> Option<String> {
@@ -818,9 +825,9 @@ mod tests {
 
     use super::{
         active_season_id, asset_extension, build_valorant_http_client, extract_region_and_shard,
-        load_cached_content, rank_from_competitive_updates, rank_from_mmr, stable_asset_key,
-        store_cached_content, ContentAgent, ContentCompetitiveTier, ContentMap, ValorantClient,
-        ValorantContent,
+        load_cached_content, rank_from_competitive_updates, rank_from_mmr,
+        season_id_from_competitive_updates, stable_asset_key, store_cached_content, ContentAgent,
+        ContentCompetitiveTier, ContentMap, ValorantClient, ValorantContent,
     };
     use crate::riot::cache::PublicCacheContext;
     use crate::riot::local_client::EntitlementsToken;
@@ -879,9 +886,29 @@ mod tests {
     }
 
     #[test]
+    fn rejects_mmr_without_current_act_id() {
+        let mmr = json!({
+            "QueueSkills": {
+                "competitive": {
+                    "SeasonalInfoBySeasonID": {
+                        "old-act": {
+                            "CompetitiveTier": 10,
+                            "RankedRating": 34
+                        }
+                    }
+                }
+            }
+        });
+
+        assert!(rank_from_mmr(&mmr, None).is_none());
+        assert!(rank_from_mmr(&mmr, Some("current-act")).is_none());
+    }
+
+    #[test]
     fn parses_last_match_delta_from_competitive_updates() {
         let updates = json!({
             "Matches": [{
+                "SeasonID": "current-act",
                 "TierAfterUpdate": 24,
                 "RankedRatingAfterUpdate": 20,
                 "RankedRatingEarned": -18
@@ -893,6 +920,10 @@ mod tests {
         assert_eq!(rank.tier, Some(24));
         assert_eq!(rank.ranked_rating, Some(20));
         assert_eq!(rank.last_match_delta, Some(-18));
+        assert_eq!(
+            season_id_from_competitive_updates(&updates).as_deref(),
+            Some("current-act")
+        );
     }
 
     #[test]

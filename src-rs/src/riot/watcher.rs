@@ -25,7 +25,8 @@ use super::{
     valorant_client::{
         active_season_id, build_valorant_http_client, extract_region_and_shard,
         fetch_public_client_version, i32_path, rank_from_competitive_updates, rank_from_mmr,
-        str_path, u32_path, ValorantClient, ValorantContent, ValorantContentCache,
+        season_id_from_competitive_updates, str_path, u32_path, ValorantClient, ValorantContent,
+        ValorantContentCache,
     },
 };
 
@@ -807,23 +808,23 @@ impl PollingEventSource {
             }
         }
 
+        let updates = client.competitive_updates(puuid).await.ok();
+        let season_id = self.active_season_id.clone().or_else(|| {
+            updates
+                .as_ref()
+                .and_then(season_id_from_competitive_updates)
+        });
         let mut next_rank = client
             .mmr(puuid)
             .await
             .ok()
-            .and_then(|mmr| rank_from_mmr(&mmr, self.active_season_id.as_deref()));
+            .and_then(|mmr| rank_from_mmr(&mmr, season_id.as_deref()));
 
-        let update_rank = client
-            .competitive_updates(puuid)
-            .await
-            .ok()
-            .and_then(|updates| rank_from_competitive_updates(&updates));
+        let update_rank = updates.as_ref().and_then(rank_from_competitive_updates);
 
         if let Some(update_rank) = update_rank {
             if let Some(rank) = &mut next_rank {
                 rank.last_match_delta = update_rank.last_match_delta;
-            } else {
-                next_rank = Some(update_rank);
             }
         }
 
