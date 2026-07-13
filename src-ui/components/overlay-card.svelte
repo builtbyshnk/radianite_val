@@ -67,7 +67,7 @@
       {locale.t("overlay.suggestedSize")}
       <span class="font-mono text-foreground">720 × 200</span>
     </p>
-    <div class="overflow-hidden px-2 py-1">
+    <div class="overflow-hidden">
       {#if url}<div
           class="preview-host aspect-[720/200] w-full overflow-hidden rounded-md"
         >
@@ -94,11 +94,11 @@
 
   .preview-iframe {
     display: block;
-    width: 770px;
+    width: 720px;
     height: 200px;
     border: 0;
     background: transparent;
     transform-origin: top left;
-    transform: scale(calc(100cqw / 770px)) translate(-25px, -7px);
+    transform: scale(calc(100cqw / 720px)) translate(-25px, -7px);
   }
 </style>

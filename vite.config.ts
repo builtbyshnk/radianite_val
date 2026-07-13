@@ -12,6 +12,9 @@ export default defineConfig(async () => ({
       "@": "/src-ui",
     },
   },
+  optimizeDeps: {
+    exclude: ["@icons-pack/svelte-simple-icons"],
+  },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
