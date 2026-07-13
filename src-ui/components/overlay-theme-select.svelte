@@ -24,8 +24,10 @@
 
 <div
   class={cn(
-    "flex min-w-0 items-center rounded-lg border bg-background/40",
-    compact ? "w-full px-2 py-1.5" : "justify-between gap-4 px-4 py-3.5",
+    "flex min-w-0 items-center",
+    compact
+      ? "w-full"
+      : "justify-between gap-4 rounded-lg border bg-background/40 px-4 py-3.5",
     className,
   )}
 >
