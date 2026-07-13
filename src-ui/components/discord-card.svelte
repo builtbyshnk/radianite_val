@@ -2,6 +2,7 @@
   import IconBrandDiscord from "@icons-pack/svelte-simple-icons/icons/SiDiscord"
   import IconPlayerPlay from "lucide-svelte/icons/play"
   import IconCircleStop from "lucide-svelte/icons/circle-stop"
+  import IconGamepad from "lucide-svelte/icons/gamepad-2"
   import AppIcon from "@/components/app-icon.svelte"
   import Panel from "@/components/panel.svelte"
   import { Button } from "@/components/ui/button"
@@ -108,14 +109,14 @@
             </p>
             <p class="truncate text-[0.7rem] text-[#b5bac1]">{preview.state}</p>
             {#if preview.startedAt}<p
-                class="mt-0.5 truncate text-[0.8rem] text-[#b5bac1]"
+                class="mt-0.5 flex items-center gap-1 truncate font-mono text-[0.8rem] font-semibold text-[#23a55a]"
               >
-                {locale.t("discord.elapsed", {
-                  time: formatUptime(now - preview.startedAt).replace(
-                    /^00:/,
-                    "",
-                  ),
-                })}
+                <IconGamepad
+                  class="size-3.5 shrink-0"
+                  strokeWidth={3}
+                  aria-hidden="true"
+                />
+                {formatUptime(now - preview.startedAt).replace(/^00:/, "")}
               </p>{/if}
           </div>
         </div>
