@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte"
   import { Toaster } from "@/components/ui/sonner"
+  import { TooltipProvider } from "@/components/ui/tooltip"
+  import AppTooltipLayer from "@/components/app-tooltip-layer.svelte"
   import CoreStatusCard from "@/components/core-status-card.svelte"
   import DiscordCard from "@/components/discord-card.svelte"
   import LiveMatchHero from "@/components/live-match-hero.svelte"
@@ -63,82 +65,88 @@
   })
 </script>
 
-<div class="app-enter flex h-screen flex-col bg-background text-foreground">
-  {#if !r.initializing}<TitleBar
-      status={r.diagnostics.status}
-      version={r.appVersion}
-      busy={r.busy}
-      onRefresh={r.refreshAll}
-      onStartMonitor={r.startMonitor}
-      onStopMonitor={r.stopMonitor}
-      onOpenSettings={openSettings}
-    />
-    <main class="flex-1 overflow-y-auto p-3">
-      <div class="mx-auto flex w-full max-w-[1400px] flex-col gap-3">
-        <div
-          class="grid gap-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(22rem,1fr)]"
-        >
-          <LiveMatchHero snapshot={r.snapshot} presentation={r.presentation} />
-          <div class="flex flex-col gap-3">
-            <CoreStatusCard diagnostics={r.diagnostics} /><OverlayCard
+<TooltipProvider delayDuration={350} skipDelayDuration={100}>
+  <div class="app-enter flex h-screen flex-col bg-background text-foreground">
+    {#if !r.initializing}<TitleBar
+        status={r.diagnostics.status}
+        version={r.appVersion}
+        busy={r.busy}
+        onRefresh={r.refreshAll}
+        onStartMonitor={r.startMonitor}
+        onStopMonitor={r.stopMonitor}
+        onOpenSettings={openSettings}
+      />
+      <main class="flex-1 overflow-y-auto p-3">
+        <div class="mx-auto flex w-full max-w-[1400px] flex-col gap-3">
+          <div
+            class="grid gap-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(22rem,1fr)]"
+          >
+            <LiveMatchHero
+              snapshot={r.snapshot}
+              presentation={r.presentation}
+            />
+            <div class="flex flex-col gap-3">
+              <CoreStatusCard diagnostics={r.diagnostics} /><OverlayCard
+                overlay={r.overlayStatus}
+                theme={r.overlayTheme}
+                overlayHideDetails={r.settings.overlayHideDetails}
+                onCopy={() => r.copyOverlayUrl()}
+                onThemeChange={r.setOverlayTheme}
+                onOverlayHideDetailsChange={(value) =>
+                  r.setSetting("overlayHideDetails", value)}
+              />
+            </div>
+          </div>
+          <div class="grid gap-3 lg:grid-cols-3">
+            <DiscordCard
+              rpc={r.rpcStatus}
+              snapshot={r.snapshot}
+              presentation={r.presentation}
+              busy={r.busy}
+              onToggle={r.toggleRpc}
+              now={r.now}
+            /><UpdatesCard
+              updater={r.updater}
+              version={r.appVersion}
+              canInstall={Boolean(r.availableUpdate)}
+              lastChecked={r.lastChecked}
+              now={r.now}
+              onCheck={() => r.checkForUpdate()}
+              onInstall={() => r.installAvailableUpdate()}
+            /><QuickInfoCard
               overlay={r.overlayStatus}
-              theme={r.overlayTheme}
-              overlayHideDetails={r.settings.overlayHideDetails}
-              onCopy={() => r.copyOverlayUrl()}
-              onThemeChange={r.setOverlayTheme}
-              onOverlayHideDetailsChange={(value) =>
-                r.setSetting("overlayHideDetails", value)}
+              rpc={r.rpcStatus}
+              snapshot={r.snapshot}
+              lastSync={r.lastSync}
+              now={r.now}
             />
           </div>
         </div>
-        <div class="grid gap-3 lg:grid-cols-3">
-          <DiscordCard
-            rpc={r.rpcStatus}
-            snapshot={r.snapshot}
-            presentation={r.presentation}
-            busy={r.busy}
-            onToggle={r.toggleRpc}
-            now={r.now}
-          /><UpdatesCard
-            updater={r.updater}
-            version={r.appVersion}
-            canInstall={Boolean(r.availableUpdate)}
-            lastChecked={r.lastChecked}
-            now={r.now}
-            onCheck={() => r.checkForUpdate()}
-            onInstall={() => r.installAvailableUpdate()}
-          /><QuickInfoCard
-            overlay={r.overlayStatus}
-            rpc={r.rpcStatus}
-            snapshot={r.snapshot}
-            lastSync={r.lastSync}
-            now={r.now}
-          />
-        </div>
-      </div>
-    </main>
-    <StatusBar
-      status={r.diagnostics.status}
-      lastSync={r.lastSync}
-      startedAt={r.startedAt}
-      now={r.now}
-    />{/if}
-  <StartupVeil active={r.initializing} />
-  {#if settingsOpen && SettingsDialog}<SettingsDialog
-      bind:open={settingsOpen}
-      onOpenChange={(open: boolean) => (settingsOpen = open)}
-      settings={r.settings}
-      onSetSetting={(key: never, value: never) => r.setSetting(key, value)}
-      overlay={r.overlayStatus}
-      onCopyOverlay={() => r.copyOverlayUrl()}
-      onOpenOverlay={() => r.openOverlayUrl()}
-      busy={r.busy}
-      appVersion={r.appVersion}
-      onOpenUrl={(url: string) => r.open(url)}
-    />{/if}
-  <Toaster
-    position={localeInfo(document.documentElement.lang)?.direction === "rtl"
-      ? "bottom-left"
-      : "bottom-right"}
-  />
-</div>
+      </main>
+      <StatusBar
+        status={r.diagnostics.status}
+        lastSync={r.lastSync}
+        startedAt={r.startedAt}
+        now={r.now}
+      />{/if}
+    <StartupVeil active={r.initializing} />
+    {#if settingsOpen && SettingsDialog}<SettingsDialog
+        bind:open={settingsOpen}
+        onOpenChange={(open: boolean) => (settingsOpen = open)}
+        settings={r.settings}
+        onSetSetting={(key: never, value: never) => r.setSetting(key, value)}
+        overlay={r.overlayStatus}
+        onCopyOverlay={() => r.copyOverlayUrl()}
+        onOpenOverlay={() => r.openOverlayUrl()}
+        busy={r.busy}
+        appVersion={r.appVersion}
+        onOpenUrl={(url: string) => r.open(url)}
+      />{/if}
+    <Toaster
+      position={localeInfo(document.documentElement.lang)?.direction === "rtl"
+        ? "bottom-left"
+        : "bottom-right"}
+    />
+    <AppTooltipLayer />
+  </div>
+</TooltipProvider>

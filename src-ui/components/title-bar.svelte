@@ -9,6 +9,7 @@
   import IconX from "lucide-svelte/icons/x"
   import AppIcon from "@/components/app-icon.svelte"
   import { Button } from "@/components/ui/button"
+  import * as Tooltip from "@/components/ui/tooltip"
   import { statusPill } from "@/lib/format"
   import { locale } from "@/lib/locale.svelte"
   import { cn } from "@/lib/utils"
@@ -58,86 +59,123 @@
     >
   </div>
   <div class="flex items-center gap-2">
-    <Button
-      size="icon-sm"
-      variant="ghost"
-      onclick={onOpenSettings}
-      aria-label={locale.t("titleBar.openSettings")}
-      title={locale.t("titleBar.openSettings")}
-      class="size-8 hover:translate-y-0"><IconSettings
-        data-motion
-        class="transition-transform duration-300 ease-out group-hover/button:rotate-45"
-      /></Button
+    <Tooltip.Root
+      ><Tooltip.Trigger
+        >{#snippet child({ props })}<Button
+            {...props}
+            size="icon-sm"
+            variant="ghost"
+            onclick={onOpenSettings}
+            aria-label={locale.t("titleBar.openSettings")}
+            class="size-8 hover:translate-y-0"
+            ><IconSettings
+              data-motion
+              class="transition-transform duration-300 ease-out group-hover/button:rotate-45"
+            /></Button
+          >{/snippet}</Tooltip.Trigger
+      ><Tooltip.Content>{locale.t("titleBar.openSettings")}</Tooltip.Content
+      ></Tooltip.Root
     >
-    <Button
-      size="sm"
-      variant="outline"
-      onclick={onRefresh}
-      disabled={busy}
-      aria-label={locale.t("titleBar.refresh")}
-      title={locale.t("titleBar.refresh")}
-      class="h-8"
-      ><IconRefresh
-        data-motion
-        data-icon="inline-start"
-        class="transition-transform duration-300 ease-out group-hover/button:rotate-180"
-      /><span class="hidden sm:inline"
-        >{locale.t("titleBar.refresh")}</span
-      ></Button
+    <Tooltip.Root
+      ><Tooltip.Trigger
+        >{#snippet child({ props })}<Button
+            {...props}
+            size="sm"
+            variant="outline"
+            onclick={onRefresh}
+            disabled={busy}
+            aria-label={locale.t("titleBar.refresh")}
+            class="h-8"
+            ><IconRefresh
+              data-motion
+              data-icon="inline-start"
+              class="transition-transform duration-300 ease-out group-hover/button:rotate-180"
+            /><span class="hidden sm:inline"
+              >{locale.t("titleBar.refresh")}</span
+            ></Button
+          >{/snippet}</Tooltip.Trigger
+      ><Tooltip.Content>{locale.t("titleBar.refresh")}</Tooltip.Content
+      ></Tooltip.Root
     >
-    {#if status.monitored}<Button
-        size="sm"
-        onclick={onStopMonitor}
-        disabled={busy}
-        aria-label={locale.t("titleBar.stopMonitoring")}
-        title={locale.t("titleBar.stopMonitoring")}
-        class="h-8 bg-primary text-primary-foreground hover:bg-primary/85"
-        ><IconPlayerStop
-          data-motion
-          data-icon="inline-start"
-          class="transition-transform duration-150 group-hover/button:scale-110"
-        /><span
-          class="hidden sm:inline">{locale.t("titleBar.stopMonitoring")}</span
-        ></Button
-      >{:else}<Button
-        size="sm"
-        onclick={onStartMonitor}
-        disabled={busy}
-        aria-label={locale.t("titleBar.startMonitoring")}
-        title={locale.t("titleBar.startMonitoring")}
-        class="h-8"
-        ><IconPlayerPlay
-          data-motion
-          data-icon="inline-start"
-          class="transition-transform duration-150 group-hover/button:scale-110"
-        /><span
-          class="hidden sm:inline">{locale.t("titleBar.startMonitoring")}</span
-        ></Button
+    {#if status.monitored}<Tooltip.Root
+        ><Tooltip.Trigger
+          >{#snippet child({ props })}<Button
+              {...props}
+              size="sm"
+              onclick={onStopMonitor}
+              disabled={busy}
+              aria-label={locale.t("titleBar.stopMonitoring")}
+              class="h-8 bg-primary text-primary-foreground hover:bg-primary/85"
+              ><IconPlayerStop
+                data-motion
+                data-icon="inline-start"
+                class="transition-transform duration-150 group-hover/button:scale-110"
+              /><span class="hidden sm:inline"
+                >{locale.t("titleBar.stopMonitoring")}</span
+              ></Button
+            >{/snippet}</Tooltip.Trigger
+        ><Tooltip.Content>{locale.t("titleBar.stopMonitoring")}</Tooltip.Content
+        ></Tooltip.Root
+      >{:else}<Tooltip.Root
+        ><Tooltip.Trigger
+          >{#snippet child({ props })}<Button
+              {...props}
+              size="sm"
+              onclick={onStartMonitor}
+              disabled={busy}
+              aria-label={locale.t("titleBar.startMonitoring")}
+              class="h-8"
+              ><IconPlayerPlay
+                data-motion
+                data-icon="inline-start"
+                class="transition-transform duration-150 group-hover/button:scale-110"
+              /><span class="hidden sm:inline"
+                >{locale.t("titleBar.startMonitoring")}</span
+              ></Button
+            >{/snippet}</Tooltip.Trigger
+        ><Tooltip.Content
+          >{locale.t("titleBar.startMonitoring")}</Tooltip.Content
+        ></Tooltip.Root
       >{/if}
     <div class="ms-1 flex items-center">
-      <button
-        type="button"
-        aria-label={locale.t("titleBar.minimize")}
-        title={locale.t("titleBar.minimize")}
-        onclick={() => appWindow?.minimize()}
-        class="flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-        ><IconMinus class="size-4" /></button
+      <Tooltip.Root
+        ><Tooltip.Trigger
+          >{#snippet child({ props })}<button
+              {...props}
+              type="button"
+              aria-label={locale.t("titleBar.minimize")}
+              onclick={() => appWindow?.minimize()}
+              class="flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              ><IconMinus class="size-4" /></button
+            >{/snippet}</Tooltip.Trigger
+        ><Tooltip.Content>{locale.t("titleBar.minimize")}</Tooltip.Content
+        ></Tooltip.Root
       >
-      <button
-        type="button"
-        aria-label={locale.t("titleBar.maximize")}
-        title={locale.t("titleBar.maximize")}
-        onclick={() => appWindow?.toggleMaximize()}
-        class="flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-        ><IconSquare class="size-3.5" /></button
+      <Tooltip.Root
+        ><Tooltip.Trigger
+          >{#snippet child({ props })}<button
+              {...props}
+              type="button"
+              aria-label={locale.t("titleBar.maximize")}
+              onclick={() => appWindow?.toggleMaximize()}
+              class="flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              ><IconSquare class="size-3.5" /></button
+            >{/snippet}</Tooltip.Trigger
+        ><Tooltip.Content>{locale.t("titleBar.maximize")}</Tooltip.Content
+        ></Tooltip.Root
       >
-      <button
-        type="button"
-        aria-label={locale.t("titleBar.close")}
-        title={locale.t("titleBar.close")}
-        onclick={() => appWindow?.close()}
-        class="flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-destructive hover:text-destructive-foreground focus-visible:ring-2 focus-visible:ring-ring"
-        ><IconX class="size-4" /></button
+      <Tooltip.Root
+        ><Tooltip.Trigger
+          >{#snippet child({ props })}<button
+              {...props}
+              type="button"
+              aria-label={locale.t("titleBar.close")}
+              onclick={() => appWindow?.close()}
+              class="flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-destructive hover:text-destructive-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              ><IconX class="size-4" /></button
+            >{/snippet}</Tooltip.Trigger
+        ><Tooltip.Content>{locale.t("titleBar.close")}</Tooltip.Content
+        ></Tooltip.Root
       >
     </div>
   </div>
