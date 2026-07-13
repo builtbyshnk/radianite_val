@@ -99,6 +99,6 @@
     border: 0;
     background: transparent;
     transform-origin: top left;
-    transform: scale(calc(100cqw / 720px));
+    transform: scale(calc(100cqw / 720px)) translate(-25px, -7px);
   }
 </style>
