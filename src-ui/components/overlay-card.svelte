@@ -67,7 +67,7 @@
       {locale.t("overlay.suggestedSize")}
       <span class="font-mono text-foreground">720 × 200</span>
     </p>
-    <div class="overflow-hidden rounded-lg border bg-background/60 p-2">
+    <div class="overflow-hidden px-2 py-1">
       {#if url}<div
           class="preview-host aspect-[720/200] w-full overflow-hidden rounded-md"
         >
@@ -77,7 +77,7 @@
             class="preview-iframe"
           ></iframe>
         </div>{:else}<div
-          class="flex aspect-[720/200] w-full items-center justify-center gap-2 text-xs text-muted-foreground"
+          class="flex aspect-[720/200] w-full items-center justify-center gap-2 rounded-lg border bg-background/60 text-xs text-muted-foreground"
         >
           <IconBroadcast class="size-4" title="" aria-hidden="true" />{locale.t(
             "overlay.previewUnavailable",
@@ -94,11 +94,11 @@
 
   .preview-iframe {
     display: block;
-    width: 720px;
+    width: 770px;
     height: 200px;
     border: 0;
     background: transparent;
     transform-origin: top left;
-    transform: scale(calc(100cqw / 720px)) translate(-25px, -7px);
+    transform: scale(calc(100cqw / 770px)) translate(-25px, -7px);
   }
 </style>
