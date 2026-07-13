@@ -1,5 +1,5 @@
 <script lang="ts">
-  import IconBroadcast from "@icons-pack/svelte-simple-icons/icons/SiObsStudio"
+  import IconBroadcast from "@icons-pack/svelte-simple-icons/icons/SiObsstudio"
   import IconCopy from "lucide-svelte/icons/copy"
   import IconHelpCircle from "lucide-svelte/icons/circle-help"
   import OverlayThemeSelect from "@/components/overlay-theme-select.svelte"

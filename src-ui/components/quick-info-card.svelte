@@ -1,6 +1,6 @@
 <script lang="ts">
   import IconBrandDiscord from "@icons-pack/svelte-simple-icons/icons/SiDiscord"
-  import IconBroadcast from "@icons-pack/svelte-simple-icons/icons/SiObsStudio"
+  import IconBroadcast from "@icons-pack/svelte-simple-icons/icons/SiObsstudio"
   import IconClockHour4 from "lucide-svelte/icons/clock-4"
   import IconInfoCircle from "lucide-svelte/icons/info"
   import IconTargetArrow from "lucide-svelte/icons/crosshair"
