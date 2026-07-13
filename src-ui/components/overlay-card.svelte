@@ -1,7 +1,7 @@
 <script lang="ts">
-  import IconBroadcast from "@tabler/icons-svelte/icons/broadcast"
-  import IconCopy from "@tabler/icons-svelte/icons/copy"
-  import IconHelpCircle from "@tabler/icons-svelte/icons/help-circle"
+  import IconBroadcast from "@icons-pack/svelte-simple-icons/icons/SiObsStudio"
+  import IconCopy from "lucide-svelte/icons/copy"
+  import IconHelpCircle from "lucide-svelte/icons/circle-help"
   import OverlayThemeSelect from "@/components/overlay-theme-select.svelte"
   import Panel from "@/components/panel.svelte"
   import { Button } from "@/components/ui/button"
@@ -31,9 +31,10 @@
 </script>
 
 <Panel title={locale.t("overlay.title")}>
-  {#snippet icon()}<IconBroadcast />{/snippet}{#snippet action()}<div
-      class="flex items-center gap-1.5"
-    >
+  {#snippet icon()}<IconBroadcast
+      title=""
+      aria-hidden="true"
+    />{/snippet}{#snippet action()}<div class="flex items-center gap-1.5">
       <Button
         variant="outline"
         size="sm"
@@ -78,7 +79,7 @@
         </div>{:else}<div
           class="flex aspect-[720/200] w-full items-center justify-center gap-2 text-xs text-muted-foreground"
         >
-          <IconBroadcast class="size-4" />{locale.t(
+          <IconBroadcast class="size-4" title="" aria-hidden="true" />{locale.t(
             "overlay.previewUnavailable",
           )}
         </div>{/if}

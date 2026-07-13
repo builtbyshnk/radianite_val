@@ -1,7 +1,7 @@
 <script lang="ts">
-  import IconBrandDiscord from "@tabler/icons-svelte/icons/brand-discord"
-  import IconPlayerPlay from "@tabler/icons-svelte/icons/player-play"
-  import IconPlayerStop from "@tabler/icons-svelte/icons/player-stop"
+  import IconBrandDiscord from "@icons-pack/svelte-simple-icons/icons/SiDiscord"
+  import IconPlayerPlay from "lucide-svelte/icons/play"
+  import IconCircleStop from "lucide-svelte/icons/circle-stop"
   import AppIcon from "@/components/app-icon.svelte"
   import Panel from "@/components/panel.svelte"
   import { Button } from "@/components/ui/button"
@@ -40,12 +40,15 @@
 </script>
 
 <Panel title={locale.t("discord.title")}>
-  {#snippet icon()}<IconBrandDiscord />{/snippet}{#snippet action()}<Button
+  {#snippet icon()}<IconBrandDiscord
+      title=""
+      aria-hidden="true"
+    />{/snippet}{#snippet action()}<Button
       variant="outline"
       size="sm"
       onclick={onToggle}
       disabled={busy || !canToggle}
-      >{#if rpc.enabled}<IconPlayerStop
+      >{#if rpc.enabled}<IconCircleStop
           data-icon="inline-start"
         />{:else}<IconPlayerPlay data-icon="inline-start" />{/if}{rpc.enabled
         ? locale.t("common.disable")

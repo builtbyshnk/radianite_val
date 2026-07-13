@@ -1,7 +1,7 @@
 <script lang="ts">
-  import IconClockHour4 from "@tabler/icons-svelte/icons/clock-hour-4"
-  import IconRefreshDot from "@tabler/icons-svelte/icons/refresh-dot"
-  import IconWifi from "@tabler/icons-svelte/icons/wifi"
+  import IconClockHour4 from "lucide-svelte/icons/clock-4"
+  import IconRefreshDot from "lucide-svelte/icons/refresh-cw"
+  import IconWifi from "lucide-svelte/icons/wifi"
   import RelativeTime from "@/components/relative-time.svelte"
   import { locale } from "@/lib/locale.svelte"
   import { formatUptime } from "@/lib/format"

@@ -1,12 +1,12 @@
 <script lang="ts">
   import { getCurrentWindow } from "@tauri-apps/api/window"
-  import IconMinus from "@tabler/icons-svelte/icons/minus"
-  import IconPlayerPlay from "@tabler/icons-svelte/icons/player-play"
-  import IconPlayerStop from "@tabler/icons-svelte/icons/player-stop"
-  import IconRefresh from "@tabler/icons-svelte/icons/refresh"
-  import IconSettings from "@tabler/icons-svelte/icons/settings"
-  import IconSquare from "@tabler/icons-svelte/icons/square"
-  import IconX from "@tabler/icons-svelte/icons/x"
+  import IconMinus from "lucide-svelte/icons/minus"
+  import IconPlayerPlay from "lucide-svelte/icons/play"
+  import IconPlayerStop from "lucide-svelte/icons/circle-stop"
+  import IconRefresh from "lucide-svelte/icons/refresh-cw"
+  import IconSettings from "lucide-svelte/icons/settings"
+  import IconSquare from "lucide-svelte/icons/square"
+  import IconX from "lucide-svelte/icons/x"
   import AppIcon from "@/components/app-icon.svelte"
   import { Button } from "@/components/ui/button"
   import { statusPill } from "@/lib/format"
@@ -64,7 +64,10 @@
       onclick={onOpenSettings}
       aria-label={locale.t("titleBar.openSettings")}
       title={locale.t("titleBar.openSettings")}
-      class="size-8"><IconSettings /></Button
+      class="size-8 hover:translate-y-0"><IconSettings
+        data-motion
+        class="transition-transform duration-300 ease-out group-hover/button:rotate-45"
+      /></Button
     >
     <Button
       size="sm"
@@ -74,7 +77,11 @@
       aria-label={locale.t("titleBar.refresh")}
       title={locale.t("titleBar.refresh")}
       class="h-8"
-      ><IconRefresh data-icon="inline-start" /><span class="hidden sm:inline"
+      ><IconRefresh
+        data-motion
+        data-icon="inline-start"
+        class="transition-transform duration-300 ease-out group-hover/button:rotate-180"
+      /><span class="hidden sm:inline"
         >{locale.t("titleBar.refresh")}</span
       ></Button
     >
@@ -85,7 +92,11 @@
         aria-label={locale.t("titleBar.stopMonitoring")}
         title={locale.t("titleBar.stopMonitoring")}
         class="h-8 bg-primary text-primary-foreground hover:bg-primary/85"
-        ><IconPlayerStop data-icon="inline-start" /><span
+        ><IconPlayerStop
+          data-motion
+          data-icon="inline-start"
+          class="transition-transform duration-150 group-hover/button:scale-110"
+        /><span
           class="hidden sm:inline">{locale.t("titleBar.stopMonitoring")}</span
         ></Button
       >{:else}<Button
@@ -95,7 +106,11 @@
         aria-label={locale.t("titleBar.startMonitoring")}
         title={locale.t("titleBar.startMonitoring")}
         class="h-8"
-        ><IconPlayerPlay data-icon="inline-start" /><span
+        ><IconPlayerPlay
+          data-motion
+          data-icon="inline-start"
+          class="transition-transform duration-150 group-hover/button:scale-110"
+        /><span
           class="hidden sm:inline">{locale.t("titleBar.startMonitoring")}</span
         ></Button
       >{/if}

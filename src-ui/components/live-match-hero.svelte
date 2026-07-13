@@ -1,11 +1,11 @@
 <script lang="ts">
-  import IconCircleDot from "@tabler/icons-svelte/icons/circle-dot"
-  import IconMap2 from "@tabler/icons-svelte/icons/map-2"
-  import IconShield from "@tabler/icons-svelte/icons/shield"
-  import IconSwords from "@tabler/icons-svelte/icons/swords"
-  import IconUser from "@tabler/icons-svelte/icons/user"
-  import IconUsersGroup from "@tabler/icons-svelte/icons/users-group"
-  import IconWorld from "@tabler/icons-svelte/icons/world"
+  import IconCircleDot from "lucide-svelte/icons/circle-dot"
+  import IconMap2 from "lucide-svelte/icons/map"
+  import IconShield from "lucide-svelte/icons/shield"
+  import IconSwords from "lucide-svelte/icons/swords"
+  import IconUser from "lucide-svelte/icons/user"
+  import IconUsersGroup from "lucide-svelte/icons/users"
+  import IconWorld from "lucide-svelte/icons/globe"
   import AppIcon from "@/components/app-icon.svelte"
   import StatCell from "@/components/stat-cell.svelte"
   import { phaseLabel, playerName, queueLabel } from "@/lib/format"
@@ -82,7 +82,7 @@
   class="relative flex flex-1 flex-col overflow-hidden rounded-xl border bg-card"
 >
   {#if !snapshot}<div
-      class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,oklch(0.28_0.06_25/0.6),transparent_55%),radial-gradient(circle_at_80%_80%,oklch(0.25_0.05_264/0.7),transparent_50%)]"
+      class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgb(255_70_84/0.2),transparent_55%),radial-gradient(circle_at_80%_80%,rgb(17_24_35/0.35),transparent_50%)]"
     ></div>
     <div
       class="relative z-10 flex flex-1 flex-col items-center justify-center gap-3 text-center"
@@ -101,7 +101,7 @@
           alt=""
           class="absolute inset-0 size-full object-cover"
         />{:else}<div
-          class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,oklch(0.28_0.06_25/0.6),transparent_55%),radial-gradient(circle_at_80%_80%,oklch(0.25_0.05_264/0.7),transparent_50%)]"
+          class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgb(255_70_84/0.2),transparent_55%),radial-gradient(circle_at_80%_80%,rgb(17_24_35/0.35),transparent_50%)]"
         ></div>{/if}
       <div
         class="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-background/10 rtl:bg-gradient-to-l"

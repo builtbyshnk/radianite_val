@@ -1,9 +1,9 @@
 <script lang="ts">
-  import IconBrandDiscord from "@tabler/icons-svelte/icons/brand-discord"
-  import IconBroadcast from "@tabler/icons-svelte/icons/broadcast"
-  import IconClockHour4 from "@tabler/icons-svelte/icons/clock-hour-4"
-  import IconInfoCircle from "@tabler/icons-svelte/icons/info-circle"
-  import IconTargetArrow from "@tabler/icons-svelte/icons/target-arrow"
+  import IconBrandDiscord from "@icons-pack/svelte-simple-icons/icons/SiDiscord"
+  import IconBroadcast from "@icons-pack/svelte-simple-icons/icons/SiObsStudio"
+  import IconClockHour4 from "lucide-svelte/icons/clock-4"
+  import IconInfoCircle from "lucide-svelte/icons/info"
+  import IconTargetArrow from "lucide-svelte/icons/crosshair"
   import Panel from "@/components/panel.svelte"
   import RelativeTime from "@/components/relative-time.svelte"
   import { locale } from "@/lib/locale.svelte"
@@ -30,16 +30,22 @@
   >{#snippet icon()}<IconInfoCircle />{/snippet}
   <div class="flex flex-col">
     <div class="row">
-      <span><IconBroadcast />{locale.t("quickInfo.overlay")}</span><strong
-        class:text-success={overlay.enabled}
+      <span
+        ><IconBroadcast title="" aria-hidden="true" />{locale.t(
+          "quickInfo.overlay",
+        )}</span
+      ><strong class:text-success={overlay.enabled}
         >{overlay.enabled
           ? locale.t("common.ready")
           : locale.t("common.off")}</strong
       >
     </div>
     <div class="row">
-      <span><IconBrandDiscord />{locale.t("quickInfo.discord")}</span><strong
-        class:text-success={rpc.connected}
+      <span
+        ><IconBrandDiscord title="" aria-hidden="true" />{locale.t(
+          "quickInfo.discord",
+        )}</span
+      ><strong class:text-success={rpc.connected}
         >{rpc.connected
           ? locale.t("common.ready")
           : rpc.enabled
