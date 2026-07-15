@@ -35,6 +35,7 @@
   /* ---- Resolve the latest Windows installer from GitHub ---- */
   var downloadLinks = document.querySelectorAll(".js-download");
   var cachedTagKey = "radianite-latest-release-tag";
+  var baseReleaseTag = "v1.2.1";
 
   var setDownloadUrl = function (url) {
     downloadLinks.forEach(function (link) {
@@ -83,12 +84,13 @@
           localStorage.setItem(cachedTagKey, release.tag_name);
         } catch (e) {}
       })
-      .catch(function (error) {
-        if (!error.rateLimited) return;
+      .catch(function () {
         try {
-          var cachedUrl = installerUrlFromTag(localStorage.getItem(cachedTagKey) || "");
-          if (cachedUrl) setDownloadUrl(cachedUrl);
-        } catch (e) {}
+          var cachedTag = localStorage.getItem(cachedTagKey) || baseReleaseTag;
+          setDownloadUrl(installerUrlFromTag(cachedTag) || installerUrlFromTag(baseReleaseTag));
+        } catch (e) {
+          setDownloadUrl(installerUrlFromTag(baseReleaseTag));
+        }
       });
   }
 

@@ -67,20 +67,3 @@ jobs:
           releaseDraft: true
           prerelease: false
           releaseAssetNamePattern: "[name]_[version]_[platform]_[arch].[ext]"
-
-      - name: Upload stable Windows installer alias
-        if: github.event_name != 'workflow_dispatch' || inputs.buildOnly != true
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          $version = (Get-Content package.json | ConvertFrom-Json).version
-          $installer = Get-ChildItem "src-rs/target/release/bundle/nsis" -Filter "*.exe" -File |
-            Select-Object -First 1
-          if ($null -eq $installer) {
-            throw "NSIS installer was not found"
-          }
-
-          $alias = Join-Path $env:RUNNER_TEMP "Radianite-Windows-Setup.exe"
-          Copy-Item -LiteralPath $installer.FullName -Destination $alias -Force
-          gh release upload "v$version" $alias --clobber
