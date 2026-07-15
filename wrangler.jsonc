@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "radianite-site",
+  "compatibility_date": "2026-07-15",
+  "preview_urls": false,
+  "workers_dev": true,
+  "assets": {
+    "directory": "./docs"
+  }
+}
