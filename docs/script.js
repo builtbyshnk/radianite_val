@@ -32,30 +32,63 @@
     });
   }
 
-  /* ---- Resolve latest .exe from GitHub release ---- */
+  /* ---- Resolve the latest Windows installer from GitHub ---- */
   var downloadLinks = document.querySelectorAll(".js-download");
+  var cachedTagKey = "radianite-latest-release-tag";
+
+  var setDownloadUrl = function (url) {
+    downloadLinks.forEach(function (link) {
+      link.href = url;
+      link.setAttribute("download", "");
+    });
+  };
+
+  var installerUrlFromTag = function (tag) {
+    if (!/^v?\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(tag)) return null;
+    var version = tag.replace(/^v/i, "");
+    return (
+      "https://github.com/builtbyshnk/radianite_val/releases/download/" +
+      encodeURIComponent(tag) +
+      "/Radianite_" +
+      encodeURIComponent(version) +
+      "_windows_x64.exe"
+    );
+  };
+
   if (downloadLinks.length) {
     fetch("https://api.github.com/repos/builtbyshnk/radianite_val/releases/latest", {
       headers: { Accept: "application/vnd.github+json" }
     })
       .then(function (res) {
+        var rateLimited =
+          res.status === 429 ||
+          (res.status === 403 && res.headers.get("x-ratelimit-remaining") === "0");
+        if (rateLimited) {
+          var error = new Error("GitHub API rate limit exceeded");
+          error.rateLimited = true;
+          throw error;
+        }
         if (!res.ok) throw new Error("GitHub API " + res.status);
         return res.json();
       })
       .then(function (release) {
         var assets = release.assets || [];
-        var exe = assets.filter(function (a) {
-          return /\.exe$/i.test(a.name);
-        })[0];
-        if (exe && exe.browser_download_url) {
-          downloadLinks.forEach(function (link) {
-            link.href = exe.browser_download_url;
-            link.setAttribute("download", "");
-          });
-        }
+        var installer = assets.find(function (asset) {
+          return /^Radianite_.+_windows_x64\.exe$/i.test(asset.name);
+        });
+        if (!installer || !installer.browser_download_url || !release.tag_name) return;
+
+        setDownloadUrl(installer.browser_download_url);
+        try {
+          localStorage.setItem(cachedTagKey, release.tag_name);
+        } catch (e) {}
       })
-      .catch(function () {
-        /* keep the /releases/latest fallback already in the markup */
+      .catch(function (error) {
+        if (!error.rateLimited) return;
+        try {
+          var cachedUrl = installerUrlFromTag(localStorage.getItem(cachedTagKey) || "");
+          if (cachedUrl) setDownloadUrl(cachedUrl);
+        } catch (e) {}
       });
   }
 
