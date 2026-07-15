@@ -19,7 +19,6 @@ const rpc: RpcStatus = {
 }
 const settings: Settings = {
   runAtBoot: false,
-  startMinimized: false,
   automaticUpdateChecks: false,
   reduceMotion: false,
   interfaceScale: "default",

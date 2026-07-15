@@ -14,7 +14,6 @@ const fixture = query.get("fixture") ?? "disconnected"
 
 const settings: Settings = {
   runAtBoot: false,
-  startMinimized: false,
   automaticUpdateChecks: false,
   reduceMotion: false,
   interfaceScale: "default",

@@ -65,7 +65,6 @@ const initialUpdater: UpdaterState = {
 }
 const defaultSettings: Settings = {
   runAtBoot: false,
-  startMinimized: false,
   automaticUpdateChecks: false,
   reduceMotion: false,
   interfaceScale: "default",

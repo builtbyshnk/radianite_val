@@ -12,7 +12,6 @@ const LEGACY_BACKGROUND_SHORTCUT: &str = "Radianite Background.lnk";
 #[serde(rename_all = "camelCase")]
 pub struct Settings {
     pub run_at_boot: bool,
-    pub start_minimized: bool,
     pub automatic_update_checks: bool,
     pub reduce_motion: bool,
     pub interface_scale: String,
@@ -34,7 +33,6 @@ pub struct SettingsBootstrap {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct StartupSettings {
-    pub start_minimized: bool,
     pub remember_window_state: bool,
     pub low_resource_mode: bool,
 }
@@ -42,9 +40,6 @@ pub struct StartupSettings {
 pub fn load_startup_settings(app: &AppHandle) -> Result<StartupSettings, String> {
     let store = app.store(SETTINGS_STORE).map_err(|err| err.to_string())?;
     Ok(startup_settings_from_values(
-        store
-            .get("startMinimized")
-            .and_then(|value| value.as_bool()),
         store
             .get("rememberWindowState")
             .and_then(|value| value.as_bool()),
@@ -73,10 +68,6 @@ pub async fn initialize(
         .unwrap_or(stored_run_at_boot.unwrap_or(false));
     let settings = Settings {
         run_at_boot,
-        start_minimized: store
-            .get("startMinimized")
-            .and_then(|value| value.as_bool())
-            .unwrap_or(false),
         automatic_update_checks: store
             .get("automaticUpdateChecks")
             .and_then(|value| value.as_bool())
@@ -186,7 +177,6 @@ pub async fn update(
 }
 
 fn startup_settings_from_values(
-    start_minimized: Option<bool>,
     remember_window_state: Option<bool>,
     low_resource_mode: Option<bool>,
     minimize_to_tray: Option<bool>,
@@ -197,7 +187,6 @@ fn startup_settings_from_values(
         (None, None) => true,
     };
     StartupSettings {
-        start_minimized: start_minimized.unwrap_or(false),
         remember_window_state: remember_window_state.unwrap_or(false),
         low_resource_mode,
     }
@@ -210,7 +199,8 @@ fn apply_autostart(app: &AppHandle, enabled: bool) -> Result<(), String> {
     let autolaunch = app.autolaunch();
     let autolaunch_enabled = autolaunch.is_enabled().map_err(|err| err.to_string())?;
     if enabled {
-        // Re-register even when enabled so existing installs gain --autostart.
+        // Re-register so existing installs drop obsolete launch arguments and
+        // refresh the executable path after updates.
         autolaunch.enable().map_err(|err| err.to_string())?;
     } else if !enabled && autolaunch_enabled {
         autolaunch.disable().map_err(|err| err.to_string())?;
@@ -239,7 +229,7 @@ fn apply_ui_locale(app: &AppHandle, locale: &str) -> Result<(), String> {
 fn save(app: &AppHandle, settings: &Settings) -> Result<(), String> {
     let store = app.store(SETTINGS_STORE).map_err(|err| err.to_string())?;
     store.set("runAtBoot", settings.run_at_boot);
-    store.set("startMinimized", settings.start_minimized);
+    store.delete("startMinimized");
     store.set("automaticUpdateChecks", settings.automatic_update_checks);
     store.set("reduceMotion", settings.reduce_motion);
     store.set("interfaceScale", settings.interface_scale.clone());
@@ -309,9 +299,8 @@ mod tests {
     #[test]
     fn startup_settings_use_safe_defaults_when_missing() {
         assert_eq!(
-            startup_settings_from_values(None, None, None, None),
+            startup_settings_from_values(None, None, None),
             StartupSettings {
-                start_minimized: false,
                 remember_window_state: false,
                 low_resource_mode: true,
             }
@@ -321,9 +310,8 @@ mod tests {
     #[test]
     fn startup_settings_use_persisted_values() {
         assert_eq!(
-            startup_settings_from_values(Some(true), Some(true), Some(false), None),
+            startup_settings_from_values(Some(true), Some(false), None),
             StartupSettings {
-                start_minimized: true,
                 remember_window_state: true,
                 low_resource_mode: false,
             }
@@ -333,8 +321,7 @@ mod tests {
     #[test]
     fn startup_settings_merge_legacy_tray_preference() {
         assert!(
-            startup_settings_from_values(Some(false), Some(false), Some(false), Some(true))
-                .low_resource_mode
+            startup_settings_from_values(Some(false), Some(false), Some(true)).low_resource_mode
         );
     }
 }

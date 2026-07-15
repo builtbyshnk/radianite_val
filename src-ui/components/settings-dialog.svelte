@@ -101,12 +101,6 @@
                   locale.t("settings.runAtBootDescription"),
                   settings.runAtBoot,
                   (value) => onSetSetting("runAtBoot", value),
-                )}{@render SettingRow(
-                  locale.t("settings.startMinimized"),
-                  locale.t("settings.startMinimizedDescription"),
-                  settings.startMinimized,
-                  (value) => onSetSetting("startMinimized", value),
-                  !settings.runAtBoot,
                 )}{@render SelectRow(
                   locale.t("settings.closeBehavior"),
                   locale.t("settings.closeBehaviorDescription"),
