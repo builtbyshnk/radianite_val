@@ -23,6 +23,7 @@ export default tseslint.config(
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "svelte/no-at-html-tags": "off",
+      "svelte/no-navigation-without-resolve": "off",
       "svelte/prefer-svelte-reactivity": "off",
       "svelte/require-each-key": "off",
     },

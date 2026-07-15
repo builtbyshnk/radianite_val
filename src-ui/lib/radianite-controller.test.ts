@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 import { RadianiteController } from "@/lib/radianite-controller.svelte"
 import type { RadianiteClient } from "@/lib/radianite-client"
-import type { CoreStatus, RpcStatus, Settings } from "@/lib/types"
+import type { AppSnapshot, CoreStatus, RpcStatus, Settings } from "@/lib/types"
 
 const status: CoreStatus = {
   kind: "riotClientClosed",
@@ -37,24 +37,52 @@ describe("RadianiteController", () => {
     const closeWindow = vi.fn(async () => undefined)
     const presentationCalls = vi.fn()
     const handlers = new Map<string, (payload: unknown) => void>()
-    const client: RadianiteClient = {
-      invoke: async <T>(command: string, args?: Record<string, unknown>) => {
-        if (command === "settings_initialize")
-          return { settings, rpcStatus: rpc } as T
-        if (command === "app_get_snapshot")
-          return new Promise<never>(() => undefined) as T
-        if (command === "riot_start_monitor") return status as T
-        if (command === "settings_set")
-          return {
-            settings: (args as { settings: Settings }).settings,
-            rpcStatus: rpc,
-          } as T
-        if (command === "valorant_get_presentation") {
-          presentationCalls()
-          return {} as T
-        }
-        throw new Error(`Unexpected command: ${command}`)
+    const appSnapshot: AppSnapshot = {
+      diagnostics: {
+        status,
+        riotInstallsJsonExists: false,
+        lockfileExists: false,
+        lockfilePortPresent: false,
+        localApiReady: false,
+        sessionProductIds: [],
+        valorantSessionPresent: false,
+        puuidPresent: false,
+        accessTokenReady: false,
+        entitlementTokenReady: false,
+        updatedAt: "",
       },
+      liveSnapshot: null,
+      rpcStatus: rpc,
+      overlayStatus: {
+        enabled: true,
+        url: "http://127.0.0.1:48271/overlay/rank",
+        port: 48271,
+        message: { key: "status.overlay.running" },
+        updatedAt: "",
+      },
+    }
+    const invokeCalls = vi.fn()
+    const invoke = async <T>(
+      command: string,
+      args?: Record<string, unknown>,
+    ): Promise<T> => {
+      invokeCalls(command, args)
+      if (command === "settings_initialize")
+        return { settings, rpcStatus: rpc } as T
+      if (command === "app_get_snapshot") return appSnapshot as T
+      if (command === "settings_set")
+        return {
+          settings: (args as { settings: Settings }).settings,
+          rpcStatus: rpc,
+        } as T
+      if (command === "valorant_get_presentation") {
+        presentationCalls()
+        return {} as T
+      }
+      throw new Error(`Unexpected command: ${command}`)
+    }
+    const client: RadianiteClient = {
+      invoke,
       listen: async <T>(event: string, handler: (payload: T) => void) => {
         handlers.set(event, handler as (payload: unknown) => void)
         return unlisten
@@ -70,6 +98,10 @@ describe("RadianiteController", () => {
     await controller.initialize()
     expect(controller.initializing).toBe(false)
     expect(controller.appVersion).toBe("0.1.6")
+    expect(controller.overlayStatus.enabled).toBe(true)
+    expect(invokeCalls.mock.calls.map(([command]) => command)).not.toContain(
+      "riot_start_monitor",
+    )
     handlers.get("riot:status")?.({ ...status, kind: "valorantLaunching" })
     expect(controller.diagnostics.status.kind).toBe("valorantLaunching")
     handlers.get("riot:diagnostics")?.({

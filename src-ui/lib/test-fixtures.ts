@@ -124,10 +124,7 @@ export function installTestFixture() {
   mockWindows("main")
   mockIPC(
     async (command, payload) => {
-      if (
-        fixture === "startup" &&
-        (command === "riot_start_monitor" || command === "settings_initialize")
-      ) {
+      if (fixture === "startup" && command === "settings_initialize") {
         return new Promise(() => undefined)
       }
       switch (command) {
@@ -140,8 +137,6 @@ export function installTestFixture() {
             settings: (payload as { settings: Settings }).settings,
             rpcStatus,
           }
-        case "riot_start_monitor":
-          return coreStatus
         case "riot_stop_monitor":
           return { ...coreStatus, monitored: false }
         case "app_get_snapshot":

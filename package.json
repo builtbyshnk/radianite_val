@@ -17,6 +17,9 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "test": "vitest run",
+    "verify": "bun run verify:frontend && bun run verify:rust",
+    "verify:frontend": "bun run lint && bun run format:check && bun run test && bun run build",
+    "verify:rust": "cargo fmt --manifest-path src-rs/Cargo.toml --check && cargo clippy --manifest-path src-rs/Cargo.toml -- -D warnings && cargo test --manifest-path src-rs/Cargo.toml",
     "prepare": "husky",
     "precommit": "bunx lint-staged && bun run check && bun run format:rust:check && bun run lint:rust"
   },

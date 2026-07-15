@@ -7,6 +7,18 @@ use tauri::{utils::config::WindowConfig, AppHandle, Manager, WebviewWindowBuilde
 
 pub const AUTOSTART_ARG: &str = "--autostart";
 
+pub fn is_autostart_launch<I, S>(args: I) -> bool
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    args.into_iter().any(|arg| arg.as_ref() == AUTOSTART_ARG)
+}
+
+pub fn should_show_main_window(autostart_launch: bool, start_minimized: bool) -> bool {
+    !autostart_launch || !start_minimized
+}
+
 #[derive(Clone)]
 pub struct UiLifecycle {
     main_window: Arc<WindowConfig>,
@@ -58,7 +70,25 @@ impl UiLifecycle {
 mod tests {
     use tauri::utils::config::WindowConfig;
 
-    use super::UiLifecycle;
+    use super::{is_autostart_launch, should_show_main_window, UiLifecycle};
+
+    #[test]
+    fn manual_launch_always_shows_the_window() {
+        assert!(should_show_main_window(false, false));
+        assert!(should_show_main_window(false, true));
+    }
+
+    #[test]
+    fn autostart_launch_only_stays_hidden_when_requested() {
+        assert!(should_show_main_window(true, false));
+        assert!(!should_show_main_window(true, true));
+    }
+
+    #[test]
+    fn identifies_primary_and_secondary_autostart_arguments() {
+        assert!(is_autostart_launch(["radianite.exe", "--autostart"]));
+        assert!(!is_autostart_launch(["radianite.exe"]));
+    }
 
     #[test]
     fn low_resource_mode_is_enabled_by_default_and_can_be_disabled() {

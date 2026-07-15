@@ -8,10 +8,3 @@ export const overlayThemes = [
 ] as const
 
 export type OverlayTheme = (typeof overlayThemes)[number]["id"]
-
-export function themedOverlayUrl(
-  url: string | null | undefined,
-  _theme: OverlayTheme,
-) {
-  return url ?? null
-}

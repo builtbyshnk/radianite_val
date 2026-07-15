@@ -10,7 +10,7 @@ mod settings;
 rust_i18n::i18n!("locales", fallback = "en-US");
 
 use app_state::AppState;
-use lifecycle::{UiLifecycle, AUTOSTART_ARG};
+use lifecycle::{is_autostart_launch, should_show_main_window, UiLifecycle, AUTOSTART_ARG};
 use rust_i18n::t;
 use tauri::{
     menu::{Menu, MenuItem},
@@ -51,7 +51,7 @@ pub fn run() {
         .find(|window| window.label == "main")
         .expect("main window configuration is missing")
         .visible = false;
-    let autostart_launch = std::env::args().any(|arg| arg == AUTOSTART_ARG);
+    let autostart_launch = is_autostart_launch(std::env::args());
     let state = AppState::new();
     let lifecycle = UiLifecycle::new(main_window);
 
@@ -76,8 +76,19 @@ pub fn run() {
                     .arg(AUTOSTART_ARG)
                     .build(),
             )
-            .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-                show_main_window(app);
+            .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+                let autostart_launch = is_autostart_launch(&args);
+                let should_show = settings::load_startup_settings(app)
+                    .map(|settings| {
+                        should_show_main_window(autostart_launch, settings.start_minimized)
+                    })
+                    .unwrap_or_else(|err| {
+                        eprintln!("failed to load settings for secondary launch: {err}");
+                        true
+                    });
+                if should_show {
+                    show_main_window(app);
+                }
             }));
 
         #[cfg(not(debug_assertions))]
@@ -104,16 +115,16 @@ pub fn run() {
             let state = app_state.inner().clone();
             let app_handle = app.handle().clone();
             let lifecycle = app.state::<UiLifecycle>().inner().clone();
-            let low_resource_mode = settings::low_resource_mode_enabled(app.handle());
-            lifecycle.set_low_resource_mode(low_resource_mode);
-            if settings::remember_window_state_enabled(app.handle()) {
+            let startup_settings = settings::load_startup_settings(app.handle())?;
+            lifecycle.set_low_resource_mode(startup_settings.low_resource_mode);
+            if startup_settings.remember_window_state {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.restore_state(
                         StateFlags::SIZE | StateFlags::POSITION | StateFlags::MAXIMIZED,
                     );
                 }
             }
-            if !autostart_launch || !settings::start_minimized_enabled(app.handle()) {
+            if should_show_main_window(autostart_launch, startup_settings.start_minimized) {
                 lifecycle.show_main_window(app.handle());
             }
             tauri::async_runtime::spawn(async move {

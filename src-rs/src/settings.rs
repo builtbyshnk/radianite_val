@@ -32,6 +32,31 @@ pub struct SettingsBootstrap {
     pub rpc_status: RpcStatus,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct StartupSettings {
+    pub start_minimized: bool,
+    pub remember_window_state: bool,
+    pub low_resource_mode: bool,
+}
+
+pub fn load_startup_settings(app: &AppHandle) -> Result<StartupSettings, String> {
+    let store = app.store(SETTINGS_STORE).map_err(|err| err.to_string())?;
+    Ok(startup_settings_from_values(
+        store
+            .get("startMinimized")
+            .and_then(|value| value.as_bool()),
+        store
+            .get("rememberWindowState")
+            .and_then(|value| value.as_bool()),
+        store
+            .get("lowResourceMode")
+            .and_then(|value| value.as_bool()),
+        store
+            .get("minimizeToTray")
+            .and_then(|value| value.as_bool()),
+    ))
+}
+
 pub async fn initialize(
     app: &AppHandle,
     state: &AppState,
@@ -160,36 +185,22 @@ pub async fn update(
     })
 }
 
-pub fn low_resource_mode_enabled(app: &AppHandle) -> bool {
-    let Some(store) = app.get_store(SETTINGS_STORE) else {
-        return true;
-    };
-    match (
-        store
-            .get("lowResourceMode")
-            .and_then(|value| value.as_bool()),
-        store
-            .get("minimizeToTray")
-            .and_then(|value| value.as_bool()),
-    ) {
+fn startup_settings_from_values(
+    start_minimized: Option<bool>,
+    remember_window_state: Option<bool>,
+    low_resource_mode: Option<bool>,
+    minimize_to_tray: Option<bool>,
+) -> StartupSettings {
+    let low_resource_mode = match (low_resource_mode, minimize_to_tray) {
         (Some(low_resource), Some(minimize_to_tray)) => low_resource || minimize_to_tray,
         (Some(value), None) | (None, Some(value)) => value,
         (None, None) => true,
+    };
+    StartupSettings {
+        start_minimized: start_minimized.unwrap_or(false),
+        remember_window_state: remember_window_state.unwrap_or(false),
+        low_resource_mode,
     }
-}
-
-pub fn start_minimized_enabled(app: &AppHandle) -> bool {
-    app.get_store(SETTINGS_STORE)
-        .and_then(|store| store.get("startMinimized"))
-        .and_then(|value| value.as_bool())
-        .unwrap_or(false)
-}
-
-pub fn remember_window_state_enabled(app: &AppHandle) -> bool {
-    app.get_store(SETTINGS_STORE)
-        .and_then(|store| store.get("rememberWindowState"))
-        .and_then(|value| value.as_bool())
-        .unwrap_or(false)
 }
 
 fn apply_autostart(app: &AppHandle, enabled: bool) -> Result<(), String> {
@@ -288,5 +299,42 @@ fn ensure_locale(locale: &str) -> Result<(), String> {
         Ok(())
     } else {
         Err(format!("unsupported locale: {locale}"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{startup_settings_from_values, StartupSettings};
+
+    #[test]
+    fn startup_settings_use_safe_defaults_when_missing() {
+        assert_eq!(
+            startup_settings_from_values(None, None, None, None),
+            StartupSettings {
+                start_minimized: false,
+                remember_window_state: false,
+                low_resource_mode: true,
+            }
+        );
+    }
+
+    #[test]
+    fn startup_settings_use_persisted_values() {
+        assert_eq!(
+            startup_settings_from_values(Some(true), Some(true), Some(false), None),
+            StartupSettings {
+                start_minimized: true,
+                remember_window_state: true,
+                low_resource_mode: false,
+            }
+        );
+    }
+
+    #[test]
+    fn startup_settings_merge_legacy_tray_preference() {
+        assert!(
+            startup_settings_from_values(Some(false), Some(false), Some(false), Some(true))
+                .low_resource_mode
+        );
     }
 }

@@ -215,11 +215,7 @@ html[data-reduce-motion="true"] [data-motion] {
   width: 24rem;
   height: 24rem;
   border-radius: 9999px;
-  background: radial-gradient(
-    circle,
-    rgb(255 70 84 / 18%),
-    transparent 68%
-  );
+  background: radial-gradient(circle, rgb(255 70 84 / 18%), transparent 68%);
   animation: startup-breathe 2.4s ease-in-out infinite;
 }
 

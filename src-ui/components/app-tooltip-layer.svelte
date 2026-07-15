@@ -79,7 +79,7 @@
   }
 
   $effect(() => {
-    const prepareTree = (root: ParentNode) => {
+    const prepareTree = (root: Document | HTMLElement) => {
       if (root instanceof HTMLElement && root.hasAttribute("title"))
         prepare(root)
       root.querySelectorAll<HTMLElement>("[title]").forEach(prepare)

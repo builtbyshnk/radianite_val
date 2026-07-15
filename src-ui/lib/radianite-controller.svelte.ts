@@ -2,7 +2,7 @@ import type { DownloadEvent, Update } from "@tauri-apps/plugin-updater"
 import { toast } from "svelte-sonner"
 
 import i18n, { applyUiLocale, detectedLocale } from "@/lib/i18n"
-import { themedOverlayUrl, type OverlayTheme } from "@/lib/overlay-themes"
+import type { OverlayTheme } from "@/lib/overlay-themes"
 import { tauriClient, type RadianiteClient } from "@/lib/radianite-client"
 import type {
   AppSnapshot,
@@ -180,14 +180,7 @@ export class RadianiteController {
         .catch(() => {
           if (this.active) this.appVersion = null
         })
-      const status = await this.client.invoke<CoreStatus>("riot_start_monitor")
-      if (this.active) {
-        this.diagnostics = { ...this.diagnostics, status }
-        this.backendReady = true
-        void this.refresh().catch((error) => {
-          if (this.active) toast.error(errorText(error))
-        })
-      }
+      await this.refresh()
     } catch (error) {
       if (this.active) toast.error(errorText(error))
     } finally {
@@ -261,7 +254,7 @@ export class RadianiteController {
     void this.setSetting("overlayTheme", theme)
   }
   async copyOverlayUrl() {
-    const url = themedOverlayUrl(this.overlayStatus.url, this.overlayTheme)
+    const url = this.overlayStatus.url
     if (!url) return
     try {
       await navigator.clipboard.writeText(url)
@@ -271,7 +264,7 @@ export class RadianiteController {
     }
   }
   async openOverlayUrl() {
-    const url = themedOverlayUrl(this.overlayStatus.url, this.overlayTheme)
+    const url = this.overlayStatus.url
     if (url) await this.open(url)
   }
   async open(url: string) {

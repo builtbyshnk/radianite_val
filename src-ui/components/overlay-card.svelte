@@ -7,7 +7,7 @@
   import { Button } from "@/components/ui/button"
   import { Switch } from "@/components/ui/switch"
   import { locale } from "@/lib/locale.svelte"
-  import { themedOverlayUrl, type OverlayTheme } from "@/lib/overlay-themes"
+  import type { OverlayTheme } from "@/lib/overlay-themes"
   import type { OverlayStatus } from "@/lib/types"
 
   let {
@@ -26,7 +26,7 @@
     onOverlayHideDetailsChange: (value: boolean) => void
   } = $props()
 
-  let url = $derived(themedOverlayUrl(overlay.url ?? null, theme))
+  let url = $derived(overlay.url ?? null)
   const privacyLabel = $derived(locale.t("settings.overlayHideDetails"))
 </script>
 

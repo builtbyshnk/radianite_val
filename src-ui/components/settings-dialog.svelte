@@ -7,6 +7,7 @@
   import IconInfoCircle from "lucide-svelte/icons/info"
   import IconPalette from "lucide-svelte/icons/palette"
   import IconSettings from "lucide-svelte/icons/settings"
+  import DonateSettings from "@/components/donate-settings.svelte"
   import * as Dialog from "@/components/ui/dialog"
   import * as Select from "@/components/ui/select"
   import { Button } from "@/components/ui/button"
@@ -80,11 +81,9 @@
         >{/each}
     </nav>
     <div class="flex min-w-0 flex-1 flex-col">
-      {#if active === "donate"}<iframe
-          title={locale.t("settings.supportTitle")}
-          src="https://radcolor.dev/donate"
-          class="page-transition size-full border-0 bg-background"
-        ></iframe>{:else}<ScrollArea class="page-transition flex-1"
+      {#if active === "donate"}<ScrollArea class="page-transition flex-1"
+          ><DonateSettings {onOpenUrl} /></ScrollArea
+        >{:else}<ScrollArea class="page-transition flex-1"
           ><div class="flex flex-col gap-7 p-7">
             {#if active === "general"}{@render Heading(
                 locale.t("settings.nav.general"),
