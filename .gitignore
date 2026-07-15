@@ -16,6 +16,7 @@ dist-ssr
 
 discord-assets
 scripts/*
+!scripts/radianite-site-worker.ts
 !scripts/validate-locales.ts
 
 # Editor directories and files
