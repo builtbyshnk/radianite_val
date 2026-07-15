@@ -259,7 +259,7 @@
                 ><Button
                   variant="outline"
                   onclick={() =>
-                    onOpenUrl("https://builtbyshnk.github.io/radianite_val/")}
+                    onOpenUrl("https://get.radcolor.dev/radianite")}
                   ><IconExternalLink data-icon="inline-start" />{locale.t(
                     "settings.website",
                   )}</Button
