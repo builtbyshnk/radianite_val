@@ -9,7 +9,7 @@ on:
 jobs:
   frontend:
     name: Frontend
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
 
     steps:
       - name: Checkout
@@ -28,7 +28,7 @@ jobs:
 
   rust:
     name: Rust
-    runs-on: windows-latest
+    runs-on: blacksmith-4vcpu-windows-2025
 
     steps:
       - name: Checkout
@@ -54,7 +54,7 @@ jobs:
 
   tauri-build:
     name: Tauri NSIS smoke build
-    runs-on: windows-latest
+    runs-on: blacksmith-4vcpu-windows-2025
     needs:
       - frontend
       - rust
