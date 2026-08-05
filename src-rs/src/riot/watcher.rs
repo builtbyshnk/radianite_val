@@ -830,13 +830,13 @@ impl PollingEventSource {
 
         let update_rank = updates.as_ref().and_then(rank_from_competitive_updates);
 
-        if let Some(update_rank) = update_rank {
+        if let Some(update_rank) = &update_rank {
             if let Some(rank) = &mut next_rank {
                 rank.last_match_delta = update_rank.last_match_delta;
             }
         }
 
-        if let Some(rank) = next_rank {
+        if let Some(rank) = next_rank.or(update_rank) {
             self.cached_rank = Some(rank);
         }
     }
