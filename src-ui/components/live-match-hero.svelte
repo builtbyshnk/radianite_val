@@ -112,9 +112,9 @@
       {#if agentUrl}<img
           src={agentUrl}
           alt={agent}
-          class="absolute bottom-0 start-0 h-[105%] max-w-[55%] object-contain object-left-bottom drop-shadow-2xl rtl:object-right-bottom"
+          class="absolute bottom-0 start-0 h-[105%] max-w-[55%] object-contain object-left-bottom drop-shadow-2xl transition-opacity duration-300 rtl:object-right-bottom"
         />{/if}{#if isLive}<div
-          class="absolute start-4 top-4 flex items-center gap-2 rounded-md bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-lg"
+          class="absolute start-4 top-4 flex items-center gap-2 rounded-md bg-primary/95 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-lg shadow-primary/20 ring-1 ring-white/20 backdrop-blur-md"
         >
           <span class="size-1.5 animate-pulse rounded-full bg-current"
           ></span>{locale.t("match.live")}
@@ -135,13 +135,15 @@
           class="absolute end-6 top-1/2 -translate-y-1/2 text-end"
         >
           <AppIcon
-            class="ms-auto size-10 rounded-lg opacity-90"
+            class="ms-auto size-10 rounded-lg opacity-90 drop-shadow-md"
           />{#if map !== empty}<p
-              class="mt-2 text-xs font-medium text-muted-foreground"
+              class="mt-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase drop-shadow-sm"
             >
               {locale.t("match.mapHeading")}
             </p>
-            <p class="text-4xl font-bold text-foreground/90 uppercase">
+            <p
+              class="text-4xl font-extrabold tracking-tight text-foreground uppercase drop-shadow-md"
+            >
               {map}
             </p>{/if}
         </div>{/if}

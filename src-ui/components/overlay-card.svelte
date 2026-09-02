@@ -1,5 +1,6 @@
 <script lang="ts">
   import IconBroadcast from "@icons-pack/svelte-simple-icons/icons/SiObsstudio"
+  import IconCheck from "lucide-svelte/icons/check"
   import IconCopy from "lucide-svelte/icons/copy"
   import IconHelpCircle from "lucide-svelte/icons/circle-help"
   import OverlayThemeSelect from "@/components/overlay-theme-select.svelte"
@@ -26,6 +27,18 @@
     onOverlayHideDetailsChange: (value: boolean) => void
   } = $props()
 
+  let copied = $state(false)
+  let copyTimeout: ReturnType<typeof setTimeout> | null = null
+
+  function handleCopy() {
+    onCopy()
+    copied = true
+    if (copyTimeout) clearTimeout(copyTimeout)
+    copyTimeout = setTimeout(() => {
+      copied = false
+    }, 1500)
+  }
+
   let url = $derived(overlay.url ?? null)
   const privacyLabel = $derived(locale.t("settings.overlayHideDetails"))
 </script>
@@ -38,16 +51,20 @@
       <Button
         variant="outline"
         size="sm"
-        onclick={onCopy}
+        onclick={handleCopy}
         disabled={!url}
         title={url
           ? locale.t("overlay.copyUrl")
           : locale.t("overlay.notRunning")}
-        ><IconCopy data-icon="inline-start" />{locale.t(
+        >{#if copied}<IconCheck
+            data-icon="inline-start"
+            class="text-success size-3.5"
+          />{:else}<IconCopy data-icon="inline-start" />{/if}{locale.t(
           "overlay.copyUrl",
         )}</Button
-      ><span class="text-muted-foreground" title={locale.t("overlay.help")}
-        ><IconHelpCircle class="size-4" /></span
+      ><span
+        class="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-help"
+        title={locale.t("overlay.help")}><IconHelpCircle class="size-4" /></span
       >
     </div>{/snippet}
   <div class="flex flex-col gap-2">

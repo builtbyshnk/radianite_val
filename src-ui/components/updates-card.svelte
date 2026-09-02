@@ -2,6 +2,7 @@
   import IconCalendarEvent from "lucide-svelte/icons/calendar-days"
   import IconClockCheck from "lucide-svelte/icons/clock-check"
   import IconDownload from "lucide-svelte/icons/download"
+  import IconExternalLink from "lucide-svelte/icons/external-link"
   import IconRefresh from "lucide-svelte/icons/refresh-cw"
   import IconRocket from "lucide-svelte/icons/rocket"
   import IconShieldCheck from "lucide-svelte/icons/shield-check"
@@ -69,11 +70,14 @@
     <div class="flex flex-col">
       <button
         type="button"
-        class="info-row rounded-sm text-start transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring"
+        class="info-row group/ver rounded-md text-start transition-colors hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
         onclick={() => openRelease("current")}
         disabled={current === locale.t("common.notAvailable")}
         ><span><IconTag />{locale.t("updates.currentVersion")}</span><strong
-          class="font-mono">v{current}</strong
+          class="font-mono flex items-center gap-1.5"
+          >v{current}<IconExternalLink
+            class="size-3 text-muted-foreground opacity-40 transition-opacity group-hover/ver:opacity-100"
+          /></strong
         ></button
       >
       <div class="info-row">
@@ -100,11 +104,17 @@
       </div>
       {#if hasUpdate}<button
           type="button"
-          class="info-row rounded-sm text-start transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring"
+          class="info-row group/ver rounded-md text-start transition-colors hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
           aria-label={`${locale.t("updates.latestVersion")} v${updater.version}`}
           onclick={() => openRelease("latest")}
-          ><span><IconSparkles />{locale.t("updates.latestVersion")}</span
-          ><strong class="font-mono text-primary">v{updater.version}</strong
+          ><span
+            ><IconSparkles class="text-primary" />{locale.t(
+              "updates.latestVersion",
+            )}</span
+          ><strong class="font-mono text-primary flex items-center gap-1.5"
+            >v{updater.version}<IconExternalLink
+              class="size-3 text-primary opacity-60 transition-opacity group-hover/ver:opacity-100"
+            /></strong
           ></button
         >{/if}
       {#if hasUpdate && updater.date}<div class="info-row">
@@ -195,8 +205,14 @@
     justify-content: space-between;
     gap: 0.75rem;
     border-top: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
-    padding: 0.375rem 0;
+    padding: 0.375rem 0.375rem;
+    margin: 0 -0.375rem;
+    border-radius: 0.375rem;
     line-height: 1.25rem;
+    transition: background-color 150ms ease-out;
+  }
+  .info-row:hover {
+    background-color: rgb(255 255 255 / 0.03);
   }
   .info-row:first-child {
     border-top: 0;
@@ -212,6 +228,10 @@
     width: 1rem;
     height: 1rem;
     color: var(--muted-foreground);
+    transition: transform 150ms ease-out;
+  }
+  .info-row:hover span :global(svg) {
+    transform: scale(1.05);
   }
   .info-row strong {
     font-size: 0.875rem;

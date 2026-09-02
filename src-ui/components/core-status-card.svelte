@@ -23,13 +23,13 @@
   >{#snippet icon()}<IconActivity />{/snippet}
   <div class="flex flex-col">
     {#each rows as row}<div
-        class="flex items-center justify-between gap-3 border-t border-border/60 py-2 first:border-t-0"
+        class="group/row -mx-1.5 flex items-center justify-between gap-3 rounded-md border-t border-border/60 px-1.5 py-2 transition-colors first:border-t-0 hover:bg-white/[0.03]"
       >
         <span class="flex items-center gap-2.5 text-sm"
           >{#if row.ready}<IconCircleCheck
-              class="size-4.5 text-success"
+              class="size-4.5 text-success transition-transform duration-150 group-hover/row:scale-105"
             />{:else}<IconCircleX
-              class="size-4.5 text-muted-foreground"
+              class="size-4.5 text-muted-foreground transition-transform duration-150 group-hover/row:scale-105"
             />{/if}{row.label}</span
         ><span
           class:text-success={row.ready}

@@ -1,5 +1,8 @@
 <script lang="ts">
+  import IconCheck from "lucide-svelte/icons/check"
+  import IconCopy from "lucide-svelte/icons/copy"
   import IconExternalLink from "lucide-svelte/icons/external-link"
+  import { toast } from "svelte-sonner"
   import { Button } from "@/components/ui/button"
   import { locale } from "@/lib/locale.svelte"
 
@@ -10,6 +13,25 @@
   const UPI_QR_URL = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=6&data=${encodeURIComponent(UPI_URI)}`
   const RAZORPAY_URL = "https://razorpay.me/@shashankbaghel705"
   const GITHUB_SPONSORS_URL = "https://github.com/sponsors/radcolor"
+
+  let copied = $state(false)
+  let copyTimeout: ReturnType<typeof setTimeout> | null = null
+
+  async function copyUpi() {
+    try {
+      await navigator.clipboard.writeText(UPI_VPA)
+      copied = true
+      toast.success(
+        locale.t("overlay.copied", { defaultValue: "Copied to clipboard" }),
+      )
+      if (copyTimeout) clearTimeout(copyTimeout)
+      copyTimeout = setTimeout(() => {
+        copied = false
+      }, 1500)
+    } catch {
+      toast.error("Failed to copy")
+    }
+  }
 </script>
 
 <div class="flex flex-col gap-7 p-7">
@@ -38,22 +60,41 @@
           <p class="text-xs text-muted-foreground">
             {locale.t("settings.upiId")}
           </p>
-          <p class="mt-1 break-all font-mono text-base font-semibold">
-            {UPI_VPA}
-          </p>
+          <div class="mt-1.5 flex items-center gap-2.5">
+            <p class="break-all font-mono text-base font-semibold">
+              {UPI_VPA}
+            </p>
+            <Button
+              variant="outline"
+              size="xs"
+              class="h-7 px-2 text-xs"
+              onclick={copyUpi}
+              aria-label="Copy UPI ID"
+            >
+              {#if copied}
+                <IconCheck class="size-3.5 text-success" />
+              {:else}
+                <IconCopy class="size-3.5" />
+              {/if}
+              <span class="ms-1">{copied ? "Copied" : "Copy"}</span>
+            </Button>
+          </div>
         </div>
       </div>
 
       <div
-        class="mx-auto w-fit shrink-0 rounded-lg border bg-white p-2 md:mx-0"
+        class="mx-auto flex w-fit shrink-0 flex-col items-center gap-1.5 rounded-xl border border-white/15 bg-white p-2.5 shadow-md md:mx-0"
       >
         <img
           src={UPI_QR_URL}
           alt={locale.t("settings.upiQrAlt", { vpa: UPI_VPA })}
-          class="size-40"
+          class="size-40 rounded-lg"
           width="160"
           height="160"
         />
+        <span class="font-mono text-[10px] font-medium text-black/60"
+          >Scan with any UPI app</span
+        >
       </div>
     </div>
   </section>

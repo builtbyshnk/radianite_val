@@ -137,6 +137,11 @@ html[data-reduce-motion="true"] [data-motion] {
     @apply font-sans;
   }
 
+  ::selection {
+    background-color: color-mix(in srgb, var(--primary) 35%, transparent);
+    color: #ffffff;
+  }
+
   body {
     @apply min-h-screen overflow-hidden bg-background text-foreground;
   }

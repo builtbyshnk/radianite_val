@@ -1,5 +1,8 @@
 <script lang="ts">
+  import { onMount } from "svelte"
   import { getCurrentWindow } from "@tauri-apps/api/window"
+  import { listen } from "@tauri-apps/api/event"
+  import IconCopy from "lucide-svelte/icons/copy"
   import IconMinus from "lucide-svelte/icons/minus"
   import IconPlayerPlay from "lucide-svelte/icons/play"
   import IconPlayerStop from "lucide-svelte/icons/circle-stop"
@@ -32,6 +35,26 @@
     onOpenSettings: () => void
   } = $props()
   const appWindow = "__TAURI_INTERNALS__" in window ? getCurrentWindow() : null
+  let isMaximized = $state(false)
+
+  onMount(() => {
+    if (!appWindow) return
+    let unlisten: (() => void) | undefined
+    void appWindow.isMaximized().then((max) => {
+      isMaximized = max
+    })
+    void listen("tauri://resize", async () => {
+      if (appWindow) {
+        isMaximized = await appWindow.isMaximized()
+      }
+    }).then((fn) => {
+      unlisten = fn
+    })
+    return () => {
+      unlisten?.()
+    }
+  })
+
   const tones = {
     ready: "border-success/30 bg-success/10 text-success",
     pending: "border-chart-4/30 bg-chart-4/10 text-chart-4",
@@ -41,9 +64,19 @@
   let pill = $derived(statusPill(status.kind))
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <header
   data-tauri-drag-region
-  class="flex h-12 shrink-0 items-center justify-between gap-3 border-b bg-background/80 px-3 backdrop-blur"
+  ondblclick={(e) => {
+    if (
+      (e.target as HTMLElement)?.closest(
+        "button, a, [data-tauri-drag-region='false']",
+      )
+    )
+      return
+    void appWindow?.toggleMaximize()
+  }}
+  class="flex h-12 shrink-0 items-center justify-between gap-3 border-b bg-background/80 px-3 backdrop-blur select-none"
 >
   <div data-tauri-drag-region class="flex min-w-0 items-center gap-3">
     <AppIcon class="size-5 rounded-sm" /><span
@@ -137,7 +170,7 @@
           >{locale.t("titleBar.startMonitoring")}</Tooltip.Content
         ></Tooltip.Root
       >{/if}
-    <div class="ms-1 flex items-center">
+    <div class="ms-1 flex items-center" data-tauri-drag-region="false">
       <Tooltip.Root
         ><Tooltip.Trigger
           >{#snippet child({ props })}<button
@@ -145,7 +178,7 @@
               type="button"
               aria-label={locale.t("titleBar.minimize")}
               onclick={() => appWindow?.minimize()}
-              class="flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              class="flex h-8 w-10 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
               ><IconMinus class="size-4" /></button
             >{/snippet}</Tooltip.Trigger
         ><Tooltip.Content>{locale.t("titleBar.minimize")}</Tooltip.Content
@@ -156,12 +189,19 @@
           >{#snippet child({ props })}<button
               {...props}
               type="button"
-              aria-label={locale.t("titleBar.maximize")}
+              aria-label={isMaximized
+                ? locale.t("titleBar.restore", { defaultValue: "Restore" })
+                : locale.t("titleBar.maximize")}
               onclick={() => appWindow?.toggleMaximize()}
-              class="flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-              ><IconSquare class="size-3.5" /></button
+              class="flex h-8 w-10 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              >{#if isMaximized}<IconCopy class="size-3.5" />{:else}<IconSquare
+                  class="size-3.5"
+                />{/if}</button
             >{/snippet}</Tooltip.Trigger
-        ><Tooltip.Content>{locale.t("titleBar.maximize")}</Tooltip.Content
+        ><Tooltip.Content
+          >{isMaximized
+            ? locale.t("titleBar.restore", { defaultValue: "Restore" })
+            : locale.t("titleBar.maximize")}</Tooltip.Content
         ></Tooltip.Root
       >
       <Tooltip.Root
@@ -171,7 +211,7 @@
               type="button"
               aria-label={locale.t("titleBar.close")}
               onclick={() => appWindow?.close()}
-              class="flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-destructive hover:text-destructive-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              class="flex h-8 w-10 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-[#c42b1c] hover:text-white focus-visible:ring-2 focus-visible:ring-ring"
               ><IconX class="size-4" /></button
             >{/snippet}</Tooltip.Trigger
         ><Tooltip.Content>{locale.t("titleBar.close")}</Tooltip.Content

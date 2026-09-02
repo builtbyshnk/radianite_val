@@ -78,8 +78,14 @@
     justify-content: space-between;
     gap: 0.75rem;
     border-top: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
-    padding: 0.5rem 0;
+    padding: 0.5rem 0.375rem;
+    margin: 0 -0.375rem;
+    border-radius: 0.375rem;
     line-height: 1.25rem;
+    transition: background-color 150ms ease-out;
+  }
+  .row:hover {
+    background-color: rgb(255 255 255 / 0.03);
   }
   .row:first-child {
     border-top: 0;
@@ -95,6 +101,10 @@
     width: 1rem;
     height: 1rem;
     color: var(--muted-foreground);
+    transition: transform 150ms ease-out;
+  }
+  .row:hover span :global(svg) {
+    transform: scale(1.05);
   }
   .row strong {
     font-size: 0.875rem;

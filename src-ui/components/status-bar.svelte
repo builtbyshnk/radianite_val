@@ -20,7 +20,11 @@
   } = $props()
   let health = $derived(
     status.kind === "valorantReady"
-      ? { label: locale.t("statusBar.excellent"), tone: "text-success" }
+      ? {
+          label: locale.t("statusBar.excellent"),
+          tone: "text-success",
+          dot: "bg-success",
+        }
       : status.kind === "riotClientOnly" ||
           status.kind === "valorantLaunching" ||
           status.kind === "degraded"
@@ -31,24 +35,36 @@
                 : "statusBar.good",
             ),
             tone: "text-chart-4",
+            dot: "bg-chart-4",
           }
         : status.kind === "error" ||
             status.kind === "noRiotInstall" ||
             status.kind === "authExpired"
-          ? { label: locale.t("statusBar.error"), tone: "text-destructive" }
+          ? {
+              label: locale.t("statusBar.error"),
+              tone: "text-destructive",
+              dot: "bg-destructive",
+            }
           : {
               label: locale.t("statusBar.offline"),
               tone: "text-muted-foreground",
+              dot: "bg-muted-foreground",
             },
   )
 </script>
 
 <footer
-  class="flex h-11 shrink-0 items-center border-t bg-background/80 px-4 text-xs backdrop-blur"
+  class="flex h-11 shrink-0 items-center border-t bg-background/80 px-4 text-xs backdrop-blur select-none"
 >
   <div class="flex items-center gap-4 text-muted-foreground">
     <span class="flex items-center gap-1.5"
-      ><IconWifi class={cn("size-4", health.tone)} />{locale.t(
+      ><span
+        class={cn(
+          "size-1.5 rounded-full",
+          health.dot,
+          health.tone === "text-success" && "animate-pulse",
+        )}
+      ></span><IconWifi class={cn("size-4", health.tone)} />{locale.t(
         "statusBar.connectionHealth",
       )}
       <strong class={cn("font-semibold", health.tone)}>{health.label}</strong
