@@ -400,10 +400,13 @@ fn details_text(
     match snapshot.phase {
         MatchPhase::Menus => t!("rpc.phase.menu", locale = locale, mode = mode).to_string(),
         MatchPhase::Matchmaking => t!("rpc.phase.queue", locale = locale, mode = mode).to_string(),
+        MatchPhase::Pregame if is_gauntlet(snapshot) => {
+            t!("rpc.phase.preparing", locale = locale, mode = mode).to_string()
+        }
         MatchPhase::Pregame => t!("rpc.phase.pregame", locale = locale, mode = mode).to_string(),
         MatchPhase::Ingame => {
             let location = localized_map_name(snapshot, content).unwrap_or_else(|| mode.clone());
-            if let Some(score) = &snapshot.score {
+            if let Some(score) = snapshot.score.as_ref().filter(|_| !is_gauntlet(snapshot)) {
                 t!(
                     "rpc.phase.ingameScore",
                     locale = locale,
@@ -497,6 +500,13 @@ fn mode_text(snapshot: &LiveSnapshot, locale: &str) -> String {
         .unwrap_or_else(|| t!("rpc.mode.valorant", locale = locale).to_string())
 }
 
+fn is_gauntlet(snapshot: &LiveSnapshot) -> bool {
+    snapshot
+        .queue_id
+        .as_deref()
+        .is_some_and(|queue| queue.eq_ignore_ascii_case("abilitydraftarena"))
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct RenderedAsset {
     image: String,
@@ -527,6 +537,7 @@ fn large_asset(
         MatchPhase::Pregame => snapshot
             .agent_name
             .as_deref()
+            .filter(|_| !is_gauntlet(snapshot))
             .map(|agent| RenderedAsset {
                 image: prefixed_asset(&assets.agent_prefix, agent),
                 text: localized_agent_name(snapshot, content).unwrap_or_else(|| agent.to_string()),
@@ -534,11 +545,15 @@ fn large_asset(
             .unwrap_or_else(|| game_asset(assets, locale)),
         MatchPhase::Ingame | MatchPhase::Range => map_asset(snapshot, assets, locale, content)
             .or_else(|| {
-                snapshot.agent_name.as_deref().map(|agent| RenderedAsset {
-                    image: prefixed_asset(&assets.agent_prefix, agent),
-                    text: localized_agent_name(snapshot, content)
-                        .unwrap_or_else(|| agent.to_string()),
-                })
+                snapshot
+                    .agent_name
+                    .as_deref()
+                    .filter(|_| !is_gauntlet(snapshot))
+                    .map(|agent| RenderedAsset {
+                        image: prefixed_asset(&assets.agent_prefix, agent),
+                        text: localized_agent_name(snapshot, content)
+                            .unwrap_or_else(|| agent.to_string()),
+                    })
             })
             .unwrap_or_else(|| game_asset(assets, locale)),
         _ => game_asset(assets, locale),
@@ -551,6 +566,13 @@ fn small_asset(
     locale: &str,
     content: Option<&ValorantContent>,
 ) -> RenderedAsset {
+    if is_gauntlet(snapshot) && snapshot.phase != MatchPhase::Range {
+        return RenderedAsset {
+            image: format!("{}abilitydraftarena", assets.mode_prefix),
+            text: mode_text(snapshot, locale),
+        };
+    }
+
     match snapshot.phase {
         MatchPhase::Pregame => mode_asset(snapshot, assets, locale)
             .or_else(|| rank_asset(snapshot, assets, locale, content))
@@ -1046,7 +1068,11 @@ mod tests {
             ("premier", "mode_premier", "Premier"),
             ("hurm", "mode_tdm", "Team Deathmatch"),
             ("teamdeathmatch", "mode_tdm", "Team Deathmatch"),
-            ("abilitydraftarena", "mode_discovery", "Gauntlet: Glitched"),
+            (
+                "abilitydraftarena",
+                "mode_abilitydraftarena",
+                "Gauntlet: Glitched",
+            ),
         ];
 
         for (queue, image, text) in cases {
@@ -1065,7 +1091,7 @@ mod tests {
         let cases = [
             (MatchPhase::Menus, "Gauntlet: Glitched - In Menu"),
             (MatchPhase::Matchmaking, "Gauntlet: Glitched - Queueing"),
-            (MatchPhase::Pregame, "Gauntlet: Glitched - Agent Select"),
+            (MatchPhase::Pregame, "Gauntlet: Glitched - Preparing Match"),
             (MatchPhase::Ingame, "Ascent - Gauntlet: Glitched"),
         ];
 
@@ -1073,6 +1099,7 @@ mod tests {
             let mut snapshot = snapshot(phase);
             snapshot.queue_id = Some("abilitydraftarena".to_string());
             snapshot.map_name = Some("Ascent".to_string());
+            snapshot.score = Some(ScoreSnapshot { ally: 7, enemy: 4 });
 
             assert_eq!(details_text(&snapshot, "en-US", None), expected);
         }
@@ -1081,6 +1108,67 @@ mod tests {
             queue_label("ABILITYDRAFTARENA", "de-DE"),
             "Gauntlet: Glitched"
         );
+    }
+
+    #[test]
+    fn gauntlet_mode_icon_takes_priority_over_agent_and_rank() {
+        for phase in [
+            MatchPhase::Menus,
+            MatchPhase::Matchmaking,
+            MatchPhase::Pregame,
+            MatchPhase::Ingame,
+            MatchPhase::Replay,
+        ] {
+            let mut snapshot = snapshot(phase);
+            snapshot.queue_id = Some("ABILITYDRAFTARENA".to_string());
+            snapshot.agent_name = Some("KAY/O".to_string());
+            snapshot.rank = Some(RankSnapshot {
+                tier: Some(15),
+                tier_name: Some("Silver 2".to_string()),
+                ranked_rating: None,
+                last_match_delta: None,
+                leaderboard_rank: None,
+                season_id: None,
+                icon_url: None,
+            });
+
+            let (activity, _) = render_activity(&snapshot, &asset_config(), None, "en-US", None);
+            let rendered = serde_json::to_value(activity).expect("serialized activity");
+
+            assert_eq!(
+                rendered
+                    .pointer("/assets/small_image")
+                    .and_then(Value::as_str),
+                Some("mode_abilitydraftarena")
+            );
+            assert_eq!(
+                rendered
+                    .pointer("/assets/small_text")
+                    .and_then(Value::as_str),
+                Some("Gauntlet: Glitched")
+            );
+            assert_eq!(
+                rendered
+                    .pointer("/assets/large_image")
+                    .and_then(Value::as_str),
+                Some(if snapshot.phase == MatchPhase::Matchmaking {
+                    "game_icon_white"
+                } else {
+                    "game_icon"
+                })
+            );
+        }
+    }
+
+    #[test]
+    fn gauntlet_queue_does_not_override_range_art() {
+        let mut snapshot = snapshot(MatchPhase::Range);
+        snapshot.queue_id = Some("abilitydraftarena".to_string());
+
+        let small = small_asset(&snapshot, &asset_config(), "en-US", None);
+
+        assert_eq!(small.image, "mode_range");
+        assert_eq!(small.text, "The Range");
     }
 
     #[test]

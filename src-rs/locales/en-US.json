@@ -9,6 +9,7 @@
   "rpc.phase.menu": "%{mode} - In Menu",
   "rpc.phase.queue": "%{mode} - Queueing",
   "rpc.phase.pregame": "%{mode} - Agent Select",
+  "rpc.phase.preparing": "%{mode} - Preparing Match",
   "rpc.phase.ingame": "%{location} - %{mode}",
   "rpc.phase.ingameScore": "%{location} - %{mode} (%{ally}-%{enemy})",
   "rpc.phase.replay": "Watching Replay",
