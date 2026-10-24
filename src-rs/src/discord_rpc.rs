@@ -703,6 +703,7 @@ fn queue_label(queue: &str, locale: &str) -> String {
         "hurm" | "teamdeathmatch" => Some("rpc.mode.hurm"),
         "retake" | "fortcollins" => Some("rpc.mode.retake"),
         "knockout" | "dodgeball" => Some("rpc.mode.knockout"),
+        "abilitydraftarena" => Some("rpc.mode.abilitydraftarena"),
         "aros" | "allrandomonesite" => Some("rpc.mode.aros"),
         "skirmish" => Some("rpc.mode.skirmish"),
         "skirmishascension" => Some("rpc.mode.skirmishascension"),
@@ -811,8 +812,8 @@ mod tests {
     };
 
     use super::{
-        details_text, large_asset, render_activity, small_asset, state_text, truncate_discord,
-        RpcAssetConfig,
+        details_text, large_asset, queue_label, render_activity, small_asset, state_text,
+        truncate_discord, RpcAssetConfig,
     };
 
     fn snapshot(phase: MatchPhase) -> LiveSnapshot {
@@ -1045,6 +1046,7 @@ mod tests {
             ("premier", "mode_premier", "Premier"),
             ("hurm", "mode_tdm", "Team Deathmatch"),
             ("teamdeathmatch", "mode_tdm", "Team Deathmatch"),
+            ("abilitydraftarena", "mode_discovery", "Gauntlet: Glitched"),
         ];
 
         for (queue, image, text) in cases {
@@ -1056,6 +1058,29 @@ mod tests {
             assert_eq!(small.image, image);
             assert_eq!(small.text, text);
         }
+    }
+
+    #[test]
+    fn renders_gauntlet_mode_name_across_match_phases() {
+        let cases = [
+            (MatchPhase::Menus, "Gauntlet: Glitched - In Menu"),
+            (MatchPhase::Matchmaking, "Gauntlet: Glitched - Queueing"),
+            (MatchPhase::Pregame, "Gauntlet: Glitched - Agent Select"),
+            (MatchPhase::Ingame, "Ascent - Gauntlet: Glitched"),
+        ];
+
+        for (phase, expected) in cases {
+            let mut snapshot = snapshot(phase);
+            snapshot.queue_id = Some("abilitydraftarena".to_string());
+            snapshot.map_name = Some("Ascent".to_string());
+
+            assert_eq!(details_text(&snapshot, "en-US", None), expected);
+        }
+
+        assert_eq!(
+            queue_label("ABILITYDRAFTARENA", "de-DE"),
+            "Gauntlet: Glitched"
+        );
     }
 
     #[test]

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { formatUptime, labelize } from "@/lib/format"
+import { formatUptime, labelize, queueLabel } from "@/lib/format"
 
 describe("format helpers", () => {
   it("formats uptime without locale-dependent output", () => {
@@ -8,5 +8,12 @@ describe("format helpers", () => {
 
   it("turns enum-like names into labels", () => {
     expect(labelize("valorantReady")).toBe("Valorant Ready")
+  })
+
+  it("labels the Gauntlet queue with its public mode name", () => {
+    expect(queueLabel("abilitydraftarena", "abilitydraftarena")).toBe(
+      "Gauntlet: Glitched",
+    )
+    expect(queueLabel("ABILITYDRAFTARENA")).toBe("Gauntlet: Glitched")
   })
 })
