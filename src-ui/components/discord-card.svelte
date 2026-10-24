@@ -80,7 +80,7 @@
           {locale.t("discord.playing")}
         </p>
         <div class="flex gap-3">
-          <div class="relative size-[52px] shrink-0">
+          <div class="relative size-14 shrink-0">
             <div
               class="flex size-full items-center justify-center overflow-hidden rounded-lg bg-[#1a1b1e]"
             >
@@ -88,18 +88,18 @@
                   src={largeUrl}
                   alt=""
                   class="size-full object-cover"
-                />{:else}<AppIcon class="size-9 rounded-md" />{/if}
+                />{:else}<AppIcon class="size-10 rounded-md" />{/if}
             </div>
             <span
-              class="absolute -bottom-1 -end-1 flex size-5 items-center justify-center overflow-hidden rounded-full bg-[#232428] ring-2 ring-[#232428]"
+              class="absolute -bottom-1 -end-1 flex size-7 items-center justify-center overflow-hidden rounded-full bg-[#232428] ring-2 ring-[#232428]"
               >{#if agentUrl}<img
                   src={agentUrl}
                   alt=""
-                  class="size-4 rounded-full object-cover"
+                  class="size-6 rounded-full object-cover"
                 />{/if}</span
             >
           </div>
-          <div class="min-w-0 flex-1 text-sm leading-tight">
+          <div class="min-w-0 flex-1 text-sm leading-normal">
             <p class="truncate font-semibold text-white">{preview.name}</p>
             <p class="truncate text-[0.7rem] text-[#b5bac1]">
               {preview.details}
