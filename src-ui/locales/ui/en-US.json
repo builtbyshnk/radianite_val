@@ -142,7 +142,7 @@
     }
   },
   "overlay": {
-    "title": "Open Broadcaster Software (OBS) Overlay",
+    "title": "Open Broadcaster Software overlay",
     "help": "Add this URL as a Browser Source in OBS.",
     "sourceUrl": "Browser Source URL",
     "theme": "Overlay theme",
