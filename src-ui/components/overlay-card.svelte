@@ -43,7 +43,7 @@
   const privacyLabel = $derived(locale.t("settings.overlayHideDetails"))
 </script>
 
-<Panel title={locale.t("overlay.title")}>
+<Panel title={locale.t("overlay.title")} class="flex-1">
   {#snippet icon()}<IconBroadcast
       title=""
       aria-hidden="true"
