@@ -1021,6 +1021,21 @@ mod tests {
     }
 
     #[test]
+    fn renders_hush_assets_without_a_codename_or_agent_id() {
+        let mut snapshot = snapshot(MatchPhase::Pregame);
+        snapshot.agent_name = Some("Hush".to_string());
+
+        let large = large_asset(&snapshot, &asset_config(), "en-US", None);
+        assert_eq!(large.image, "agent_hush");
+        assert_eq!(large.text, "Hush");
+
+        snapshot.phase = MatchPhase::Ingame;
+        let small = small_asset(&snapshot, &asset_config(), "en-US", None);
+        assert_eq!(small.image, "agent_hush");
+        assert_eq!(small.text, "Hush");
+    }
+
+    #[test]
     fn derives_map_asset_from_riot_map_path() {
         let mut snapshot = snapshot(MatchPhase::Ingame);
         snapshot.map_id = Some("/Game/Maps/Ascent/Ascent".to_string());

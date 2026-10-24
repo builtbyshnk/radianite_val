@@ -991,6 +991,26 @@ mod tests {
     }
 
     #[test]
+    fn resolves_hush_from_content_without_artwork() {
+        let content = ValorantContent {
+            agents: vec![ContentAgent {
+                // Test fixture only: Hush's real UUID has not been published yet.
+                uuid: "hush-test-id".to_string(),
+                display_name: "Hush".to_string(),
+                display_icon: None,
+                full_portrait: None,
+            }],
+            ..ValorantContent::default()
+        };
+
+        assert_eq!(content.agent_name("hush-test-id").as_deref(), Some("Hush"));
+        let presentation = content.presentation(Some("hush-test-id"), None, None);
+        assert_eq!(presentation.agent_name.as_deref(), Some("Hush"));
+        assert!(presentation.agent_icon_url.is_none());
+        assert!(presentation.agent_portrait_url.is_none());
+    }
+
+    #[test]
     fn includes_required_valorant_headers() {
         let client = ValorantClient::from_http_client(
             build_valorant_http_client().expect("transport should build"),
