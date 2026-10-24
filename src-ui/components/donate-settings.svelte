@@ -21,9 +21,7 @@
     try {
       await navigator.clipboard.writeText(UPI_VPA)
       copied = true
-      toast.success(
-        locale.t("overlay.copied", { defaultValue: "Copied to clipboard" }),
-      )
+      toast.success(locale.t("settings.upiCopied"))
       if (copyTimeout) clearTimeout(copyTimeout)
       copyTimeout = setTimeout(() => {
         copied = false

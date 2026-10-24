@@ -272,6 +272,7 @@
     "donateDescription": "If my work helps you, these are the simplest ways to support it.",
     "upiDescription": "Unified Payments Interface (UPI) is supported in India and, through select partners, in countries such as the United Arab Emirates, Singapore, Bhutan, Nepal, Sri Lanka, France, Mauritius, and Qatar. Scan the QR code or pay directly to the Virtual Payment Address (VPA). No amount is fixed.",
     "upiId": "Unified Payments Interface (UPI) / Virtual Payment Address (VPA)",
+    "upiCopied": "UPI ID copied",
     "upiQrAlt": "UPI QR code for {{vpa}}",
     "razorpayDescription": "Use Razorpay if UPI is not convenient or you prefer paying by card, wallet, or net banking.",
     "donateWithRazorpay": "Donate with Razorpay",

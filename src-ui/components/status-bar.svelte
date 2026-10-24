@@ -1,10 +1,8 @@
 <script lang="ts">
   import IconClockHour4 from "@solar-icons/svelte/bold/clock-circle"
-  import IconRefreshDot from "@solar-icons/svelte/bold/refresh"
-  import IconWifi from "@solar-icons/svelte/bold/wi-fi"
   import RelativeTime from "@/components/relative-time.svelte"
   import { locale } from "@/lib/locale.svelte"
-  import { formatUptime } from "@/lib/format"
+  import { formatUptime, statusPill } from "@/lib/format"
   import { cn } from "@/lib/utils"
   import type { CoreStatus } from "@/lib/types"
   let {
@@ -18,63 +16,42 @@
     startedAt: number
     now: number
   } = $props()
-  let health = $derived(
-    status.kind === "valorantReady"
-      ? {
-          label: locale.t("statusBar.excellent"),
-          tone: "text-success",
-          dot: "bg-success",
-        }
-      : status.kind === "riotClientOnly" ||
-          status.kind === "valorantLaunching" ||
-          status.kind === "degraded"
-        ? {
-            label: locale.t(
-              status.kind === "degraded"
-                ? "statusBar.degraded"
-                : "statusBar.good",
-            ),
-            tone: "text-chart-4",
-            dot: "bg-chart-4",
-          }
-        : status.kind === "error" ||
-            status.kind === "noRiotInstall" ||
-            status.kind === "authExpired"
-          ? {
-              label: locale.t("statusBar.error"),
-              tone: "text-destructive",
-              dot: "bg-destructive",
-            }
-          : {
-              label: locale.t("statusBar.offline"),
-              tone: "text-muted-foreground",
-              dot: "bg-muted-foreground",
-            },
-  )
+  const tones = {
+    ready: "text-success",
+    pending: "text-chart-4",
+    error: "text-destructive",
+    idle: "text-muted-foreground",
+  }
+  let health = $derived.by(() => {
+    void locale.revision
+    return statusPill(status.kind)
+  })
 </script>
 
 <footer
-  class="flex h-11 shrink-0 items-center border-t bg-background px-4 text-xs select-none"
+  class="flex min-h-10 shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t bg-background px-4 py-2 text-xs select-none"
 >
-  <div class="flex items-center gap-4 text-muted-foreground">
-    <span class="flex items-center gap-1.5"
-      ><span class={cn("size-1.5 rounded-full", health.dot)}></span><IconWifi
-        class={cn("size-4", health.tone)}
-      />{locale.t("statusBar.connectionHealth")}
-      <strong class={cn("font-semibold", health.tone)}>{health.label}</strong
-      ></span
-    ><span class="h-4 w-px bg-border"></span><span
-      class="flex items-center gap-1.5"
-      ><IconRefreshDot class="size-4" />{locale.t("statusBar.lastSync")}
-      <strong class="font-mono font-normal text-foreground"
-        ><RelativeTime date={lastSync} {now} fallback="--:--" /></strong
-      ></span
-    ><span class="h-4 w-px bg-border"></span><span
-      class="flex items-center gap-1.5"
-      ><IconClockHour4 class="size-4" />{locale.t("statusBar.uptime")}
-      <strong class="font-mono font-normal text-foreground"
-        >{formatUptime(now - startedAt)}</strong
-      ></span
-    >
+  <div class="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-2">
+    <span class="flex items-center gap-2 font-medium text-foreground">
+      <span
+        aria-hidden="true"
+        class={cn(
+          "size-1.5 shrink-0 rounded-full bg-current",
+          tones[health.tone],
+        )}
+      ></span>
+      {health.label}
+    </span>
+    <span class="flex items-center gap-2 text-muted-foreground">
+      {locale.t("statusBar.lastSync")}
+      <span class="text-foreground tabular-nums">
+        <RelativeTime date={lastSync} {now} fallback="—" />
+      </span>
+    </span>
   </div>
+  <span class="flex items-center gap-1.5 text-muted-foreground">
+    <IconClockHour4 class="size-3.5" aria-hidden="true" />
+    {locale.t("statusBar.uptime")}
+    <span class="font-mono tabular-nums">{formatUptime(now - startedAt)}</span>
+  </span>
 </footer>

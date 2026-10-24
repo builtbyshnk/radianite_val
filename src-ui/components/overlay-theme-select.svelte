@@ -50,7 +50,9 @@
     <Select.Content align="end">
       <Select.Group>
         {#each overlayThemes as theme (theme.id)}
-          <Select.Item value={theme.id}>{theme.name}</Select.Item>
+          <Select.Item value={theme.id} class="text-xs"
+            >{theme.name}</Select.Item
+          >
         {/each}
       </Select.Group>
     </Select.Content>

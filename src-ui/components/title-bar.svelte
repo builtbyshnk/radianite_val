@@ -103,7 +103,7 @@
         onclick={() => appWindow?.minimize()}
         class="flex h-8 w-9 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <IconMinus class="size-4" />
+        <IconMinus class="size-4" strokeWidth={2.5} />
       </button>
       <button
         type="button"
@@ -111,7 +111,7 @@
         onclick={() => appWindow?.close()}
         class="flex h-8 w-9 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-[#c42b1c] hover:text-white focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <IconX class="size-4" />
+        <IconX class="size-4" strokeWidth={2.5} />
       </button>
     </div>
   </div>

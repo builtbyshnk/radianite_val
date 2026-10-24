@@ -123,7 +123,7 @@
     />{/if}
   <StartupVeil active={r.initializing} />
   {#if settingsOpen && SettingsDialog}<SettingsDialog
-      bind:open={settingsOpen}
+      open={true}
       onOpenChange={(open: boolean) => (settingsOpen = open)}
       settings={r.settings}
       onSetSetting={(key: never, value: never) => r.setSetting(key, value)}

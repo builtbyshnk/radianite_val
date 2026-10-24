@@ -46,9 +46,6 @@
     ),
   )
   $effect(() => {
-    onOpenChange(open)
-  })
-  $effect(() => {
     if (!open || !fetchFromGitHub) return
     const controller = new AbortController()
     loading = true
@@ -85,7 +82,7 @@
   }
 </script>
 
-<Dialog.Root bind:open
+<Dialog.Root bind:open onOpenChangeComplete={onOpenChange}
   ><Dialog.Content
     class="flex h-[38rem] max-h-[calc(100%-2rem)] max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl"
     ><header class="flex items-start gap-3 border-b px-7 py-5 pe-14">
