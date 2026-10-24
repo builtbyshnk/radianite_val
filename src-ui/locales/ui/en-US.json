@@ -34,7 +34,7 @@
       "riotClientOnly": "Riot ready",
       "valorantLaunching": "Launching",
       "valorantReady": "VALORANT ready",
-      "authExpired": "Auth expired",
+      "authExpired": "Authentication expired",
       "disconnected": "Disconnected",
       "degraded": "Degraded",
       "error": "Error"
@@ -55,12 +55,12 @@
       "technical": "A service reported an error"
     },
     "rpc": {
-      "notLoaded": "Discord RPC status has not loaded",
-      "disabled": "Discord RPC is disabled",
-      "notConfigured": "Set RADIANITE_DISCORD_APP_ID to enable Discord RPC",
-      "waiting": "Discord RPC is connected; waiting for live VALORANT data",
-      "updated": "Discord RPC updated",
-      "connectionFailed": "Discord IPC connection failed",
+      "notLoaded": "Discord Rich Presence status has not loaded",
+      "disabled": "Discord Rich Presence is disabled",
+      "notConfigured": "Set RADIANITE_DISCORD_APP_ID to enable Discord Rich Presence",
+      "waiting": "Discord Rich Presence is connected; waiting for live VALORANT data",
+      "updated": "Discord Rich Presence updated",
+      "connectionFailed": "Discord connection failed",
       "updateFailed": "Discord activity update failed"
     },
     "overlay": {
@@ -96,8 +96,18 @@
     "map": "Map",
     "phase": "Phase",
     "rank": "Rank",
-    "rr": "RR",
+    "rr": "Rank Rating",
     "region": "Region",
+    "regionLabel": {
+      "ap": "Asia Pacific",
+      "na": "North America",
+      "eu": "Europe",
+      "kr": "South Korea",
+      "br": "Brazil",
+      "latam": "Latin America",
+      "pbe": "Public Beta Environment",
+      "cn": "China"
+    },
     "tier": "Tier {{tier}}",
     "unranked": "Unranked",
     "phaseLabel": {
@@ -132,7 +142,7 @@
     }
   },
   "overlay": {
-    "title": "OBS Overlay",
+    "title": "Open Broadcaster Software (OBS) Overlay",
     "help": "Add this URL as a Browser Source in OBS.",
     "sourceUrl": "Browser Source URL",
     "theme": "Overlay theme",
@@ -141,7 +151,7 @@
     "copied": "Overlay URL copied",
     "suggestedSize": "Suggested Size:",
     "livePreview": "Live Preview",
-    "previewTitle": "OBS rank overlay preview",
+    "previewTitle": "Open Broadcaster Software (OBS) rank overlay preview",
     "previewUnavailable": "Preview unavailable"
   },
   "discord": {
@@ -222,7 +232,7 @@
       "general": "General",
       "appearance": "Appearance",
       "overlay": "Overlay",
-      "discord": "Discord RPC",
+      "discord": "Discord Rich Presence",
       "donate": "Donate",
       "about": "About"
     },
@@ -249,19 +259,19 @@
     "reduceMotion": "Reduce motion",
     "reduceMotionDescription": "Disable nonessential interface animations and transitions.",
     "lowResourceMode": "Low-resource mode on exit",
-    "lowResourceModeDescription": "Closing Radianite removes the graphical interface while monitoring, Discord RPC, and the OBS overlay continue from the system tray.",
+    "lowResourceModeDescription": "Closing Radianite removes the graphical interface while monitoring, Discord Rich Presence, and the OBS overlay continue from the system tray.",
     "overlayDescription": "Add this URL as a Browser Source in OBS to show your live rank.",
     "overlayHideDetails": "Hide overlay details",
-    "overlayHideDetailsDescription": "Show only your rank and RR by hiding your VALORANT ID and match details.",
+    "overlayHideDetailsDescription": "Show only your rank and Rank Rating by hiding your VALORANT player identity and match details.",
     "rpcTitle": "Discord Rich Presence",
     "rpcDescription": "Show your current VALORANT match and rank on your Discord profile.",
-    "rpcLanguage": "Discord RPC language",
+    "rpcLanguage": "Discord Rich Presence language",
     "rpcLanguageDescription": "Choose the language sent to Discord independently from the app.",
-    "enableRpcOnStart": "Enable Discord RPC on app start",
+    "enableRpcOnStart": "Enable Discord Rich Presence on app start",
     "enableRpcOnStartDescription": "Automatically enable Discord Rich Presence when Radianite starts.",
     "donateDescription": "If my work helps you, these are the simplest ways to support it.",
-    "upiDescription": "Unified Payments Interface (UPI) is supported in India and, through select partners, in countries such as the UAE, Singapore, Bhutan, Nepal, Sri Lanka, France, Mauritius, and Qatar. Scan the QR or pay directly to the VPA. No amount is fixed.",
-    "upiId": "UPI ID / VPA",
+    "upiDescription": "Unified Payments Interface (UPI) is supported in India and, through select partners, in countries such as the United Arab Emirates, Singapore, Bhutan, Nepal, Sri Lanka, France, Mauritius, and Qatar. Scan the QR code or pay directly to the Virtual Payment Address (VPA). No amount is fixed.",
+    "upiId": "Unified Payments Interface (UPI) / Virtual Payment Address (VPA)",
     "upiQrAlt": "UPI QR code for {{vpa}}",
     "razorpayDescription": "Use Razorpay if UPI is not convenient or you prefer paying by card, wallet, or net banking.",
     "donateWithRazorpay": "Donate with Razorpay",

@@ -50,7 +50,7 @@ impl RpcConfig {
                 .or_else(|| Some(DEFAULT_GITHUB_URL.to_string())),
             assets: RpcAssetConfig {
                 large_game: env::var("RADIANITE_DISCORD_ASSET_GAME")
-                    .unwrap_or_else(|_| "game_icon".to_string()),
+                    .unwrap_or_else(|_| "radianite".to_string()),
                 small_menu: env::var("RADIANITE_DISCORD_ASSET_MENU")
                     .unwrap_or_else(|_| "mode_unrated".to_string()),
                 map_prefix: env::var("RADIANITE_DISCORD_ASSET_MAP_PREFIX")
@@ -890,7 +890,7 @@ mod tests {
 
         assert_eq!(
             state_text(&snapshot, "en-US", None),
-            "SILVER 2 (47rr) - Solo 1/5"
+            "SILVER 2 (47 RR) - Solo 1/5"
         );
     }
 
@@ -922,7 +922,7 @@ mod tests {
 
         assert_eq!(
             state_text(&snapshot, "en-US", None),
-            "SILVER 2 (47rr) - Away"
+            "SILVER 2 (47 RR) - Away"
         );
     }
 
@@ -1006,7 +1006,7 @@ mod tests {
         let menus_large = large_asset(&menus, &asset_config(), "en-US", None);
 
         assert_eq!(queueing_large.image, "game_icon_white");
-        assert_eq!(menus_large.image, "game_icon");
+        assert_eq!(menus_large.image, "radianite");
     }
 
     #[test]
@@ -1169,7 +1169,7 @@ mod tests {
                 Some(if snapshot.phase == MatchPhase::Matchmaking {
                     "game_icon_white"
                 } else {
-                    "game_icon"
+                    "radianite"
                 })
             );
         }
@@ -1226,7 +1226,7 @@ mod tests {
 
     fn asset_config() -> RpcAssetConfig {
         RpcAssetConfig {
-            large_game: "game_icon".to_string(),
+            large_game: "radianite".to_string(),
             small_menu: "mode_unrated".to_string(),
             map_prefix: "splash_".to_string(),
             agent_prefix: "agent_".to_string(),

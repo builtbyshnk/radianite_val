@@ -90,9 +90,6 @@
           width="160"
           height="160"
         />
-        <span class="font-mono text-[10px] font-medium text-black/60"
-          >Scan with any UPI app</span
-        >
       </div>
     </div>
   </section>

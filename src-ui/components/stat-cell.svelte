@@ -27,7 +27,7 @@
     <p
       class:text-foreground={accent}
       class:text-primary={tone}
-      class="truncate rounded-sm text-sm font-medium outline-none"
+      class="rounded-sm text-sm font-medium break-words outline-none"
     >
       {value}
     </p>

@@ -11,7 +11,7 @@
   import IconWorld from "@solar-icons/svelte/bold/globe"
   import AppIcon from "@/components/app-icon.svelte"
   import StatCell from "@/components/stat-cell.svelte"
-  import { phaseLabel, playerName, queueLabel } from "@/lib/format"
+  import { phaseLabel, playerName, queueLabel, regionLabel } from "@/lib/format"
   import { locale } from "@/lib/locale.svelte"
   import type { LiveSnapshot, ValorantPresentation } from "@/lib/types"
   let {
@@ -73,12 +73,10 @@
   )
   let rr = $derived(
     snapshot?.rank?.rankedRating != null
-      ? `${snapshot.rank.rankedRating} ${locale.t("match.rr")}`
+      ? `${snapshot.rank.rankedRating}`
       : empty,
   )
-  let region = $derived(
-    snapshot?.region ? snapshot.region.toUpperCase() : empty,
-  )
+  let region = $derived(regionLabel(snapshot?.region) ?? empty)
 </script>
 
 <section

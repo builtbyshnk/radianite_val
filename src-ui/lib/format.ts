@@ -46,6 +46,13 @@ export function playerName(snapshot: LiveSnapshot | null) {
   return `${name}${snapshot?.player.gameTag ? `#${snapshot.player.gameTag}` : ""}`
 }
 
+export function regionLabel(region?: string | null) {
+  if (!region) return null
+  return i18n.t(`match.regionLabel.${region.toLowerCase()}`, {
+    defaultValue: region.toUpperCase(),
+  })
+}
+
 export function labelize(value: string) {
   return value
     .replace(/([A-Z])/g, " $1")

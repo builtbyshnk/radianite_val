@@ -18,6 +18,7 @@
     "site:dev": "wrangler dev",
     "site:verify": "wrangler deploy --dry-run",
     "tauri": "tauri",
+    "icons:generate": "bun scripts/generate-icons.ts",
     "test": "vitest run",
     "verify": "bun run verify:frontend && bun run verify:rust",
     "verify:frontend": "bun run lint && bun run format:check && bun run test && bun run build",

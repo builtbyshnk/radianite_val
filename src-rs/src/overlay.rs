@@ -18,6 +18,7 @@ const BIND_HOST: &str = "127.0.0.1";
 const OVERLAY_HTML: &str = include_str!("overlay/index.html");
 const OVERLAY_CSS: &str = include_str!("overlay/overlay.css");
 const OVERLAY_JS: &str = include_str!("overlay/overlay.js");
+const OVERLAY_FAVICON: &[u8] = include_bytes!("../icons/icon.ico");
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -141,7 +142,7 @@ async fn handle_connection(mut stream: TcpStream, state: AppState) -> std::io::R
             });
             write_response(&mut stream, 200, "application/json; charset=utf-8", &body).await
         }
-        "/favicon.ico" => write_response(&mut stream, 204, "text/plain; charset=utf-8", "").await,
+        "/favicon.ico" => write_response(&mut stream, 200, "image/x-icon", OVERLAY_FAVICON).await,
         _ => write_response(&mut stream, 404, "text/plain; charset=utf-8", "Not found").await,
     }
 }
@@ -200,7 +201,7 @@ async fn write_response(
     stream: &mut TcpStream,
     status_code: u16,
     content_type: &str,
-    body: &str,
+    body: impl AsRef<[u8]>,
 ) -> std::io::Result<()> {
     let reason = match status_code {
         200 => "OK",
@@ -208,7 +209,7 @@ async fn write_response(
         404 => "Not Found",
         _ => "OK",
     };
-    let bytes = body.as_bytes();
+    let bytes = body.as_ref();
     let response = format!(
         "HTTP/1.1 {status_code} {reason}\r\nContent-Type: {content_type}\r\nContent-Length: {}\r\nCache-Control: no-store, no-cache, must-revalidate\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n",
         bytes.len()
@@ -222,8 +223,15 @@ async fn write_response(
 #[cfg(test)]
 mod tests {
     use serde_json::json;
+    use tokio::{
+        io::AsyncReadExt,
+        net::{TcpListener, TcpStream},
+    };
 
-    use super::{overlay_snapshot_from_parts, OVERLAY_CSS, OVERLAY_HTML, OVERLAY_JS};
+    use super::{
+        overlay_snapshot_from_parts, write_response, OVERLAY_CSS, OVERLAY_FAVICON, OVERLAY_HTML,
+        OVERLAY_JS,
+    };
     use crate::riot::state::{
         CoreStatus, CoreStatusKind, LiveSnapshot, MatchPhase, PartySnapshot, PlayerIdentity,
         RankSnapshot,
@@ -277,6 +285,32 @@ mod tests {
         for theme in ["catppuccin", "evergreen", "solarized", "porcelain", "rose"] {
             assert!(OVERLAY_CSS.contains(&format!(r#"data-theme="{theme}""#)));
         }
+    }
+
+    #[tokio::test]
+    async fn writes_binary_favicon_without_corrupting_the_image() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            write_response(&mut stream, 200, "image/x-icon", OVERLAY_FAVICON)
+                .await
+                .unwrap();
+        });
+        let mut client = TcpStream::connect(address).await.unwrap();
+        let mut response = Vec::new();
+        client.read_to_end(&mut response).await.unwrap();
+        server.await.unwrap();
+
+        let header_end = response
+            .windows(4)
+            .position(|part| part == b"\r\n\r\n")
+            .unwrap();
+        let headers = std::str::from_utf8(&response[..header_end]).unwrap();
+        assert!(headers.starts_with("HTTP/1.1 200 OK\r\n"));
+        assert!(headers.contains("Content-Type: image/x-icon\r\n"));
+        assert!(headers.contains(&format!("Content-Length: {}\r\n", OVERLAY_FAVICON.len())));
+        assert_eq!(&response[header_end + 4..], OVERLAY_FAVICON);
     }
 
     #[test]
