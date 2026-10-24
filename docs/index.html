@@ -46,7 +46,7 @@
     "description": "A lightweight VALORANT companion app for streamers and players who want cleaner match presence and an easy OBS rank overlay.",
     "url": "https://get.radcolor.dev/radianite",
     "image": "https://get.radcolor.dev/radianite/assets/radianite-logo.png",
-    "downloadUrl": "https://github.com/builtbyshnk/radianite_val/releases/download/v1.2.1/Radianite_1.2.1_windows_x64.exe",
+    "downloadUrl": "https://github.com/builtbyshnk/radianite_val/releases/latest",
     "license": "https://www.gnu.org/licenses/gpl-3.0.html",
     "author": {
       "@type": "Organization",
@@ -64,14 +64,15 @@
   <!-- Theme set early to avoid flash of incorrect theme -->
   <script>
     (function () {
+      var saved;
       try {
-        var saved = localStorage.getItem('radianite-theme');
-        if (saved) {
-          document.documentElement.setAttribute('data-theme', saved);
-        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-          document.documentElement.setAttribute('data-theme', 'light');
-        }
+        saved = localStorage.getItem('radianite-theme');
       } catch (e) {}
+      if (saved === 'light' || saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', saved);
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
     })();
   </script>
 
@@ -81,6 +82,7 @@
   <link rel="stylesheet" href="/radianite/styles.css" />
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
   <!-- Header / Nav -->
   <header class="site-header" id="top">
     <div class="container header-inner">
@@ -105,7 +107,7 @@
           </svg>
         </button>
 
-        <a class="btn btn-primary btn-sm js-download" href="https://github.com/builtbyshnk/radianite_val/releases/download/v1.2.1/Radianite_1.2.1_windows_x64.exe" download>Download</a>
+        <a class="btn btn-primary btn-sm js-download" href="https://github.com/builtbyshnk/radianite_val/releases/latest">Download</a>
 
         <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="primary-nav">
           <span></span><span></span><span></span>
@@ -114,7 +116,7 @@
     </div>
   </header>
 
-  <main>
+  <main id="main-content" tabindex="-1">
     <!-- Hero + Demo -->
     <section class="hero" id="demo">
       <div class="hero-glow" aria-hidden="true"></div>
@@ -124,7 +126,7 @@
           <h1 class="hero-title reveal">Cleaner match presence.<br />Effortless rank overlay.</h1>
           <p class="hero-desc reveal">Radianite is a lightweight VALORANT companion app for streamers and players. It runs locally, uses your active Riot/VALORANT session, and keeps setup simple — no external API key or complicated developer workflow.</p>
           <div class="hero-actions reveal">
-            <a class="btn btn-primary btn-download js-download" href="https://github.com/builtbyshnk/radianite_val/releases/download/v1.2.1/Radianite_1.2.1_windows_x64.exe" download>Get Radianite 🚀</a>
+            <a class="btn btn-primary btn-download js-download" href="https://github.com/builtbyshnk/radianite_val/releases/latest">Get Radianite 🚀</a>
             <div class="support-actions">
               <a class="btn btn-ghost" href="https://t.me/radcolordev" target="_blank" rel="noopener">Telegram</a>
               <a class="btn btn-ghost" href="https://discord.gg/rAX2WBvjjh" target="_blank" rel="noopener">Discord</a>
@@ -133,7 +135,7 @@
           <p class="hero-note reveal">Unofficial community project — not affiliated with or endorsed by Riot Games.</p>
         </div>
         <div class="hero-demo demo-frame reveal">
-          <video autoplay loop muted playsinline preload="auto" disablepictureinpicture>
+          <video controls loop muted playsinline preload="metadata" aria-label="Radianite app demo">
             <source src="https://github.com/user-attachments/assets/a1ddc6f4-0a2a-436f-9b3a-757de45a6a6d" type="video/mp4" />
             <a href="https://github.com/user-attachments/assets/a1ddc6f4-0a2a-436f-9b3a-757de45a6a6d" target="_blank" rel="noopener">View the demo video</a>.
           </video>
@@ -273,7 +275,7 @@
         </a>
         <nav class="footer-links" aria-label="Footer">
           <a href="https://github.com/builtbyshnk/radianite_val" target="_blank" rel="noopener">GitHub</a>
-          <a class="js-download" href="https://github.com/builtbyshnk/radianite_val/releases/download/v1.2.1/Radianite_1.2.1_windows_x64.exe" download>Download</a>
+          <a class="js-download" href="https://github.com/builtbyshnk/radianite_val/releases/latest">Download</a>
           <a href="https://discord.gg/rAX2WBvjjh" target="_blank" rel="noopener">Discord</a>
           <a href="https://t.me/radcolordev" target="_blank" rel="noopener">Telegram</a>
           <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GPL-3.0 License</a>
