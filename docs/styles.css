@@ -48,13 +48,13 @@
 }
 
 ::selection {
-  background: var(--primary);
-  color: var(--on-primary);
+  background: color-mix(in srgb, var(--primary) 22%, transparent);
+  color: inherit;
 }
 
 ::-moz-selection {
-  background: var(--primary);
-  color: var(--on-primary);
+  background: color-mix(in srgb, var(--primary) 22%, transparent);
+  color: inherit;
 }
 
 html {
