@@ -267,6 +267,8 @@ pub struct RpcStatus {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct RpcPreview {
+    pub large_image_url: Option<String>,
+    pub small_image_url: Option<String>,
     pub name: String,
     pub details: String,
     pub state: String,

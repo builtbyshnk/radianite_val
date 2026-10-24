@@ -1,4 +1,4 @@
-use std::env;
+use std::{collections::HashMap, env, sync::OnceLock};
 
 use chrono::DateTime;
 use discord_rich_presence::{
@@ -342,6 +342,8 @@ fn render_activity<'a>(
         .then(|| truncate_discord(&state_text(snapshot, locale, content)));
     let large = large_asset(snapshot, assets, locale, content);
     let small = small_asset(snapshot, assets, locale, content);
+    let large_image_url = asset_url(&large.image);
+    let small_image_url = asset_url(&small.image);
     let mut rendered_assets = Assets::new()
         .large_image(large.image)
         .large_text(truncate_discord(&large.text))
@@ -380,6 +382,8 @@ fn render_activity<'a>(
     }
 
     let preview = RpcPreview {
+        large_image_url,
+        small_image_url,
         name: t!("rpc.name", locale = locale).to_string(),
         details: details.unwrap_or_default(),
         state: state.unwrap_or_default(),
@@ -534,6 +538,10 @@ fn large_asset(
     }
 
     match snapshot.phase {
+        MatchPhase::Menus => RenderedAsset {
+            image: "game_icon".to_string(),
+            text: t!("rpc.asset.game", locale = locale).to_string(),
+        },
         MatchPhase::Pregame => snapshot
             .agent_name
             .as_deref()
@@ -617,6 +625,17 @@ fn game_asset(assets: &RpcAssetConfig, locale: &str) -> RenderedAsset {
         image: assets.large_game.clone(),
         text: t!("rpc.asset.game", locale = locale).to_string(),
     }
+}
+
+fn asset_url(name: &str) -> Option<String> {
+    static ASSETS: OnceLock<HashMap<String, String>> = OnceLock::new();
+    let assets = ASSETS.get_or_init(|| {
+        serde_json::from_str(include_str!("discord-assets.json"))
+            .expect("valid Discord asset catalog")
+    });
+    assets.get(name).map(|id| {
+        format!("https://cdn.discordapp.com/app-assets/{DEFAULT_DISCORD_APP_ID}/{id}.png")
+    })
 }
 
 fn menu_asset(assets: &RpcAssetConfig, locale: &str) -> RenderedAsset {
@@ -1006,7 +1025,47 @@ mod tests {
         let menus_large = large_asset(&menus, &asset_config(), "en-US", None);
 
         assert_eq!(queueing_large.image, "game_icon_white");
-        assert_eq!(menus_large.image, "radianite");
+        assert_eq!(menus_large.image, "game_icon");
+    }
+
+    #[test]
+    fn preview_uses_discord_art_for_online_queueing_and_away() {
+        for (phase, idle, id) in [
+            (MatchPhase::Menus, false, "1520044878292062208"),
+            (MatchPhase::Matchmaking, false, "1520047449274585189"),
+            (MatchPhase::Menus, true, "1520047592212398131"),
+        ] {
+            let mut snapshot = snapshot(phase);
+            snapshot.is_idle = idle;
+            let (_, preview) = render_activity(&snapshot, &asset_config(), None, "en-US", None);
+            assert_eq!(
+                preview.large_image_url,
+                Some(format!(
+                    "https://cdn.discordapp.com/app-assets/1520041097945153566/{id}.png"
+                ))
+            );
+        }
+    }
+
+    #[test]
+    fn preview_uses_discord_map_and_agent_art_with_missing_art_fallback() {
+        let mut snapshot = snapshot(MatchPhase::Ingame);
+        snapshot.map_name = Some("Ascent".to_string());
+        snapshot.agent_name = Some("KAY/O".to_string());
+        let (_, preview) = render_activity(&snapshot, &asset_config(), None, "en-US", None);
+        assert_eq!(
+            preview.large_image_url,
+            super::asset_url("splash_ascent_square")
+        );
+        assert_eq!(preview.small_image_url, super::asset_url("agent_kayo"));
+        assert!(preview.large_image_url.is_some());
+        assert!(preview.small_image_url.is_some());
+
+        snapshot.map_name = Some("Missing map".to_string());
+        snapshot.agent_name = Some("Missing agent".to_string());
+        let (_, preview) = render_activity(&snapshot, &asset_config(), None, "en-US", None);
+        assert!(preview.large_image_url.is_none());
+        assert!(preview.small_image_url.is_none());
     }
 
     #[test]
@@ -1168,6 +1227,8 @@ mod tests {
                     .and_then(Value::as_str),
                 Some(if snapshot.phase == MatchPhase::Matchmaking {
                     "game_icon_white"
+                } else if snapshot.phase == MatchPhase::Menus {
+                    "game_icon"
                 } else {
                     "radianite"
                 })

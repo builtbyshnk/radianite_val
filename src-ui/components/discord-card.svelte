@@ -8,36 +8,24 @@
   import { Button } from "@/components/ui/button"
   import { formatUptime } from "@/lib/format"
   import { locale } from "@/lib/locale.svelte"
-  import type {
-    LiveSnapshot,
-    RpcStatus,
-    ValorantPresentation,
-  } from "@/lib/types"
+  import type { RpcStatus } from "@/lib/types"
   let {
     rpc,
-    snapshot,
-    presentation,
     busy,
     onToggle,
     now,
   }: {
     rpc: RpcStatus
-    snapshot: LiveSnapshot | null
-    presentation: ValorantPresentation | null
     busy: boolean
     onToggle: () => void
     now: number
   } = $props()
   let canToggle = $derived(rpc.configured || rpc.enabled)
   let preview = $derived(rpc.preview ?? null)
-  let agentUrl = $derived(presentation?.agentIconUrl ?? null)
-  let largeUrl = $derived(
-    snapshot?.phase === "pregame"
-      ? agentUrl
-      : snapshot?.phase === "ingame" || snapshot?.phase === "range"
-        ? (presentation?.mapListViewIconUrl ?? agentUrl)
-        : null,
-  )
+  let largeUrl = $derived(preview?.largeImageUrl ?? null)
+  let smallUrl = $derived(preview?.smallImageUrl ?? null)
+  let failedLargeUrl = $state<string | null>(null)
+  let failedSmallUrl = $state<string | null>(null)
 </script>
 
 <Panel title={locale.t("discord.title")}>
@@ -84,19 +72,21 @@
             <div
               class="flex size-full items-center justify-center overflow-hidden rounded-lg bg-[#1a1b1e]"
             >
-              {#if largeUrl}<img
+              {#if largeUrl && failedLargeUrl !== largeUrl}<img
                   src={largeUrl}
                   alt=""
                   class="size-full object-cover"
+                  onerror={() => (failedLargeUrl = largeUrl)}
                 />{:else}<AppIcon class="size-10 rounded-md" />{/if}
             </div>
             <span
               class="absolute -bottom-1 -end-1 flex size-7 items-center justify-center overflow-hidden rounded-full bg-[#232428] ring-2 ring-[#232428]"
-              >{#if agentUrl}<img
-                  src={agentUrl}
+              >{#if smallUrl && failedSmallUrl !== smallUrl}<img
+                  src={smallUrl}
                   alt=""
                   class="size-6 rounded-full object-cover"
-                />{/if}</span
+                  onerror={() => (failedSmallUrl = smallUrl)}
+                />{:else}<AppIcon class="size-6 rounded-full" />{/if}</span
             >
           </div>
           <div class="min-w-0 flex-1 text-sm leading-normal">

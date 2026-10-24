@@ -94,8 +94,6 @@
         <div class="grid gap-3 lg:grid-cols-3">
           <DiscordCard
             rpc={r.rpcStatus}
-            snapshot={r.snapshot}
-            presentation={r.presentation}
             busy={r.busy}
             onToggle={r.toggleRpc}
             now={r.now}

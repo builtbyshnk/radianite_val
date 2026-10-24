@@ -167,6 +167,8 @@ export type LocalizedMessage = {
 }
 
 export type RpcPreview = {
+  largeImageUrl?: string | null
+  smallImageUrl?: string | null
   name: string
   details: string
   state: string
