@@ -95,7 +95,7 @@
       .catch(function () {})
   }
 
-  /* ---- Respect motion preferences and keep demo playback controllable ---- */
+  /* ---- Loop the demo while respecting motion preferences ---- */
   var demo = document.querySelector(".demo-frame video")
   if (demo) {
     if (!reducedMotion.matches) demo.play().catch(function () {})
