@@ -3,11 +3,11 @@
     Toaster as Sonner,
     type ToasterProps as SonnerProps,
   } from "svelte-sonner"
-  import IconAlertOctagon from "lucide-svelte/icons/octagon-alert"
-  import IconAlertTriangle from "lucide-svelte/icons/triangle-alert"
-  import IconCircleCheck from "lucide-svelte/icons/circle-check"
-  import IconInfoCircle from "lucide-svelte/icons/info"
-  import IconLoader2 from "lucide-svelte/icons/loader-circle"
+  import IconAlertOctagon from "@solar-icons/svelte/bold/danger-circle"
+  import IconAlertTriangle from "@solar-icons/svelte/bold/danger-triangle"
+  import IconCircleCheck from "@solar-icons/svelte/bold/check-circle"
+  import IconInfoCircle from "@solar-icons/svelte/bold/info-circle"
+  import IconLoader2 from "@solar-icons/svelte/bold/refresh"
 
   let { ...restProps }: SonnerProps = $props()
 </script>

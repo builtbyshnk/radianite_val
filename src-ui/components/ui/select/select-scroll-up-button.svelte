@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Select as SelectPrimitive } from "bits-ui"
   import { cn, type WithoutChildrenOrChild } from "@/lib/utils.js"
-  import IconChevronUp from "lucide-svelte/icons/chevron-up"
+  import IconChevronUp from "@solar-icons/svelte/bold/alt-arrow-up"
 
   let {
     ref = $bindable(null),

@@ -157,6 +157,13 @@ video {
   max-width: 60ch;
 }
 
+/* Solar Bold icons: compact actions, larger feature symbols. */
+.solar-icon {
+  display: block;
+  flex: none;
+  fill: none;
+}
+
 /* ===== Buttons ===== */
 .btn {
   display: inline-flex;
@@ -288,9 +295,9 @@ video {
 /* hamburger */
 .nav-toggle {
   display: none;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 5px;
+  color: var(--text);
   width: 38px;
   height: 38px;
   flex-shrink: 0;
@@ -299,24 +306,12 @@ video {
   background: var(--surface);
   cursor: pointer;
 }
-.nav-toggle span {
+.nav-toggle .icon-close,
+.nav-toggle[aria-expanded="true"] .icon-menu {
+  display: none;
+}
+.nav-toggle[aria-expanded="true"] .icon-close {
   display: block;
-  width: 18px;
-  height: 2px;
-  margin: 0 auto;
-  background: var(--text);
-  transition:
-    transform 0.25s ease,
-    opacity 0.2s ease;
-}
-.nav-toggle[aria-expanded="true"] span:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
-}
-.nav-toggle[aria-expanded="true"] span:nth-child(2) {
-  opacity: 0;
-}
-.nav-toggle[aria-expanded="true"] span:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
 }
 
 /* ===== Hero ===== */
@@ -445,6 +440,13 @@ video {
   color: var(--primary);
   margin-bottom: 16px;
 }
+.discord-symbol-black,
+[data-theme="light"] .discord-symbol-white {
+  display: none;
+}
+[data-theme="light"] .discord-symbol-black {
+  display: block;
+}
 .card h3 {
   font-size: 1.05rem;
   font-weight: 600;
@@ -521,21 +523,14 @@ video {
 .faq summary::-webkit-details-marker {
   display: none;
 }
-.faq summary::after {
-  content: "";
-  flex: none;
-  width: 9px;
-  height: 9px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: rotate(45deg);
+.faq summary .solar-icon {
   transition: transform 0.2s ease;
 }
 .faq details[open] summary {
   color: var(--text);
 }
-.faq details[open] summary::after {
-  transform: rotate(-135deg);
+.faq details[open] summary .solar-icon {
+  transform: rotate(180deg);
 }
 .faq-body {
   padding: 0 20px 18px;
@@ -603,6 +598,9 @@ video {
   gap: 24px;
 }
 .footer-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--text-muted);
   font-size: 0.82rem;
   transition: color 0.18s ease;

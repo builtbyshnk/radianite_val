@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Select as SelectPrimitive } from "bits-ui"
   import { cn, type WithoutChild } from "@/lib/utils.js"
-  import IconSelector from "lucide-svelte/icons/chevrons-up-down"
+  import IconChevronDown from "@solar-icons/svelte/bold/alt-arrow-down"
 
   let {
     ref = $bindable(null),
@@ -25,5 +25,5 @@
   {...restProps}
 >
   {@render children?.()}
-  <IconSelector class="pointer-events-none size-4 text-muted-foreground" />
+  <IconChevronDown class="pointer-events-none size-4 text-muted-foreground" />
 </SelectPrimitive.Trigger>

@@ -1,8 +1,8 @@
 <script lang="ts">
   import IconBroadcast from "@icons-pack/svelte-simple-icons/icons/SiObsstudio"
-  import IconCheck from "lucide-svelte/icons/check"
-  import IconCopy from "lucide-svelte/icons/copy"
-  import IconHelpCircle from "lucide-svelte/icons/circle-help"
+  import IconCheck from "@solar-icons/svelte/bold/check"
+  import IconCopy from "@solar-icons/svelte/bold/copy"
+  import IconHelpCircle from "@solar-icons/svelte/bold/question-circle"
   import OverlayThemeSelect from "@/components/overlay-theme-select.svelte"
   import Panel from "@/components/panel.svelte"
   import { Button } from "@/components/ui/button"
@@ -48,14 +48,7 @@
       title=""
       aria-hidden="true"
     />{/snippet}{#snippet action()}<div class="flex items-center gap-1.5">
-      <Button
-        variant="outline"
-        size="sm"
-        onclick={handleCopy}
-        disabled={!url}
-        title={url
-          ? locale.t("overlay.copyUrl")
-          : locale.t("overlay.notRunning")}
+      <Button variant="outline" size="sm" onclick={handleCopy} disabled={!url}
         >{#if copied}<IconCheck
             data-icon="inline-start"
             class="text-success size-3.5"
@@ -63,7 +56,8 @@
           "overlay.copyUrl",
         )}</Button
       ><span
-        class="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-help"
+        class="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground cursor-help"
+        aria-label={locale.t("overlay.help")}
         title={locale.t("overlay.help")}><IconHelpCircle class="size-4" /></span
       >
     </div>{/snippet}
@@ -72,7 +66,6 @@
       <OverlayThemeSelect compact value={theme} onChange={onThemeChange} />
       <label
         class="flex min-w-0 cursor-pointer items-center justify-between gap-2 rounded-lg border bg-background/40 px-2 py-1.5"
-        title={locale.t("settings.overlayHideDetailsDescription")}
         ><span class="truncate text-xs font-medium">{privacyLabel}</span><Switch
           class="shrink-0"
           checked={overlayHideDetails}

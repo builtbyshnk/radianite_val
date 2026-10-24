@@ -1,11 +1,14 @@
 <script lang="ts">
-  import IconCircleDot from "lucide-svelte/icons/circle-dot"
-  import IconMap2 from "lucide-svelte/icons/map"
-  import IconShield from "lucide-svelte/icons/shield"
-  import IconSwords from "lucide-svelte/icons/swords"
-  import IconUser from "lucide-svelte/icons/user"
-  import IconUsersGroup from "lucide-svelte/icons/users"
-  import IconWorld from "lucide-svelte/icons/globe"
+  import IconQueue from "@solar-icons/svelte/bold/gamepad"
+  import IconPhase from "@solar-icons/svelte/bold/hourglass"
+  import IconRating from "@solar-icons/svelte/bold/chart-2"
+  import IconRank from "@solar-icons/svelte/bold/medal-star"
+  import IconMap2 from "@solar-icons/svelte/bold/map"
+  import IconAgent from "@solar-icons/svelte/bold/user-id"
+  import IconScore from "@solar-icons/svelte/bold/cup"
+  import IconUser from "@solar-icons/svelte/bold/user"
+  import IconUsersGroup from "@solar-icons/svelte/bold/users-group-rounded"
+  import IconWorld from "@solar-icons/svelte/bold/globe"
   import AppIcon from "@/components/app-icon.svelte"
   import StatCell from "@/components/stat-cell.svelte"
   import { phaseLabel, playerName, queueLabel } from "@/lib/format"
@@ -79,13 +82,11 @@
 </script>
 
 <section
-  class="relative flex flex-1 flex-col overflow-hidden rounded-xl border bg-card"
+  class="relative flex flex-1 flex-col overflow-hidden rounded-lg border bg-card"
 >
-  {#if !snapshot}<div
-      class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgb(255_70_84/0.2),transparent_55%),radial-gradient(circle_at_80%_80%,rgb(17_24_35/0.35),transparent_50%)]"
-    ></div>
+  {#if !snapshot}<div class="absolute inset-0 bg-card"></div>
     <div
-      class="relative z-10 flex flex-1 flex-col items-center justify-center gap-3 text-center"
+      class="relative z-10 flex min-h-44 flex-1 flex-col items-center justify-center gap-3 text-center"
     >
       <AppIcon class="size-10 rounded-lg opacity-80" />
       <div>
@@ -100,9 +101,7 @@
           src={mapUrl}
           alt=""
           class="absolute inset-0 size-full object-cover"
-        />{:else}<div
-          class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgb(255_70_84/0.2),transparent_55%),radial-gradient(circle_at_80%_80%,rgb(17_24_35/0.35),transparent_50%)]"
-        ></div>{/if}
+        />{:else}<div class="absolute inset-0 bg-card"></div>{/if}
       <div
         class="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-background/10 rtl:bg-gradient-to-l"
       ></div>
@@ -112,12 +111,13 @@
       {#if agentUrl}<img
           src={agentUrl}
           alt={agent}
-          class="absolute bottom-0 start-0 h-[105%] max-w-[55%] object-contain object-left-bottom drop-shadow-2xl transition-opacity duration-300 rtl:object-right-bottom"
+          class="absolute bottom-0 start-0 h-[105%] max-w-[55%] object-contain object-left-bottom rtl:object-right-bottom"
         />{/if}{#if isLive}<div
-          class="absolute start-4 top-4 flex items-center gap-2 rounded-md bg-primary/95 px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-lg shadow-primary/20 ring-1 ring-white/20 backdrop-blur-md"
+          class="absolute start-4 top-4 flex items-center gap-2 rounded-md bg-primary/95 px-2.5 py-1 text-xs font-semibold text-primary-foreground"
         >
-          <span class="size-1.5 animate-pulse rounded-full bg-current"
-          ></span>{locale.t("match.live")}
+          <span class="size-1.5 rounded-full bg-current"></span>{locale.t(
+            "match.live",
+          )}
         </div>{/if}{#if standby}<div
           class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 px-6 text-center"
         >
@@ -126,7 +126,7 @@
             <p
               class="flex items-center justify-center gap-2 text-base font-semibold"
             >
-              <span class="size-1.5 animate-pulse rounded-full bg-success"
+              <span class="size-1.5 rounded-full bg-success"
               ></span>{standby.title}
             </p>
             <p class="text-sm text-muted-foreground">{standby.subtitle}</p>
@@ -155,13 +155,13 @@
       <StatCell label={locale.t("match.player")} value={name} accent
         >{#snippet icon()}<IconUser />{/snippet}</StatCell
       ><StatCell label={locale.t("match.queue")} value={queue}
-        >{#snippet icon()}<IconCircleDot />{/snippet}</StatCell
+        >{#snippet icon()}<IconQueue />{/snippet}</StatCell
       ><StatCell label={locale.t("match.party")} value={party}
         >{#snippet icon()}<IconUsersGroup />{/snippet}</StatCell
       ><StatCell label={locale.t("match.score")} value={score}
-        >{#snippet icon()}<IconSwords />{/snippet}</StatCell
+        >{#snippet icon()}<IconScore />{/snippet}</StatCell
       ><StatCell label={locale.t("match.agent")} value={agent}
-        >{#snippet icon()}<IconShield />{/snippet}</StatCell
+        >{#snippet icon()}<IconAgent />{/snippet}</StatCell
       ><StatCell label={locale.t("match.map")} value={map}
         >{#snippet icon()}<IconMap2 />{/snippet}</StatCell
       >
@@ -172,15 +172,15 @@
       <StatCell
         label={locale.t("match.phase")}
         value={snapshot ? phaseLabel(snapshot.phase) : empty}
-        tone>{#snippet icon()}<IconCircleDot />{/snippet}</StatCell
+        tone>{#snippet icon()}<IconPhase />{/snippet}</StatCell
       ><StatCell label={locale.t("match.rank")} value={rank}
         >{#snippet icon()}{#if rankUrl}<img
               src={rankUrl}
               alt=""
               class="size-5 object-contain"
-            />{:else}<IconShield />{/if}{/snippet}</StatCell
+            />{:else}<IconRank />{/if}{/snippet}</StatCell
       ><StatCell label={locale.t("match.rr")} value={rr}
-        >{#snippet icon()}<IconCircleDot />{/snippet}</StatCell
+        >{#snippet icon()}<IconRating />{/snippet}</StatCell
       ><StatCell label={locale.t("match.region")} value={region}
         >{#snippet icon()}<IconWorld />{/snippet}</StatCell
       >

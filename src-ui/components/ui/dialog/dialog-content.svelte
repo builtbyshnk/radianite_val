@@ -6,7 +6,7 @@
   import { cn, type WithoutChildrenOrChild } from "@/lib/utils.js"
   import type { ComponentProps } from "svelte"
   import { Button } from "@/components/ui/button/index.js"
-  import IconX from "lucide-svelte/icons/x"
+  import IconX from "@solar-icons/svelte/bold/close"
 
   let {
     ref = $bindable(null),

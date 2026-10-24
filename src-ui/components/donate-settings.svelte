@@ -1,7 +1,7 @@
 <script lang="ts">
-  import IconCheck from "lucide-svelte/icons/check"
-  import IconCopy from "lucide-svelte/icons/copy"
-  import IconExternalLink from "lucide-svelte/icons/external-link"
+  import IconCheck from "@solar-icons/svelte/bold/check"
+  import IconCopy from "@solar-icons/svelte/bold/copy"
+  import IconExternalLink from "@solar-icons/svelte/bold/square-top-down"
   import { toast } from "svelte-sonner"
   import { Button } from "@/components/ui/button"
   import { locale } from "@/lib/locale.svelte"
@@ -44,9 +44,7 @@
     </p>
   </header>
 
-  <section
-    class="rounded-lg border bg-background/40 p-5 transition-[background-color,border-color] duration-150 hover:border-white/20 hover:bg-white/[0.025]"
-  >
+  <section class="rounded-lg border bg-background/40 p-5">
     <div
       class="flex flex-col gap-6 md:flex-row md:items-start md:justify-between"
     >

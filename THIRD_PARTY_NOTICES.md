@@ -8,6 +8,29 @@ and the licenses that apply to each portion.
 
 ---
 
+## Solar Icons (CC BY 4.0)
+
+`docs/assets/solar/bold.svg` contains selected Solar Bold icons from
+[`@solar-icons/static` 2.3.3](https://www.npmjs.com/package/@solar-icons/static).
+The Solar Icon Set is by [480 Design](https://www.figma.com/community/file/1166831539721848736),
+licensed under [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/).
+The original icon paths are unchanged and packaged as SVG symbols for local use.
+Visible attribution is included in the website footer.
+
+## Discord brand assets
+
+`src-ui/assets/discord/discord-symbol-white.svg` and the white and black
+`discord-symbol-*.svg` files in `docs/assets/` are unmodified copies of the
+official Clyde symbols linked from [Discord's branding page](https://discord.com/branding).
+
+- [Original white SVG](https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/66e3d7f4ef6498ac018f2c55_Symbol.svg)
+- [Original black SVG](https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/66e3d8014ea898f3a4b2156c_Symbol.svg)
+- Downloaded October 24, 2026.
+
+Discord's trademarks and brand assets belong to Discord Inc. and are governed
+by its brand guidelines; they are not covered by Radianite's GPL license.
+Use the supplied artwork without recoloring, distortion, or redrawing.
+
 ## valorant-rpc community translations (MIT License)
 
 Portions of the Discord Rich Presence locale strings in `src-rs/locales/`

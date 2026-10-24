@@ -6,19 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
       html, body, #root { margin: 0; min-height: 100%; background: #050505; }
-      .boot-shell { position: fixed; inset: 0; display: grid; place-items: center; overflow: hidden; background: #050505; color: #ffffff; font-family: system-ui, sans-serif; }
-      .boot-shell::before { content: ""; position: absolute; width: 24rem; height: 24rem; border-radius: 50%; background: radial-gradient(circle, rgb(255 70 84 / 18%), transparent 68%); animation: boot-breathe 2.4s ease-in-out infinite; }
-      .boot-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-      .boot-icon-wrap { position: relative; display: grid; width: 88px; height: 88px; place-items: center; }
-      .boot-icon-wrap::before { content: ""; position: absolute; inset: 0; border: 1px solid rgb(255 70 84 / 26%); border-top-color: #ff4654; border-radius: 50%; animation: boot-spin 1.8s linear infinite; }
-      .boot-icon { width: 56px; height: 56px; border-radius: 12px; filter: drop-shadow(0 14px 24px rgb(0 0 0 / 35%)); }
-      .boot-title { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.02em; }
-      .boot-track { width: 160px; height: 2px; overflow: hidden; border-radius: 999px; background: rgb(255 255 255 / 8%); }
-      .boot-track::after { content: ""; display: block; width: 45%; height: 100%; background: linear-gradient(90deg, transparent, #ff4654, transparent); animation: boot-progress 1.35s ease-in-out infinite; }
-      @keyframes boot-spin { to { transform: rotate(360deg); } }
-      @keyframes boot-breathe { 50% { transform: scale(1.08); opacity: .7; } }
-      @keyframes boot-progress { from { transform: translateX(-120%); } to { transform: translateX(240%); } }
-      @media (prefers-reduced-motion: reduce) { .boot-shell::before, .boot-icon-wrap::before, .boot-track::after { animation: none; } }
+      .boot-shell { position: fixed; inset: 0; display: grid; place-items: center; background: #050505; color: #f1f2f4; font-family: "Lexend Variable", system-ui, sans-serif; }
+      .boot-card { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+      .boot-icon { display: block; width: 48px; height: 48px; border-radius: 8px; }
+      .boot-title { margin: 0; font-size: 18px; font-weight: 600; }
+      .boot-track { width: 120px; height: 2px; overflow: hidden; background: #1c1c1f; }
+      .boot-track::after { content: ""; display: block; width: 40%; height: 100%; background: #b2b4bf; animation: boot-progress 1.4s linear infinite; }
+      @keyframes boot-progress { from { transform: translateX(-100%); } to { transform: translateX(350%); } }
+      @media (prefers-reduced-motion: reduce) { .boot-track::after { animation: none; } }
     </style>
     <title>Radianite</title>
   </head>
@@ -27,7 +22,7 @@
     <div id="root">
       <div class="boot-shell" aria-label="Starting Radianite">
         <div class="boot-card">
-          <div class="boot-icon-wrap"><img class="boot-icon" src="/app-icon.png" alt="" /></div>
+          <img class="boot-icon" src="/app-icon.png" alt="" />
           <p class="boot-title">Radianite</p>
           <div class="boot-track"></div>
         </div>

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import IconClockHour4 from "lucide-svelte/icons/clock-4"
-  import IconRefreshDot from "lucide-svelte/icons/refresh-cw"
-  import IconWifi from "lucide-svelte/icons/wifi"
+  import IconClockHour4 from "@solar-icons/svelte/bold/clock-circle"
+  import IconRefreshDot from "@solar-icons/svelte/bold/refresh"
+  import IconWifi from "@solar-icons/svelte/bold/wi-fi"
   import RelativeTime from "@/components/relative-time.svelte"
   import { locale } from "@/lib/locale.svelte"
   import { formatUptime } from "@/lib/format"
@@ -54,19 +54,13 @@
 </script>
 
 <footer
-  class="flex h-11 shrink-0 items-center border-t bg-background/80 px-4 text-xs backdrop-blur select-none"
+  class="flex h-11 shrink-0 items-center border-t bg-background px-4 text-xs select-none"
 >
   <div class="flex items-center gap-4 text-muted-foreground">
     <span class="flex items-center gap-1.5"
-      ><span
-        class={cn(
-          "size-1.5 rounded-full",
-          health.dot,
-          health.tone === "text-success" && "animate-pulse",
-        )}
-      ></span><IconWifi class={cn("size-4", health.tone)} />{locale.t(
-        "statusBar.connectionHealth",
-      )}
+      ><span class={cn("size-1.5 rounded-full", health.dot)}></span><IconWifi
+        class={cn("size-4", health.tone)}
+      />{locale.t("statusBar.connectionHealth")}
       <strong class={cn("font-semibold", health.tone)}>{health.label}</strong
       ></span
     ><span class="h-4 w-px bg-border"></span><span

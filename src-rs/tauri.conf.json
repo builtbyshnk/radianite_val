@@ -16,7 +16,10 @@
         "width": 1152,
         "height": 768,
         "minWidth": 1024,
-        "minHeight": 600,
+        "minHeight": 700,
+        "maxWidth": 1280,
+        "maxHeight": 900,
+        "maximizable": false,
         "backgroundColor": "#050505",
         "decorations": false
       }

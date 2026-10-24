@@ -1,8 +1,8 @@
 <script lang="ts">
-  import IconBrandDiscord from "@icons-pack/svelte-simple-icons/icons/SiDiscord"
-  import IconPlayerPlay from "lucide-svelte/icons/play"
-  import IconCircleStop from "lucide-svelte/icons/circle-stop"
-  import IconGamepad from "lucide-svelte/icons/gamepad-2"
+  import DiscordIcon from "@/components/discord-icon.svelte"
+  import IconPlayerPlay from "@solar-icons/svelte/bold/play"
+  import IconCircleStop from "@solar-icons/svelte/bold/stop-circle"
+  import IconGamepad from "@solar-icons/svelte/bold/gamepad"
   import AppIcon from "@/components/app-icon.svelte"
   import Panel from "@/components/panel.svelte"
   import { Button } from "@/components/ui/button"
@@ -41,10 +41,7 @@
 </script>
 
 <Panel title={locale.t("discord.title")}>
-  {#snippet icon()}<IconBrandDiscord
-      title=""
-      aria-hidden="true"
-    />{/snippet}{#snippet action()}<Button
+  {#snippet icon()}<DiscordIcon />{/snippet}{#snippet action()}<Button
       variant="outline"
       size="sm"
       onclick={onToggle}

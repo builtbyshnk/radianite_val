@@ -13,11 +13,7 @@
   class="startup-veil"
 >
   <div class="startup-glow"></div>
-  <div class="startup-mark">
-    <span class="startup-orbit"></span><AppIcon
-      class="relative size-14 rounded-xl shadow-2xl"
-    />
-  </div>
+  <AppIcon class="size-12 rounded-lg" />
   <div class="text-center">
     <p class="text-lg font-semibold tracking-tight">
       {locale.t("common.appName")}
@@ -27,7 +23,4 @@
     </p>
   </div>
   <div class="startup-progress" aria-hidden="true"><span></span></div>
-  <div class="startup-dots" aria-hidden="true">
-    <span></span><span></span><span></span>
-  </div>
 </div>

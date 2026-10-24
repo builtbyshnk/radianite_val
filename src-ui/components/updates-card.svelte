@@ -1,13 +1,13 @@
 <script lang="ts">
-  import IconCalendarEvent from "lucide-svelte/icons/calendar-days"
-  import IconClockCheck from "lucide-svelte/icons/clock-check"
-  import IconDownload from "lucide-svelte/icons/download"
-  import IconExternalLink from "lucide-svelte/icons/external-link"
-  import IconRefresh from "lucide-svelte/icons/refresh-cw"
-  import IconRocket from "lucide-svelte/icons/rocket"
-  import IconShieldCheck from "lucide-svelte/icons/shield-check"
-  import IconSparkles from "lucide-svelte/icons/sparkles"
-  import IconTag from "lucide-svelte/icons/tag"
+  import IconCalendarEvent from "@solar-icons/svelte/bold/calendar"
+  import IconClockCheck from "@solar-icons/svelte/bold/history"
+  import IconDownload from "@solar-icons/svelte/bold/download"
+  import IconExternalLink from "@solar-icons/svelte/bold/square-top-down"
+  import IconRefresh from "@solar-icons/svelte/bold/refresh"
+  import IconRocket from "@solar-icons/svelte/bold/rocket"
+  import IconShieldCheck from "@solar-icons/svelte/bold/shield-check"
+  import IconSparkles from "@solar-icons/svelte/bold/stars"
+  import IconTag from "@solar-icons/svelte/bold/tag"
   import Panel from "@/components/panel.svelte"
   import RelativeTime from "@/components/relative-time.svelte"
   import { Button } from "@/components/ui/button"
@@ -76,7 +76,7 @@
         ><span><IconTag />{locale.t("updates.currentVersion")}</span><strong
           class="font-mono flex items-center gap-1.5"
           >v{current}<IconExternalLink
-            class="size-3 text-muted-foreground opacity-40 transition-opacity group-hover/ver:opacity-100"
+            class="size-3 text-muted-foreground "
           /></strong
         ></button
       >
@@ -113,7 +113,7 @@
             )}</span
           ><strong class="font-mono text-primary flex items-center gap-1.5"
             >v{updater.version}<IconExternalLink
-              class="size-3 text-primary opacity-60 transition-opacity group-hover/ver:opacity-100"
+              class="size-3 text-primary "
             /></strong
           ></button
         >{/if}
@@ -209,10 +209,6 @@
     margin: 0 -0.375rem;
     border-radius: 0.375rem;
     line-height: 1.25rem;
-    transition: background-color 150ms ease-out;
-  }
-  .info-row:hover {
-    background-color: rgb(255 255 255 / 0.03);
   }
   .info-row:first-child {
     border-top: 0;
@@ -228,10 +224,6 @@
     width: 1rem;
     height: 1rem;
     color: var(--muted-foreground);
-    transition: transform 150ms ease-out;
-  }
-  .info-row:hover span :global(svg) {
-    transform: scale(1.05);
   }
   .info-row strong {
     font-size: 0.875rem;

@@ -1,12 +1,12 @@
 <script lang="ts">
-  import IconBrandDiscord from "@icons-pack/svelte-simple-icons/icons/SiDiscord"
+  import DiscordIcon from "@/components/discord-icon.svelte"
   import IconBroadcast from "@icons-pack/svelte-simple-icons/icons/SiObsstudio"
-  import IconCopy from "lucide-svelte/icons/copy"
-  import IconExternalLink from "lucide-svelte/icons/external-link"
-  import IconHeart from "lucide-svelte/icons/heart"
-  import IconInfoCircle from "lucide-svelte/icons/info"
-  import IconPalette from "lucide-svelte/icons/palette"
-  import IconSettings from "lucide-svelte/icons/settings"
+  import IconCopy from "@solar-icons/svelte/bold/copy"
+  import IconExternalLink from "@solar-icons/svelte/bold/square-top-down"
+  import IconHeart from "@solar-icons/svelte/bold/heart"
+  import IconInfoCircle from "@solar-icons/svelte/bold/info-circle"
+  import IconPalette from "@solar-icons/svelte/bold/palette"
+  import IconSettings from "@solar-icons/svelte/bold/settings"
   import DonateSettings from "@/components/donate-settings.svelte"
   import * as Dialog from "@/components/ui/dialog"
   import * as Select from "@/components/ui/select"
@@ -46,7 +46,7 @@
     { id: "general", key: "settings.nav.general", icon: IconSettings },
     { id: "appearance", key: "settings.nav.appearance", icon: IconPalette },
     { id: "overlay", key: "settings.nav.overlay", icon: IconBroadcast },
-    { id: "discord", key: "settings.nav.discord", icon: IconBrandDiscord },
+    { id: "discord", key: "settings.nav.discord", icon: DiscordIcon },
     { id: "donate", key: "settings.nav.donate", icon: IconHeart },
     { id: "about", key: "settings.nav.about", icon: IconInfoCircle },
   ] as const
@@ -64,26 +64,28 @@
       class="flex shrink-0 gap-1 overflow-x-auto border-b bg-sidebar/60 p-3 sm:w-52 sm:flex-col sm:overflow-visible sm:border-e sm:border-b-0"
     >
       <span
-        class="hidden px-2.5 py-2 text-xs font-semibold tracking-[0.15em] text-muted-foreground uppercase sm:block"
+        class="hidden px-2.5 py-2 text-sm font-medium text-muted-foreground sm:block"
         >{locale.t("settings.title")}</span
       >{#each nav as item}<button
           type="button"
-          data-motion
           onclick={() => (active = item.id)}
           aria-current={active === item.id ? "page" : undefined}
-          class="group/nav flex shrink-0 items-center gap-2.5 rounded-md px-2.5 py-2 text-start text-xs font-medium text-muted-foreground outline-none transition-[color,background-color,transform,box-shadow] duration-150 ease-out hover:translate-x-0.5 hover:bg-white/[0.06] hover:text-foreground focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/25 aria-[current=page]:bg-sidebar-accent aria-[current=page]:text-foreground"
+          class="flex shrink-0 items-center gap-2.5 rounded-md px-2.5 py-2 text-start text-xs font-medium text-muted-foreground outline-none transition-colors duration-100 hover:bg-white/[0.06] hover:text-foreground focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/25 aria-[current=page]:bg-sidebar-accent aria-[current=page]:text-foreground"
           ><item.icon
-            data-motion
             title=""
             aria-hidden="true"
-            class="size-4 transition-[color,transform] duration-200 ease-out group-hover/nav:rotate-6 group-hover/nav:scale-110 group-aria-[current=page]/nav:text-primary"
+            class={item.id === "discord"
+              ? "size-4"
+              : active === item.id
+                ? "size-4 text-primary"
+                : "size-4"}
           />{locale.t(item.key)}</button
         >{/each}
     </nav>
     <div class="flex min-w-0 flex-1 flex-col">
-      {#if active === "donate"}<ScrollArea class="page-transition flex-1"
+      {#if active === "donate"}<ScrollArea class="flex-1"
           ><DonateSettings {onOpenUrl} /></ScrollArea
-        >{:else}<ScrollArea class="page-transition flex-1"
+        >{:else}<ScrollArea class="flex-1"
           ><div class="flex flex-col gap-7 p-7">
             {#if active === "general"}{@render Heading(
                 locale.t("settings.nav.general"),
@@ -182,9 +184,6 @@
                     variant="outline"
                     onclick={onCopyOverlay}
                     disabled={!overlay.url}
-                    title={overlay.url
-                      ? locale.t("overlay.copyUrl")
-                      : locale.t("overlay.notRunning")}
                     ><IconCopy data-icon="inline-start" />{locale.t(
                       "overlay.copyUrl",
                     )}</Button
@@ -192,9 +191,6 @@
                     variant="outline"
                     onclick={onOpenOverlay}
                     disabled={!overlay.url}
-                    title={overlay.url
-                      ? locale.t("common.open")
-                      : locale.t("overlay.notRunning")}
                     ><IconExternalLink data-icon="inline-start" />{locale.t(
                       "common.open",
                     )}</Button
@@ -287,7 +283,7 @@
     class:cursor-pointer={!disabled}
     class:cursor-not-allowed={disabled}
     class:opacity-50={disabled}
-    class="flex items-center justify-between gap-4 rounded-lg border bg-background/40 px-4 py-3.5 transition-[background-color,border-color] duration-150 hover:border-white/20 hover:bg-white/[0.025]"
+    class="flex items-center justify-between gap-4 border-b px-1 py-4 last:border-b-0"
     ><span class="flex flex-col gap-1"
       ><span class="text-xs font-medium">{title}</span><span
         class="text-xs text-muted-foreground">{description}</span
@@ -301,7 +297,7 @@
   options: Array<{ value: string; label: string }>,
   onchange: (value: string) => void,
 )}<div
-    class="flex items-center justify-between gap-4 rounded-lg border bg-background/40 px-4 py-3.5 transition-[background-color,border-color] duration-150 hover:border-white/20 hover:bg-white/[0.025]"
+    class="flex items-center justify-between gap-4 border-b px-1 py-4 last:border-b-0"
   >
     <span class="flex flex-col gap-1"
       ><span class="text-xs font-medium">{title}</span><span
@@ -329,7 +325,7 @@
   onchange: (value: string) => void,
   disabled = false,
 )}<div
-    class="flex items-center justify-between gap-4 rounded-lg border bg-background/40 px-4 py-3.5 transition-[background-color,border-color] duration-150 hover:border-white/20 hover:bg-white/[0.025]"
+    class="flex items-center justify-between gap-4 border-b px-1 py-4 last:border-b-0"
   >
     <span class="flex flex-col gap-1"
       ><span class="text-xs font-medium">{title}</span><span

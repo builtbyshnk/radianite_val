@@ -238,7 +238,7 @@
     "automaticUpdateChecks": "Check for updates automatically",
     "automaticUpdateChecksDescription": "Check for a new Radianite version when the app starts.",
     "rememberWindowState": "Remember window size and position",
-    "rememberWindowStateDescription": "Restore the last window size, position, and maximized state on launch.",
+    "rememberWindowStateDescription": "Restore the last window size and position on launch.",
     "appearanceTitle": "Appearance",
     "appearanceDescription": "Tune the interface for your screen and comfort.",
     "interfaceScale": "Interface scale",

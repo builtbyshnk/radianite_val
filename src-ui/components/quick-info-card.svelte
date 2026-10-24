@@ -1,9 +1,9 @@
 <script lang="ts">
-  import IconBrandDiscord from "@icons-pack/svelte-simple-icons/icons/SiDiscord"
+  import DiscordIcon from "@/components/discord-icon.svelte"
   import IconBroadcast from "@icons-pack/svelte-simple-icons/icons/SiObsstudio"
-  import IconClockHour4 from "lucide-svelte/icons/clock-4"
-  import IconInfoCircle from "lucide-svelte/icons/info"
-  import IconTargetArrow from "lucide-svelte/icons/crosshair"
+  import IconClockHour4 from "@solar-icons/svelte/bold/clock-circle"
+  import IconInfoCircle from "@solar-icons/svelte/bold/info-circle"
+  import IconTargetArrow from "@solar-icons/svelte/bold/target"
   import Panel from "@/components/panel.svelte"
   import RelativeTime from "@/components/relative-time.svelte"
   import { locale } from "@/lib/locale.svelte"
@@ -41,11 +41,8 @@
       >
     </div>
     <div class="row">
-      <span
-        ><IconBrandDiscord title="" aria-hidden="true" />{locale.t(
-          "quickInfo.discord",
-        )}</span
-      ><strong class:text-success={rpc.connected}
+      <span><DiscordIcon />{locale.t("quickInfo.discord")}</span><strong
+        class:text-success={rpc.connected}
         >{rpc.connected
           ? locale.t("common.ready")
           : rpc.enabled
@@ -82,10 +79,6 @@
     margin: 0 -0.375rem;
     border-radius: 0.375rem;
     line-height: 1.25rem;
-    transition: background-color 150ms ease-out;
-  }
-  .row:hover {
-    background-color: rgb(255 255 255 / 0.03);
   }
   .row:first-child {
     border-top: 0;
@@ -101,10 +94,6 @@
     width: 1rem;
     height: 1rem;
     color: var(--muted-foreground);
-    transition: transform 150ms ease-out;
-  }
-  .row:hover span :global(svg) {
-    transform: scale(1.05);
   }
   .row strong {
     font-size: 0.875rem;

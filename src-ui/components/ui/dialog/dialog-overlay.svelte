@@ -12,9 +12,6 @@
 <DialogPrimitive.Overlay
   bind:ref
   data-slot="dialog-overlay"
-  class={cn(
-    "fixed inset-0 isolate z-50 bg-black/10 supports-backdrop-filter:backdrop-blur-xs",
-    className,
-  )}
+  class={cn("fixed inset-0 isolate z-50 bg-black/60", className)}
   {...restProps}
 />

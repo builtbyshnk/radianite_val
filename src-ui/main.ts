@@ -9,4 +9,6 @@ if (import.meta.env.VITE_UI_FIXTURE === "true") {
 }
 
 document.documentElement.classList.add("dark")
-mount(App, { target: document.getElementById("root")! })
+const target = document.getElementById("root")!
+target.replaceChildren()
+mount(App, { target })

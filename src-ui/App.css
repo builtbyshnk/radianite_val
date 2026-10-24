@@ -7,9 +7,18 @@
   font-family: "Source Code Pro";
   font-style: normal;
   font-display: swap;
-  font-weight: 400;
-  src: url("@fontsource/source-code-pro/files/source-code-pro-latin-400-normal.woff2")
+  font-weight: 600;
+  src: url("@fontsource/source-code-pro/files/source-code-pro-latin-600-normal.woff2")
     format("woff2");
+}
+
+.font-mono,
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+  font-weight: 600;
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -26,39 +35,39 @@
   -webkit-text-size-adjust: 100%;
 
   --background: #050505;
-  --foreground: #ffffff;
+  --foreground: #f1f2f4;
   --card: #0d0d0f;
-  --card-foreground: #ffffff;
+  --card-foreground: #f1f2f4;
   --popover: #111113;
-  --popover-foreground: #ffffff;
-  --primary: #ff4654;
-  --primary-foreground: #ffffff;
+  --popover-foreground: #f1f2f4;
+  --primary: #ff6572;
+  --primary-foreground: #210b10;
   --secondary: #1c1c1f;
-  --secondary-foreground: #ffffff;
-  --muted: #202024;
-  --muted-foreground: #a7a7ad;
-  --accent: #2c2022;
-  --accent-foreground: #ffffff;
-  --destructive: #ba3a46;
+  --secondary-foreground: #f1f2f4;
+  --muted: #1c1c1f;
+  --muted-foreground: #b2b4bf;
+  --accent: #232326;
+  --accent-foreground: #f1f2f4;
+  --destructive: #ff7b86;
   --success: oklch(0.72 0.18 150);
   --success-foreground: oklch(0.16 0.04 150);
-  --border: rgb(255 255 255 / 11%);
-  --input: rgb(255 255 255 / 14%);
-  --ring: #ff4654;
+  --border: rgb(255 255 255 / 13%);
+  --input: rgb(255 255 255 / 20%);
+  --ring: #ff6572;
   --chart-1: oklch(0.72 0.18 150);
-  --chart-2: #ff4654;
-  --chart-3: #ffffff;
+  --chart-2: #ff6572;
+  --chart-3: #f1f2f4;
   --chart-4: oklch(0.78 0.16 80);
   --chart-5: oklch(0.65 0.2 320);
-  --radius: 0.75rem;
+  --radius: 0.5rem;
   --sidebar: #09090b;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #ff4654;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #2b2d31;
-  --sidebar-accent-foreground: #ffffff;
+  --sidebar-foreground: #f1f2f4;
+  --sidebar-primary: #ff6572;
+  --sidebar-primary-foreground: #f1f2f4;
+  --sidebar-accent: #202023;
+  --sidebar-accent-foreground: #f1f2f4;
   --sidebar-border: rgb(255 255 255 / 11%);
-  --sidebar-ring: #ff4654;
+  --sidebar-ring: #ff6572;
 }
 
 html[data-interface-scale="compact"] {
@@ -139,7 +148,7 @@ html[data-reduce-motion="true"] [data-motion] {
 
   ::selection {
     background-color: color-mix(in srgb, var(--primary) 35%, transparent);
-    color: #ffffff;
+    color: #f1f2f4;
   }
 
   body {
@@ -172,21 +181,12 @@ html[data-reduce-motion="true"] [data-motion] {
   }
 
   *::-webkit-scrollbar-thumb:hover {
-    background-color: var(--primary);
+    background-color: rgb(255 255 255 / 40%);
   }
 
   *::-webkit-scrollbar-corner {
     background: transparent;
   }
-}
-
-.page-transition {
-  animation: page-fade-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  will-change: opacity, transform;
-}
-
-.app-enter {
-  animation: app-enter 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .startup-veil {
@@ -197,155 +197,40 @@ html[data-reduce-motion="true"] [data-motion] {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.15rem;
-  overflow: hidden;
-  background: rgb(5 5 5 / 96%);
-  transition:
-    opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
-    visibility 320ms;
+  gap: 1rem;
+  background: var(--background);
 }
-
 .startup-veil-visible {
   visibility: visible;
-  opacity: 1;
 }
 .startup-veil-hidden {
-  pointer-events: none;
   visibility: hidden;
-  opacity: 0;
-}
-
-.startup-glow {
-  position: absolute;
-  width: 24rem;
-  height: 24rem;
-  border-radius: 9999px;
-  background: radial-gradient(circle, rgb(255 70 84 / 18%), transparent 68%);
-  animation: startup-breathe 2.4s ease-in-out infinite;
-}
-
-.startup-mark {
-  position: relative;
-  display: grid;
-  width: 5.5rem;
-  height: 5.5rem;
-  place-items: center;
-}
-.startup-orbit {
-  position: absolute;
-  inset: 0;
-  border: 1px solid rgb(255 70 84 / 24%);
-  border-top-color: rgb(255 70 84 / 90%);
-  border-radius: 9999px;
-  animation: startup-spin 1.8s linear infinite;
+  pointer-events: none;
 }
 .startup-progress {
-  width: 10rem;
+  width: 8rem;
   height: 2px;
   overflow: hidden;
-  border-radius: 9999px;
-  background: oklch(1 0 0 / 8%);
+  background: var(--muted);
 }
 .startup-progress span {
   display: block;
-  width: 45%;
+  width: 40%;
   height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, transparent, var(--primary), transparent);
-  animation: startup-progress 1.35s ease-in-out infinite;
-}
-.startup-dots {
-  display: flex;
-  gap: 0.35rem;
-}
-.startup-dots span {
-  width: 0.25rem;
-  height: 0.25rem;
-  border-radius: 9999px;
   background: var(--muted-foreground);
-  animation: startup-dot 1.2s ease-in-out infinite;
-}
-.startup-dots span:nth-child(2) {
-  animation-delay: 120ms;
-}
-.startup-dots span:nth-child(3) {
-  animation-delay: 240ms;
-}
-
-@keyframes app-enter {
-  from {
-    opacity: 0;
-    transform: translateY(3px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes page-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes startup-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes startup-breathe {
-  50% {
-    transform: scale(1.08);
-    opacity: 0.7;
-  }
+  animation: startup-progress 1.4s linear infinite;
 }
 @keyframes startup-progress {
   from {
-    transform: translateX(-120%);
+    transform: translateX(-100%);
   }
   to {
-    transform: translateX(240%);
+    transform: translateX(350%);
   }
 }
-@keyframes startup-dot {
-  0%,
-  60%,
-  100% {
-    opacity: 0.3;
-    transform: translateY(0);
-  }
-  30% {
-    opacity: 1;
-    transform: translateY(-2px);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  [data-motion] {
-    transform: none !important;
-  }
-
-  .app-enter,
-  .page-transition,
-  .startup-glow,
-  .startup-orbit,
-  .startup-progress span,
-  .startup-dots span {
+  .startup-progress span {
     animation: none;
-    transform: none;
-    will-change: auto;
-  }
-
-  .startup-veil {
-    transition-duration: 1ms;
   }
 }
 

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import IconCalendarEvent from "lucide-svelte/icons/calendar-days"
-  import IconExternalLink from "lucide-svelte/icons/external-link"
-  import IconLoader2 from "lucide-svelte/icons/loader-circle"
-  import IconRocket from "lucide-svelte/icons/rocket"
+  import IconCalendarEvent from "@solar-icons/svelte/bold/calendar"
+  import IconExternalLink from "@solar-icons/svelte/bold/square-top-down"
+  import IconLoader2 from "@solar-icons/svelte/bold/refresh"
+  import IconRocket from "@solar-icons/svelte/bold/rocket"
   import DOMPurify from "dompurify"
   import { marked } from "marked"
   import { untrack } from "svelte"

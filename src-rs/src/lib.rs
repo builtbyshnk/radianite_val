@@ -64,9 +64,7 @@ pub fn run() {
             .plugin(tauri_plugin_store::Builder::new().build())
             .plugin(
                 tauri_plugin_window_state::Builder::new()
-                    .with_state_flags(
-                        StateFlags::SIZE | StateFlags::POSITION | StateFlags::MAXIMIZED,
-                    )
+                    .with_state_flags(StateFlags::SIZE | StateFlags::POSITION)
                     .skip_initial_state("main")
                     .build(),
             )
@@ -103,9 +101,7 @@ pub fn run() {
             lifecycle.set_low_resource_mode(startup_settings.low_resource_mode);
             if startup_settings.remember_window_state {
                 if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.restore_state(
-                        StateFlags::SIZE | StateFlags::POSITION | StateFlags::MAXIMIZED,
-                    );
+                    let _ = window.restore_state(StateFlags::SIZE | StateFlags::POSITION);
                 }
             }
             lifecycle.show_main_window(app.handle());
