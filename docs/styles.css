@@ -240,7 +240,7 @@ video {
 .nav {
   display: flex;
   gap: 26px;
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 .nav a {
   color: var(--text-muted);
@@ -256,7 +256,26 @@ video {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-left: 8px;
+  margin-inline-start: 8px;
+}
+
+.language-select {
+  max-width: 170px;
+  min-width: 0;
+  height: 38px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.header-actions,
+.brand {
+  flex-shrink: 0;
 }
 
 .theme-toggle {
@@ -667,7 +686,7 @@ video {
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 900px) {
   .section {
     padding: 40px 0;
   }
@@ -716,7 +735,7 @@ video {
   }
 
   .header-actions {
-    margin-left: auto;
+    margin-inline-start: auto;
   }
   .js .nav-toggle {
     display: flex;
@@ -727,6 +746,15 @@ video {
 }
 
 @media (max-width: 560px) {
+  .header-inner {
+    gap: 8px;
+  }
+  .header-actions {
+    gap: 6px;
+  }
+  .language-select {
+    max-width: 116px;
+  }
   .bento {
     grid-template-columns: 1fr;
   }
@@ -736,6 +764,19 @@ video {
   .btn {
     width: 100%;
   }
+}
+
+@media (max-width: 380px) {
+  .header-inner {
+    padding-inline: 12px;
+  }
+  .header-actions .language-select {
+    max-width: 100px;
+  }
+}
+
+html[dir="rtl"] .eyebrow {
+  letter-spacing: normal;
 }
 
 @media (prefers-reduced-motion: reduce) {

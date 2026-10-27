@@ -4,6 +4,8 @@ Radianite keeps the app language and Discord Rich Presence language independent.
 
 The interface ships in English, Arabic, Simplified Chinese, French, German, Hindi, Japanese, Korean, Brazilian Portuguese, Russian, and Spanish. The app language defaults to **System language (automatic)** for new settings. This saves `uiLocale: "system"` and resolves the Windows display language in Rust on startup and when settings are applied. Supported regional variants use the matching language (for example, `fr-CA` uses `fr-FR`); unsupported languages use English. Existing explicit language choices are preserved. Discord language selection is separate.
 
+The marketing website uses the same languages, with separate catalogs in `docs/locales/`. On a first visit it matches `navigator.languages` to a supported language, falling back to English. A manual choice in the header is saved under `radianite-language` in `localStorage` and takes priority on later visits. Automatic detection does not save a preference. If storage is blocked, selection still works for the current page. Translated copy is inserted as text, preserving links and icons; Arabic sets the page direction to RTL. Keep the English HTML fallback and `docs/locales/en-US.json` in sync when changing copy. `bun run site:verify` checks all website catalogs before the Cloudflare deployment dry run.
+
 ## Add a locale
 
 1. Choose one of the pre-registered catalogs. If the language is not listed, add its metadata to `locale-registry.json`.

@@ -146,6 +146,46 @@ for (const name of await readdir(rustDir)) {
     throw new Error(`Rust catalog ${name} is missing from locale-registry.json`)
 }
 
+const siteHtml = await readFile(path.join(root, "docs/index.html"), "utf8")
+const siteDir = path.join(root, "docs/locales")
+const siteFallback = await readJson<Record<string, string>>(
+  path.join(siteDir, `${fallback}.json`),
+)
+const siteKeys = Object.keys(siteFallback).sort()
+const siteTags = new Set(
+  registry.locales.filter((locale) => locale.ui).map((locale) => locale.tag),
+)
+const selector =
+  siteHtml.match(/<select[^>]+id="language-select"[\s\S]*?<\/select>/)?.[0] ??
+  ""
+const selectorTags = [...selector.matchAll(/<option value="([^"]+)"/g)]
+  .map((match) => match[1])
+  .sort()
+if (selectorTags.join(",") !== [...siteTags].sort().join(","))
+  throw new Error(
+    "Website language selector must match the enabled app languages",
+  )
+
+for (const match of siteHtml.matchAll(
+  /data-i18n(?:-content|-aria-label)?="([^"]+)"/g,
+)) {
+  if (!Object.hasOwn(siteFallback, match[1]))
+    throw new Error(`Website has unknown translation key ${match[1]}`)
+}
+for (const tag of siteTags) {
+  const translated = await readJson<Record<string, string>>(
+    path.join(siteDir, `${tag}.json`),
+  )
+  if (Object.keys(translated).sort().join(",") !== siteKeys.join(","))
+    throw new Error(`${tag} website catalog must contain every English key`)
+  for (const [key, value] of Object.entries(translated)) {
+    if (typeof value !== "string" || !value.trim())
+      throw new Error(
+        `${tag} website catalog has an empty or invalid value at ${key}`,
+      )
+  }
+}
+
 console.log(
-  `Validated ${registry.locales.length} locale(s); checked ${uiCatalogs} UI and ${rustCatalogs} Rust catalog(s); partial catalogs use ${fallback} fallback.`,
+  `Validated ${registry.locales.length} locale(s); checked ${uiCatalogs} UI, ${rustCatalogs} Rust, and ${siteTags.size} website catalog(s); partial app catalogs use ${fallback} fallback.`,
 )

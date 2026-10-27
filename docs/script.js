@@ -5,6 +5,114 @@
   root.classList.add("js")
   var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)")
 
+  /* ---- Site language: explicit preference, then browser language ---- */
+  var languageSelect = document.getElementById("language-select")
+  var english = {
+    "theme.dark": "Switch to dark theme",
+    "theme.light": "Switch to light theme",
+    "nav.close": "Close menu",
+  }
+  var bindings = []
+  ;[null, "content", "aria-label"].forEach(function (attribute) {
+    var marker = attribute ? "data-i18n-" + attribute : "data-i18n"
+    document.querySelectorAll("[" + marker + "]").forEach(function (element) {
+      var key = element.getAttribute(marker)
+      english[key] = attribute
+        ? element.getAttribute(attribute)
+        : element.textContent
+      bindings.push({ element: element, key: key, attribute: attribute })
+    })
+  })
+  var messages = english
+  var t = function (key) {
+    return messages[key] || english[key]
+  }
+  var languageRequest = 0
+
+  var setLanguage = async function (tag, remember) {
+    var request = ++languageRequest
+    var translated = english
+    try {
+      if (tag !== "en-US") {
+        var response = await fetch("/radianite/locales/" + tag + ".json")
+        if (!response.ok) throw new Error("Translation unavailable")
+        translated = Object.assign({}, english, await response.json())
+      }
+    } catch {
+      if (request === languageRequest) languageSelect.value = root.lang
+      return
+    }
+    if (request !== languageRequest) return
+
+    messages = translated
+    root.lang = tag
+    root.dir = languageSelect.querySelector('option[value="' + tag + '"]').dir
+    languageSelect.value = tag
+    bindings.forEach(function (binding) {
+      if (binding.attribute)
+        binding.element.setAttribute(binding.attribute, t(binding.key))
+      else binding.element.textContent = t(binding.key)
+    })
+    document.querySelector('meta[property="og:locale"]').content = tag.replace(
+      "-",
+      "_",
+    )
+    if (themeToggle) updateThemeLabel()
+    if (navToggle && nav) setNav(nav.classList.contains("open"))
+    if (remember) {
+      try {
+        localStorage.setItem("radianite-language", tag)
+      } catch {
+        // Selection still works when browser storage is unavailable.
+      }
+    }
+  }
+
+  if (languageSelect) {
+    var supportedLanguages = Array.from(languageSelect.options).map(
+      function (option) {
+        return option.value
+      },
+    )
+    var savedLanguage
+    try {
+      savedLanguage = localStorage.getItem("radianite-language")
+    } catch {
+      // Browser language is still available when storage is blocked.
+    }
+    var initialLanguage = supportedLanguages.includes(savedLanguage)
+      ? savedLanguage
+      : "en-US"
+    if (!supportedLanguages.includes(savedLanguage)) {
+      var candidates = navigator.languages.length
+        ? navigator.languages
+        : [navigator.language]
+      for (var candidate of candidates) {
+        var canonical
+        try {
+          canonical = Intl.getCanonicalLocales(candidate)[0]
+        } catch {
+          continue
+        }
+        var matched =
+          supportedLanguages.find(function (tag) {
+            return tag === canonical
+          }) ||
+          supportedLanguages.find(function (tag) {
+            return tag.split("-")[0] === canonical.split("-")[0]
+          })
+        if (matched) {
+          initialLanguage = matched
+          break
+        }
+      }
+    }
+    languageSelect.hidden = false
+    languageSelect.addEventListener("change", function () {
+      setLanguage(languageSelect.value, true)
+    })
+  }
+
   /* ---- Theme toggle + persistence ---- */
   var themeToggle = document.getElementById("theme-toggle")
   if (themeToggle) {
@@ -12,8 +120,8 @@
       themeToggle.setAttribute(
         "aria-label",
         root.getAttribute("data-theme") === "light"
-          ? "Switch to dark theme"
-          : "Switch to light theme",
+          ? t("theme.dark")
+          : t("theme.light"),
       )
     }
     updateThemeLabel()
@@ -36,13 +144,16 @@
     var setNav = function (open) {
       nav.classList.toggle("open", open)
       navToggle.setAttribute("aria-expanded", String(open))
-      navToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu")
+      navToggle.setAttribute(
+        "aria-label",
+        open ? t("nav.close") : t("nav.open"),
+      )
     }
     navToggle.addEventListener("click", function () {
       setNav(!nav.classList.contains("open"))
     })
     nav.addEventListener("click", function (e) {
-      if (e.target.tagName === "A") setNav(false)
+      if (e.target.closest("a")) setNav(false)
     })
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && nav.classList.contains("open")) {
@@ -57,11 +168,13 @@
     document.addEventListener("click", closeOutsideNav)
     document.addEventListener("focusin", closeOutsideNav)
     window
-      .matchMedia("(max-width: 720px)")
+      .matchMedia("(max-width: 900px)")
       .addEventListener("change", function () {
         setNav(false)
       })
   }
+
+  if (languageSelect) setLanguage(initialLanguage, false)
 
   /* ---- Resolve the latest Windows installer from GitHub ---- */
   var downloadLinks = document.querySelectorAll(".js-download")

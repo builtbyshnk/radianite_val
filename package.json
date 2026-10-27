@@ -16,7 +16,7 @@
     "locales:check": "bun scripts/validate-locales.ts",
     "preview": "vite preview",
     "site:dev": "wrangler dev",
-    "site:verify": "wrangler deploy --dry-run",
+    "site:verify": "bun run locales:check && wrangler deploy --dry-run",
     "tauri": "tauri",
     "icons:generate": "bun scripts/generate-icons.ts",
     "test": "vitest run",
@@ -47,9 +47,9 @@
     "bits-ui": "^2.20.2",
     "clsx": "^2.1.1",
     "dompurify": "^3.4.17",
-    "i18next": "^26.5.10",
-    "marked": "^18.1.1",
-    "svelte-sonner": "^1.2.1",
+    "i18next": "^26.5.11",
+    "marked": "^18.1.2",
+    "svelte-sonner": "^1.2.2",
     "tailwind-merge": "^3.7.0",
     "tailwind-variants": "^3.3.1",
     "tailwindcss": "^4.3.3",
@@ -70,13 +70,13 @@
     "prettier": "^3.9.10",
     "prettier-plugin-svelte": "^4.1.1",
     "shadcn-svelte": "^1.7.1",
-    "svelte": "^5.57.2",
+    "svelte": "^5.57.3",
     "svelte-check": "^4.7.7",
     "@typescript/native": "npm:typescript@^7.0.2",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.72.0",
+    "typescript-eslint": "^8.72.1",
     "vite": "^8.3.5",
     "vitest": "^5.0.5",
-    "wrangler": "^4.152.0"
+    "wrangler": "^4.153.0"
   }
 }
