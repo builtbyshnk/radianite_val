@@ -19,5 +19,7 @@
   "rpc.mode.retake": "リテイク",
   "rpc.mode.skirmish": "スカーミッシュ",
   "rpc.mode.newmap": "新マップ",
-  "rpc.mode.aros": "ランダムサイト"
+  "rpc.mode.aros": "ランダムサイト",
+  "tray.show": "Radianite を表示",
+  "tray.quit": "終了"
 }

@@ -16,7 +16,7 @@
       "englishName": "Arabic",
       "direction": "rtl",
       "contributors": ["@Ozama#8188 (valorant-rpc)"],
-      "ui": false,
+      "ui": true,
       "rpc": true
     },
     {
@@ -29,7 +29,7 @@
         "@craftpiwurzel#8368 (valorant-rpc)",
         "@Aethese#1337 (valorant-rpc)"
       ],
-      "ui": false,
+      "ui": true,
       "rpc": true
     },
     {
@@ -38,7 +38,7 @@
       "englishName": "Spanish (Spain)",
       "direction": "ltr",
       "contributors": ["@Rubiz#0822 (valorant-rpc)"],
-      "ui": false,
+      "ui": true,
       "rpc": true
     },
     {
@@ -47,7 +47,7 @@
       "englishName": "French",
       "direction": "ltr",
       "contributors": ["@Hurdenn#2777 (valorant-rpc)"],
-      "ui": false,
+      "ui": true,
       "rpc": true
     },
     {
@@ -56,7 +56,7 @@
       "englishName": "Hindi",
       "direction": "ltr",
       "contributors": ["community (valorant-rpc)"],
-      "ui": false,
+      "ui": true,
       "rpc": true
     },
     {
@@ -74,7 +74,7 @@
       "englishName": "Japanese",
       "direction": "ltr",
       "contributors": ["@Yossi#1114 (valorant-rpc)"],
-      "ui": false,
+      "ui": true,
       "rpc": true
     },
     {
@@ -86,7 +86,7 @@
         "@페이즈#5384 (valorant-rpc)",
         "@인간#6609 (valorant-rpc)"
       ],
-      "ui": false,
+      "ui": true,
       "rpc": true
     },
     {
@@ -113,7 +113,7 @@
       "englishName": "Portuguese (Brazil)",
       "direction": "ltr",
       "contributors": ["@pessimismo (valorant-rpc)"],
-      "ui": false,
+      "ui": true,
       "rpc": true
     },
     {
@@ -125,7 +125,7 @@
         "@teddn#6036 (valorant-rpc)",
         "@kizn#6995 (valorant-rpc)"
       ],
-      "ui": false,
+      "ui": true,
       "rpc": true
     },
     {
@@ -146,7 +146,7 @@
       "englishName": "Chinese (Simplified)",
       "direction": "ltr",
       "contributors": ["deepseek (valorant-rpc)"],
-      "ui": false,
+      "ui": true,
       "rpc": true
     },
     {

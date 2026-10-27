@@ -18,6 +18,7 @@
     empty: string,
     isCoarse: boolean,
   ) {
+    void locale.revision
     if (!value) return empty
     const seconds = Math.max(0, Math.floor((current - value.getTime()) / 1000))
     if (isCoarse) {
@@ -25,7 +26,7 @@
       if (seconds < 120) return locale.t("updates.relativeTime.minuteAgo")
       if (seconds < 21_600) return locale.t("updates.relativeTime.whileAgo")
     }
-    const language = document.documentElement.lang || "en-US"
+    const language = locale.language
     const formatter = new Intl.RelativeTimeFormat(language, { numeric: "auto" })
     if (seconds < 10) return formatter.format(-1, "second")
     if (seconds < 60) return formatter.format(-seconds, "second")

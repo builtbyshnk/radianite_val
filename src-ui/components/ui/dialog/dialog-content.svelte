@@ -7,6 +7,7 @@
   import type { ComponentProps } from "svelte"
   import { Button } from "@/components/ui/button/index.js"
   import IconX from "@solar-icons/svelte/bold/close"
+  import { locale } from "@/lib/locale.svelte"
 
   let {
     ref = $bindable(null),
@@ -40,12 +41,12 @@
         {#snippet child({ props })}
           <Button
             variant="ghost"
-            class="absolute top-2 right-2"
+            class="absolute top-2 end-2"
             size="icon-sm"
             {...props}
           >
             <IconX />
-            <span class="sr-only">Close</span>
+            <span class="sr-only">{locale.t("titleBar.close")}</span>
           </Button>
         {/snippet}
       </DialogPrimitive.Close>

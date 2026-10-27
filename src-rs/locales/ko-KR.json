@@ -19,5 +19,7 @@
   "rpc.mode.retake": "리테이크",
   "rpc.mode.skirmish": "스커미시",
   "rpc.mode.newmap": "신규맵",
-  "rpc.mode.aros": "랜덤 사이트"
+  "rpc.mode.aros": "랜덤 사이트",
+  "tray.show": "Radianite 표시",
+  "tray.quit": "종료"
 }

@@ -93,6 +93,8 @@
                     settings.uiLocale,
                     uiLocales,
                     (value) => onSetSetting("uiLocale", value),
+                    busy,
+                    true,
                   )}{@render SettingRow(
                     locale.t("settings.runAtBoot"),
                     locale.t("settings.runAtBootDescription"),
@@ -320,6 +322,7 @@
   options: typeof uiLocales,
   onchange: (value: string) => void,
   disabled = false,
+  allowSystem = false,
 )}<div
     class="flex items-center justify-between gap-4 border-b px-1 py-4 last:border-b-0"
   >
@@ -328,14 +331,18 @@
         class="text-xs text-muted-foreground">{description}</span
       ></span
     ><Select.Root type="single" {value} onValueChange={onchange} {disabled}
-      ><Select.Trigger class="min-w-44" aria-label={title}
+      ><Select.Trigger class="min-w-44 shrink-0" aria-label={title}
         ><span data-slot="select-value" class="flex-1 text-start"
-          >{options.find((o) => o.tag === value)?.nativeName}</span
+          >{value === "system"
+            ? locale.t("settings.systemLanguage")
+            : options.find((o) => o.tag === value)?.nativeName}</span
         ></Select.Trigger
       ><Select.Content align="end"
         ><Select.Group
-          >{#each options as option}<Select.Item value={option.tag}
-              >{option.nativeName}</Select.Item
+          >{#if allowSystem}<Select.Item value="system"
+              >{locale.t("settings.systemLanguage")}</Select.Item
+            >{/if}{#each options as option}<Select.Item value={option.tag}
+              ><bdi lang={option.tag}>{option.nativeName}</bdi></Select.Item
             >{/each}</Select.Group
         ></Select.Content
       ></Select.Root

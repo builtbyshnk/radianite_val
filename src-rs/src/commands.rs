@@ -128,11 +128,9 @@ pub async fn overlay_get_status(state: State<'_, AppState>) -> Result<OverlaySta
 pub async fn settings_initialize(
     app: AppHandle,
     state: State<'_, AppState>,
-    default_ui_locale: String,
     default_rpc_locale: String,
 ) -> Result<SettingsBootstrap, String> {
-    let bootstrap =
-        settings::initialize(&app, &state, default_ui_locale, default_rpc_locale).await?;
+    let bootstrap = settings::initialize(&app, &state, default_rpc_locale).await?;
     app.state::<UiLifecycle>()
         .set_low_resource_mode(bootstrap.settings.low_resource_mode);
     Ok(bootstrap)

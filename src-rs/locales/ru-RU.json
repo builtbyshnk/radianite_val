@@ -19,5 +19,7 @@
   "rpc.mode.retake": "Ретейк",
   "rpc.mode.skirmish": "Стычка",
   "rpc.mode.newmap": "Новая карта",
-  "rpc.mode.aros": "Случайный сайт"
+  "rpc.mode.aros": "Случайный сайт",
+  "tray.show": "Показать Radianite",
+  "tray.quit": "Выйти"
 }

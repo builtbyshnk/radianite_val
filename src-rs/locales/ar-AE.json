@@ -19,5 +19,7 @@
   "rpc.mode.retake": "استعادة",
   "rpc.mode.skirmish": "اشتباك",
   "rpc.mode.newmap": "خريطة جديدة",
-  "rpc.mode.aros": "موقع عشوائي"
+  "rpc.mode.aros": "موقع عشوائي",
+  "tray.show": "إظهار Radianite",
+  "tray.quit": "خروج"
 }

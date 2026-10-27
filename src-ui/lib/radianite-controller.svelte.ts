@@ -1,7 +1,11 @@
 import type { DownloadEvent, Update } from "@tauri-apps/plugin-updater"
 import { toast } from "svelte-sonner"
 
-import i18n, { applyUiLocale, detectedLocale } from "@/lib/i18n"
+import i18n, {
+  applyUiLocale,
+  detectedLocale,
+  FALLBACK_LOCALE,
+} from "@/lib/i18n"
 import type { OverlayTheme } from "@/lib/overlay-themes"
 import { tauriClient, type RadianiteClient } from "@/lib/radianite-client"
 import type {
@@ -73,10 +77,14 @@ const defaultSettings: Settings = {
   enableRpcOnStart: true,
   overlayTheme: "nightfall",
   overlayHideDetails: false,
-  uiLocale: detectedLocale("ui"),
+  uiLocale: "system",
   rpcLocale: detectedLocale("rpc"),
 }
-type SettingsBootstrap = { settings: Settings; rpcStatus: RpcStatus }
+type SettingsBootstrap = {
+  settings: Settings
+  rpcStatus: RpcStatus
+  resolvedUiLocale: string
+}
 
 export class RadianiteController {
   diagnostics = $state<DiagnosticSnapshot>(initialDiagnostics)
@@ -94,6 +102,7 @@ export class RadianiteController {
   now = $state(Date.now())
   readonly startedAt = Date.now()
   settings = $state<Settings>(defaultSettings)
+  resolvedUiLocale = $state(FALLBACK_LOCALE)
   backendReady = $state(false)
   settingsReady = $state(false)
   unlisteners: Array<() => void> = []
@@ -192,16 +201,16 @@ export class RadianiteController {
       const result = await this.client.invoke<SettingsBootstrap>(
         "settings_initialize",
         {
-          defaultUiLocale: defaultSettings.uiLocale,
           defaultRpcLocale: defaultSettings.rpcLocale,
         },
       )
-      await applyUiLocale(result.settings.uiLocale)
+      this.resolvedUiLocale = await applyUiLocale(result.resolvedUiLocale)
       if (this.active) {
         this.settings = result.settings
         applyInterfacePreferences(result.settings)
         this.overlayTheme = result.settings.overlayTheme as OverlayTheme
         this.rpcStatus = result.rpcStatus
+        await this.loadPresentation(true)
       }
     } catch (error) {
       if (this.active) toast.error(errorText(error))
@@ -276,6 +285,7 @@ export class RadianiteController {
 
   async setSetting<K extends SettingKey>(key: K, value: Settings[K]) {
     const previous = this.settings
+    const previousLocale = this.resolvedUiLocale
     const next = { ...previous, [key]: value }
     const localeChange = key === "uiLocale" || key === "rpcLocale"
     if (localeChange) this.busy = true
@@ -286,7 +296,7 @@ export class RadianiteController {
         "settings_set",
         { settings: next },
       )
-      await applyUiLocale(result.settings.uiLocale)
+      this.resolvedUiLocale = await applyUiLocale(result.resolvedUiLocale)
       this.settings = result.settings
       applyInterfacePreferences(result.settings)
       this.rpcStatus = result.rpcStatus
@@ -294,7 +304,10 @@ export class RadianiteController {
     } catch (error) {
       this.settings = previous
       applyInterfacePreferences(previous)
-      if (key === "uiLocale") await applyUiLocale(previous.uiLocale)
+      if (key === "uiLocale") {
+        this.resolvedUiLocale = await applyUiLocale(previousLocale)
+        await this.loadPresentation(true)
+      }
       toast.error(errorText(error))
     } finally {
       if (localeChange) this.busy = false
@@ -401,7 +414,7 @@ export class RadianiteController {
       return
     }
     const key = [
-      this.settings.uiLocale,
+      this.resolvedUiLocale,
       snapshot.agentId ?? "",
       snapshot.mapId ?? "",
       snapshot.rank?.tier ?? "",
@@ -414,7 +427,7 @@ export class RadianiteController {
       const value = await this.client.invoke<ValorantPresentation>(
         "valorant_get_presentation",
         {
-          locale: this.settings.uiLocale,
+          locale: this.resolvedUiLocale,
           agentId: snapshot.agentId,
           mapId: snapshot.mapId,
           tier: snapshot.rank?.tier,

@@ -2,6 +2,7 @@
   import { ScrollArea as ScrollAreaPrimitive } from "bits-ui"
   import { Scrollbar } from "./index.js"
   import { cn, type WithoutChild } from "@/lib/utils.js"
+  import { locale } from "@/lib/locale.svelte"
 
   let {
     ref = $bindable(null),
@@ -23,6 +24,7 @@
 <ScrollAreaPrimitive.Root
   bind:ref
   data-slot="scroll-area"
+  dir={locale.direction}
   class={cn("relative", className)}
   {...restProps}
 >

@@ -19,5 +19,7 @@
   "rpc.mode.retake": "重夺模式",
   "rpc.mode.skirmish": "冲突",
   "rpc.mode.newmap": "新地图",
-  "rpc.mode.aros": "随机据点"
+  "rpc.mode.aros": "随机据点",
+  "tray.show": "显示 Radianite",
+  "tray.quit": "退出"
 }

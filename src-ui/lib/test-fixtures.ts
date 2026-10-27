@@ -1,4 +1,5 @@
 import { mockIPC, mockWindows } from "@tauri-apps/api/mocks"
+import { resolveLocale } from "@/lib/i18n"
 
 import type {
   AppSnapshot,
@@ -130,11 +131,15 @@ export function installTestFixture() {
         case "plugin:app|version":
           return "0.1.6"
         case "settings_initialize":
-          return { settings, rpcStatus }
+          return { settings, rpcStatus, resolvedUiLocale: settings.uiLocale }
         case "settings_set":
           return {
             settings: (payload as { settings: Settings }).settings,
             rpcStatus,
+            resolvedUiLocale: resolveLocale(
+              [(payload as { settings: Settings }).settings.uiLocale],
+              "ui",
+            ),
           }
         case "riot_stop_monitor":
           return { ...coreStatus, monitored: false }

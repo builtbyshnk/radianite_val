@@ -27,7 +27,7 @@
         copied = false
       }, 1500)
     } catch {
-      toast.error("Failed to copy")
+      toast.error(locale.t("common.copyFailed"))
     }
   }
 </script>
@@ -65,14 +65,18 @@
               size="xs"
               class="h-7 px-2 text-xs"
               onclick={copyUpi}
-              aria-label="Copy UPI ID"
+              aria-label={locale.t("settings.copyUpiId")}
             >
               {#if copied}
                 <IconCheck class="size-3.5 text-success" />
               {:else}
                 <IconCopy class="size-3.5" />
               {/if}
-              <span class="ms-1">{copied ? "Copied" : "Copy"}</span>
+              <span class="ms-1"
+                >{copied
+                  ? locale.t("common.copied")
+                  : locale.t("common.copy")}</span
+              >
             </Button>
           </div>
         </div>

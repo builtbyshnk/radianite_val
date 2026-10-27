@@ -2,6 +2,7 @@ mod app_state;
 mod commands;
 mod discord_rpc;
 mod lifecycle;
+mod localization;
 mod overlay;
 mod riot;
 mod settings;

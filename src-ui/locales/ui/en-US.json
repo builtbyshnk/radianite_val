@@ -13,7 +13,10 @@
     "disable": "Disable",
     "open": "Open",
     "unknown": "Unknown",
-    "notAvailable": "—"
+    "notAvailable": "—",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Failed to copy"
   },
   "startup": {
     "preparing": "Preparing your match companion..."
@@ -238,7 +241,7 @@
     },
     "generalDescription": "Control how Radianite starts and behaves on your system.",
     "appLanguage": "App language",
-    "appLanguageDescription": "Choose the language used by the Radianite interface and tray menu.",
+    "appLanguageDescription": "Choose the interface and tray language. System language follows Windows, with English as the fallback.",
     "runAtBoot": "Run at boot",
     "runAtBootDescription": "Launch Radianite automatically when you sign in to Windows.",
     "closeBehavior": "When closing the window",
@@ -283,7 +286,9 @@
     "version": "Version",
     "license": "License",
     "repository": "Repository",
-    "website": "Website"
+    "website": "Website",
+    "systemLanguage": "System language (automatic)",
+    "copyUpiId": "Copy UPI ID"
   },
   "errors": {
     "generic": "Something went wrong",

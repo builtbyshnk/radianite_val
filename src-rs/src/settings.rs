@@ -3,6 +3,7 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_store::StoreExt;
 
+use crate::localization::{ensure_ui_locale, resolve_ui_locale, SYSTEM_LOCALE};
 use crate::{app_state::AppState, riot::state::RpcStatus};
 
 pub const SETTINGS_STORE: &str = "settings.json";
@@ -29,6 +30,7 @@ pub struct Settings {
 pub struct SettingsBootstrap {
     pub settings: Settings,
     pub rpc_status: RpcStatus,
+    pub resolved_ui_locale: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -55,7 +57,6 @@ pub fn load_startup_settings(app: &AppHandle) -> Result<StartupSettings, String>
 pub async fn initialize(
     app: &AppHandle,
     state: &AppState,
-    default_ui_locale: String,
     default_rpc_locale: String,
 ) -> Result<SettingsBootstrap, String> {
     let _guard = state.lock_settings().await;
@@ -102,10 +103,11 @@ pub async fn initialize(
             .get("overlayHideDetails")
             .and_then(|value| value.as_bool())
             .unwrap_or(false),
-        ui_locale: valid_locale(
-            store.get("uiLocale").and_then(json_string),
-            &default_ui_locale,
-        ),
+        ui_locale: store
+            .get("uiLocale")
+            .and_then(json_string)
+            .filter(|locale| ensure_ui_locale(locale).is_ok())
+            .unwrap_or_else(|| SYSTEM_LOCALE.to_string()),
         rpc_locale: valid_locale(
             store.get("rpcLocale").and_then(json_string),
             &default_rpc_locale,
@@ -113,7 +115,8 @@ pub async fn initialize(
     };
 
     apply_autostart(app, settings.run_at_boot)?;
-    apply_ui_locale(app, &settings.ui_locale)?;
+    let resolved_ui_locale = resolve_ui_locale(&settings.ui_locale);
+    apply_ui_locale(app, &resolved_ui_locale)?;
     state.set_rpc_locale(settings.rpc_locale.clone()).await;
     state
         .set_overlay_theme(settings.overlay_theme.clone())
@@ -127,6 +130,7 @@ pub async fn initialize(
     Ok(SettingsBootstrap {
         settings,
         rpc_status,
+        resolved_ui_locale,
     })
 }
 
@@ -136,7 +140,7 @@ pub async fn update(
     settings: Settings,
 ) -> Result<SettingsBootstrap, String> {
     let _guard = state.lock_settings().await;
-    ensure_locale(&settings.ui_locale)?;
+    ensure_ui_locale(&settings.ui_locale)?;
     ensure_locale(&settings.rpc_locale)?;
     ensure_overlay_theme(&settings.overlay_theme)?;
     ensure_interface_scale(&settings.interface_scale)?;
@@ -144,10 +148,13 @@ pub async fn update(
     let store = app.store(SETTINGS_STORE).map_err(|err| err.to_string())?;
     let previous_ui_locale = store.get("uiLocale").and_then(json_string);
     let previous_rpc_locale = store.get("rpcLocale").and_then(json_string);
+    let resolved_ui_locale = resolve_ui_locale(&settings.ui_locale);
     let result = async {
         apply_autostart(app, settings.run_at_boot)?;
-        if previous_ui_locale.as_deref() != Some(settings.ui_locale.as_str()) {
-            apply_ui_locale(app, &settings.ui_locale)?;
+        if previous_ui_locale.as_deref() != Some(settings.ui_locale.as_str())
+            || settings.ui_locale == SYSTEM_LOCALE
+        {
+            apply_ui_locale(app, &resolved_ui_locale)?;
         }
         let rpc_status = if previous_rpc_locale.as_deref() != Some(settings.rpc_locale.as_str()) {
             state.set_rpc_locale(settings.rpc_locale.clone()).await
@@ -173,6 +180,7 @@ pub async fn update(
     Ok(SettingsBootstrap {
         settings,
         rpc_status,
+        resolved_ui_locale,
     })
 }
 

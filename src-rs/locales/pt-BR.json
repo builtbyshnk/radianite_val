@@ -19,5 +19,7 @@
   "rpc.mode.retake": "Retake",
   "rpc.mode.skirmish": "Escaramuça",
   "rpc.mode.newmap": "Mapa Novo",
-  "rpc.mode.aros": "Ponto Aleatório"
+  "rpc.mode.aros": "Ponto Aleatório",
+  "tray.show": "Mostrar Radianite",
+  "tray.quit": "Sair"
 }

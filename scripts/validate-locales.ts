@@ -90,6 +90,8 @@ for (const locale of registry.locales) {
     throw new Error(`Incomplete metadata for ${locale.tag}`)
 
   const uiFile = path.join(uiDir, `${locale.tag}.json`)
+  if (locale.ui && !(await exists(uiFile)))
+    throw new Error(`Missing enabled UI catalog ${locale.tag}.json`)
   if (locale.ui && (await exists(uiFile))) {
     uiCatalogs++
     const translated = flatten(await readJson(uiFile))

@@ -1,5 +1,6 @@
 import type { CoreStatusKind, LiveSnapshot, MatchPhase } from "@/lib/types"
 import i18n from "@/lib/i18n"
+import { locale } from "@/lib/locale.svelte"
 
 export type StatusTone = "ready" | "pending" | "error" | "idle"
 
@@ -7,6 +8,7 @@ export function statusPill(kind: CoreStatusKind): {
   label: string
   tone: StatusTone
 } {
+  void locale.revision
   switch (kind) {
     case "valorantReady":
       return { label: i18n.t("status.pill.valorantReady"), tone: "ready" }
@@ -31,10 +33,12 @@ export function statusPill(kind: CoreStatusKind): {
 }
 
 export function phaseLabel(phase: MatchPhase) {
+  void locale.revision
   return i18n.t(`match.phaseLabel.${phase}`, { defaultValue: labelize(phase) })
 }
 
 export function queueLabel(queueId?: string | null, queueKey?: string | null) {
+  void locale.revision
   if (!queueId) return null
   const key = queueKey ?? queueId.toLowerCase()
   return i18n.t(`match.queueLabel.${key}`, { defaultValue: labelize(queueId) })
@@ -47,6 +51,7 @@ export function playerName(snapshot: LiveSnapshot | null) {
 }
 
 export function regionLabel(region?: string | null) {
+  void locale.revision
   if (!region) return null
   return i18n.t(`match.regionLabel.${region.toLowerCase()}`, {
     defaultValue: region.toUpperCase(),
@@ -61,6 +66,7 @@ export function labelize(value: string) {
 }
 
 export function formatTime(date: Date | null) {
+  void locale.revision
   if (!date) return "--:--"
   return date.toLocaleTimeString(i18n.language, {
     hour: "2-digit",
@@ -70,6 +76,7 @@ export function formatTime(date: Date | null) {
 }
 
 export function formatDate(date: Date) {
+  void locale.revision
   return date.toLocaleDateString(i18n.language, {
     year: "numeric",
     month: "short",
@@ -90,6 +97,7 @@ export function formatUptime(ms: number) {
 }
 
 export function formatUpdateDate(value?: string | null) {
+  void locale.revision
   if (!value) return null
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value

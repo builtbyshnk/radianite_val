@@ -135,7 +135,7 @@
       onOpenUrl={(url: string) => r.open(url)}
     />{/if}
   <Toaster
-    position={localeInfo(document.documentElement.lang)?.direction === "rtl"
+    position={localeInfo(r.resolvedUiLocale)?.direction === "rtl"
       ? "bottom-left"
       : "bottom-right"}
   />

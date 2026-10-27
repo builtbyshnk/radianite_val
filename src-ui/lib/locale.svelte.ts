@@ -1,4 +1,4 @@
-import i18n from "@/lib/i18n"
+import i18n, { localeInfo } from "@/lib/i18n"
 
 class LocaleState {
   revision = $state(0)
@@ -7,6 +7,15 @@ class LocaleState {
     i18n.on("languageChanged", () => {
       this.revision += 1
     })
+  }
+
+  get language() {
+    this.revision
+    return i18n.language
+  }
+
+  get direction() {
+    return localeInfo(this.language)?.direction ?? "ltr"
   }
 
   t(key: string, options?: Record<string, unknown>) {

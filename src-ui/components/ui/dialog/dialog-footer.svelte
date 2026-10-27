@@ -3,6 +3,7 @@
   import type { HTMLAttributes } from "svelte/elements"
   import { Dialog as DialogPrimitive } from "bits-ui"
   import { Button } from "@/components/ui/button/index.js"
+  import { locale } from "@/lib/locale.svelte"
 
   let {
     ref = $bindable(null),
@@ -28,7 +29,9 @@
   {#if showCloseButton}
     <DialogPrimitive.Close>
       {#snippet child({ props })}
-        <Button variant="outline" {...props}>Close</Button>
+        <Button variant="outline" {...props}
+          >{locale.t("titleBar.close")}</Button
+        >
       {/snippet}
     </DialogPrimitive.Close>
   {/if}

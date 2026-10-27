@@ -37,6 +37,9 @@ tauri-plugin-prevent-default = { version = "6.0.0", features = ["platform-window
 tauri-plugin-single-instance = "2"
 tauri-plugin-window-state = "2"
 
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Globalization"] }
+
 [profile.dev]
 incremental = true
 

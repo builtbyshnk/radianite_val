@@ -19,5 +19,7 @@
   "rpc.mode.retake": "Retake",
   "rpc.mode.skirmish": "Skirmish",
   "rpc.mode.newmap": "नया Map",
-  "rpc.mode.aros": "All Random One Site"
+  "rpc.mode.aros": "All Random One Site",
+  "tray.show": "Radianite दिखाएँ",
+  "tray.quit": "बाहर निकलें"
 }
