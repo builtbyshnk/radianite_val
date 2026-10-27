@@ -1,5 +1,9 @@
 * text=auto eol=lf
 
+# Count Svelte and TypeScript together in GitHub language statistics.
+*.svelte linguist-language=TypeScript
+*.ts linguist-language=TypeScript
+
 # Exclude frontend assets from GitHub language statistics.
 *.css linguist-detectable=false
 *.html linguist-detectable=false
