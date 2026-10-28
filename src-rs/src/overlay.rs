@@ -19,6 +19,7 @@ const OVERLAY_HTML: &str = include_str!("overlay/index.html");
 const OVERLAY_CSS: &str = include_str!("overlay/overlay.css");
 const OVERLAY_JS: &str = include_str!("overlay/overlay.js");
 const OVERLAY_FAVICON: &[u8] = include_bytes!("../icons/icon.ico");
+const OVERLAY_APP_ICON: &[u8] = include_bytes!("../../public/app-icon.png");
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -143,6 +144,9 @@ async fn handle_connection(mut stream: TcpStream, state: AppState) -> std::io::R
             write_response(&mut stream, 200, "application/json; charset=utf-8", &body).await
         }
         "/favicon.ico" => write_response(&mut stream, 200, "image/x-icon", OVERLAY_FAVICON).await,
+        "/overlay/app-icon.png" => {
+            write_response(&mut stream, 200, "image/png", OVERLAY_APP_ICON).await
+        }
         _ => write_response(&mut stream, 404, "text/plain; charset=utf-8", "Not found").await,
     }
 }
@@ -188,7 +192,7 @@ pub fn overlay_snapshot_from_parts(
             .message
             .detail
             .clone()
-            .unwrap_or_else(|| t!(core_status.message.key.as_str()).to_string()),
+            .unwrap_or_else(|| t!("overlay.waitingRank").to_string()),
         theme,
         hide_details,
         rank: None,
@@ -233,8 +237,8 @@ mod tests {
         OVERLAY_JS,
     };
     use crate::riot::state::{
-        CoreStatus, CoreStatusKind, LiveSnapshot, MatchPhase, PartySnapshot, PlayerIdentity,
-        RankSnapshot,
+        CoreStatus, CoreStatusKind, LiveSnapshot, LocalizedMessage, MatchPhase, PartySnapshot,
+        PlayerIdentity, RankSnapshot,
     };
 
     fn live_snapshot() -> LiveSnapshot {
@@ -349,6 +353,34 @@ mod tests {
         assert!(!rendered.contains("lockfile"));
         assert!(!rendered.contains("password"));
         assert!(!rendered.contains("privatePresence"));
+    }
+
+    #[test]
+    fn waiting_message_does_not_expose_frontend_translation_keys() {
+        for key in [
+            "status.message.technical",
+            "status.message.riotClosed",
+            "status.message.launching",
+        ] {
+            let status = CoreStatus::new(
+                CoreStatusKind::Disconnected,
+                true,
+                LocalizedMessage::key(key),
+            );
+            let snapshot =
+                overlay_snapshot_from_parts(&status, None, "nightfall".to_string(), false);
+
+            assert_eq!(snapshot.message, rust_i18n::t!("overlay.waitingRank"));
+            assert!(!snapshot.message.starts_with("status."));
+        }
+    }
+
+    #[test]
+    fn waiting_message_preserves_readable_status_details() {
+        let status = CoreStatus::new(CoreStatusKind::Disconnected, true, "Waiting for VALORANT");
+        let snapshot = overlay_snapshot_from_parts(&status, None, "nightfall".to_string(), false);
+
+        assert_eq!(snapshot.message, "Waiting for VALORANT");
     }
 
     #[test]

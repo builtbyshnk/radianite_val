@@ -19,11 +19,16 @@ const playerName = document.getElementById("playerName")
 const delta = document.getElementById("delta")
 const statusText = document.getElementById("statusText")
 
+rankIcon.addEventListener("error", () => {
+  rankIcon.hidden = true
+  fallbackIcon.hidden = false
+})
+
 function setWaiting(message) {
   document.body.classList.add("waiting")
   rankIcon.hidden = true
   fallbackIcon.hidden = false
-  rankName.textContent = "Waiting"
+  rankName.textContent = "Radianite"
   rankRR.textContent = ""
   playerName.textContent = "Radianite overlay"
   delta.textContent = "Waiting"
@@ -43,10 +48,13 @@ function render(data) {
 
   document.body.classList.remove("waiting")
   const rank = data.rank
-  rankName.textContent = rank.tierName || (rank.tier ? `Tier ${rank.tier}` : "Unrated")
-  rankRR.textContent = typeof rank.rankedRating === "number" ? `${rank.rankedRating} RR` : ""
+  rankName.textContent =
+    rank.tierName || (rank.tier ? `Tier ${rank.tier}` : "Unrated")
+  rankRR.textContent =
+    typeof rank.rankedRating === "number" ? `${rank.rankedRating} RR` : ""
   playerName.textContent = data.player?.gameName
-    ? data.player.gameName + (data.player.gameTag ? `#${data.player.gameTag}` : "")
+    ? data.player.gameName +
+      (data.player.gameTag ? `#${data.player.gameTag}` : "")
     : "Current rank"
 
   if (rank.iconUrl) {
@@ -73,7 +81,7 @@ async function refresh() {
     const response = await fetch("/overlay/state", { cache: "no-store" })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     render(await response.json())
-  } catch (_error) {
+  } catch {
     setWaiting("Overlay disconnected")
   }
 }

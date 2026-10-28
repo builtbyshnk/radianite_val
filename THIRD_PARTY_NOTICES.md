@@ -17,6 +17,10 @@ licensed under [Creative Commons Attribution 4.0 International](https://creative
 The original icon paths are unchanged and packaged as SVG symbols for local use.
 Visible attribution is included in the website footer.
 
+`src-rs/src/overlay/index.html` embeds the Solar Bold `gamepad`,
+`graph-up`, and `pulse` icon paths from `@solar-icons/svelte` 2.3.3 for the
+OBS overlay. The original icon paths are unchanged.
+
 ## Discord brand assets
 
 `src-ui/assets/discord/discord-symbol-white.svg` and the white and black
