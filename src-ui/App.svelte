@@ -134,6 +134,17 @@
       busy={r.busy}
       appVersion={r.appVersion}
       onOpenUrl={(url: string) => r.open(url)}
+      rpc={r.rpcStatus}
+      onToggleRpc={r.toggleRpc}
+      updater={r.updater}
+      canInstall={Boolean(r.availableUpdate)}
+      lastChecked={r.lastChecked}
+      now={r.now}
+      onCheckUpdate={() => r.checkForUpdate()}
+      onInstallUpdate={() => r.installAvailableUpdate()}
+      diagnostics={r.diagnostics}
+      onRestartMonitor={r.restartMonitor}
+      onCopySupportReport={() => r.copySupportReport()}
     />{/if}
   <Toaster
     position={localeInfo(r.resolvedUiLocale)?.direction === "rtl"

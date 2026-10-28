@@ -21,6 +21,9 @@ const settings: Settings = {
   rememberWindowState: false,
   lowResourceMode: true,
   enableRpcOnStart: true,
+  rpcHideRank: false,
+  rpcHideParty: false,
+  rpcHideElapsed: false,
   overlayTheme: "nightfall",
   overlayHideDetails: false,
   uiLocale: "en-US",
@@ -133,22 +136,32 @@ export function installTestFixture() {
         case "settings_initialize":
           return { settings, rpcStatus, resolvedUiLocale: settings.uiLocale }
         case "settings_set":
+          Object.assign(settings, (payload as { settings: Settings }).settings)
           return {
-            settings: (payload as { settings: Settings }).settings,
+            settings,
             rpcStatus,
-            resolvedUiLocale: resolveLocale(
-              [(payload as { settings: Settings }).settings.uiLocale],
-              "ui",
-            ),
+            resolvedUiLocale: resolveLocale([settings.uiLocale], "ui"),
           }
+        case "riot_start_monitor":
         case "riot_stop_monitor":
-          return { ...coreStatus, monitored: false }
+          coreStatus.monitored = command === "riot_start_monitor"
+          return coreStatus
+        case "app_support_report":
+          return JSON.stringify({
+            appVersion: "0.1.6",
+            os: "windows",
+            architecture: "x86_64",
+            status: coreStatus.kind,
+            monitoring: coreStatus.monitored,
+          })
         case "app_get_snapshot":
           return appSnapshot
         case "valorant_get_presentation":
           return presentation
         case "discord_rpc_set_enabled":
-          return { ...rpcStatus, enabled: !rpcStatus.enabled }
+          rpcStatus.enabled = (payload as { enabled: boolean }).enabled
+          rpcStatus.connected = rpcStatus.enabled && Boolean(snapshot)
+          return rpcStatus
         case "plugin:updater|check":
           return {
             rid: 1,

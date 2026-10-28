@@ -10,7 +10,7 @@ use tokio::{
 };
 
 use crate::{
-    discord_rpc::{DiscordRpcManager, RpcConfig},
+    discord_rpc::{DiscordRpcManager, RpcConfig, RpcPrivacy},
     riot::{
         cache::PublicCacheContext,
         state::{
@@ -222,6 +222,14 @@ impl AppState {
             .lock()
             .await
             .set_locale(locale, content, snapshot.as_ref())
+    }
+
+    pub async fn set_rpc_privacy(&self, privacy: RpcPrivacy) -> RpcStatus {
+        let snapshot = self.live_snapshot().await;
+        self.discord
+            .lock()
+            .await
+            .set_privacy(privacy, snapshot.as_ref())
     }
 
     pub async fn valorant_presentation(

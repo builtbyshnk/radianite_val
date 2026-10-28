@@ -7,7 +7,10 @@
   import IconInfoCircle from "@solar-icons/svelte/bold/info-circle"
   import IconPalette from "@solar-icons/svelte/bold/palette"
   import IconSettings from "@solar-icons/svelte/bold/settings"
+  import IconRefresh from "@solar-icons/svelte/bold/refresh"
+  import IconShield from "@solar-icons/svelte/bold/shield-check"
   import DonateSettings from "@/components/donate-settings.svelte"
+  import UpdatesCard from "@/components/updates-card.svelte"
   import * as Dialog from "@/components/ui/dialog"
   import * as Select from "@/components/ui/select"
   import { Button } from "@/components/ui/button"
@@ -15,9 +18,24 @@
   import { Switch } from "@/components/ui/switch"
   import { locale } from "@/lib/locale.svelte"
   import { rpcLocales, uiLocales } from "@/lib/i18n"
-  import type { OverlayStatus, SettingKey, Settings } from "@/lib/types"
+  import { overlayThemes } from "@/lib/overlay-themes"
+  import type {
+    DiagnosticSnapshot,
+    OverlayStatus,
+    RpcStatus,
+    SettingKey,
+    Settings,
+    UpdaterState,
+  } from "@/lib/types"
   type Tab =
-    "general" | "appearance" | "overlay" | "discord" | "donate" | "about"
+    | "general"
+    | "appearance"
+    | "overlay"
+    | "discord"
+    | "updates"
+    | "support"
+    | "donate"
+    | "about"
   let {
     open = $bindable(),
     onOpenChange,
@@ -29,6 +47,17 @@
     busy,
     appVersion,
     onOpenUrl,
+    rpc,
+    onToggleRpc,
+    updater,
+    canInstall,
+    lastChecked,
+    now,
+    onCheckUpdate,
+    onInstallUpdate,
+    diagnostics,
+    onRestartMonitor,
+    onCopySupportReport,
   }: {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -40,13 +69,37 @@
     busy: boolean
     appVersion: string | null
     onOpenUrl: (url: string) => void
+    rpc: RpcStatus
+    onToggleRpc: () => void
+    updater: UpdaterState
+    canInstall: boolean
+    lastChecked: Date | null
+    now: number
+    onCheckUpdate: () => void
+    onInstallUpdate: () => void
+    diagnostics: DiagnosticSnapshot
+    onRestartMonitor: () => void
+    onCopySupportReport: () => Promise<void>
   } = $props()
   let active = $state<Tab>("general")
+  let copyingReport = $state(false)
+
+  async function copySupportReport() {
+    copyingReport = true
+    try {
+      await onCopySupportReport()
+    } finally {
+      copyingReport = false
+    }
+  }
+
   const nav = [
     { id: "general", key: "settings.nav.general", icon: IconSettings },
     { id: "appearance", key: "settings.nav.appearance", icon: IconPalette },
     { id: "overlay", key: "settings.nav.overlay", icon: IconBroadcast },
     { id: "discord", key: "settings.nav.discord", icon: DiscordIcon },
+    { id: "updates", key: "updates.title", icon: IconRefresh },
+    { id: "support", key: "settings.supportTitle", icon: IconShield },
     { id: "donate", key: "settings.nav.donate", icon: IconHeart },
     { id: "about", key: "settings.nav.about", icon: IconInfoCircle },
   ] as const
@@ -60,7 +113,8 @@
       >{locale.t("settings.description")}</Dialog.Description
     >
     <nav
-      class="flex shrink-0 gap-1 overflow-x-auto border-b bg-sidebar/60 p-3 sm:w-52 sm:flex-col sm:overflow-visible sm:border-e sm:border-b-0"
+      aria-label={locale.t("settings.title")}
+      class="me-10 flex shrink-0 gap-1 overflow-x-auto border-b bg-sidebar/60 p-3 sm:me-0 sm:w-52 sm:flex-col sm:overflow-visible sm:border-e sm:border-b-0"
     >
       <span
         class="hidden px-2.5 py-2 text-sm font-medium text-muted-foreground sm:block"
@@ -76,7 +130,7 @@
         >{/each}
     </nav>
     {#key active}<div
-        class="flex min-w-0 flex-1 flex-col animate-in fade-in-0 duration-150 ease-out motion-reduce:animate-none"
+        class="flex min-h-0 min-w-0 flex-1 flex-col animate-in fade-in-0 duration-150 ease-out motion-reduce:animate-none"
       >
         {#if active === "donate"}<ScrollArea class="flex-1"
             ><DonateSettings {onOpenUrl} /></ScrollArea
@@ -116,11 +170,6 @@
                     ],
                     (value) =>
                       onSetSetting("lowResourceMode", value === "tray"),
-                  )}{@render SettingRow(
-                    locale.t("settings.automaticUpdateChecks"),
-                    locale.t("settings.automaticUpdateChecksDescription"),
-                    settings.automaticUpdateChecks,
-                    (value) => onSetSetting("automaticUpdateChecks", value),
                   )}{@render SettingRow(
                     locale.t("settings.rememberWindowState"),
                     locale.t("settings.rememberWindowStateDescription"),
@@ -198,12 +247,35 @@
                     {locale.t("overlay.suggestedSize")}
                     <span class="font-mono text-foreground">720 × 200</span>
                   </p>
+                  {@render SelectRow(
+                    locale.t("overlay.theme"),
+                    locale.t("settings.overlayThemeDescription"),
+                    settings.overlayTheme,
+                    overlayThemes.map((theme) => ({
+                      value: theme.id,
+                      label: theme.name,
+                    })),
+                    (value) => onSetSetting("overlayTheme", value),
+                  )}
+                  {@render SettingRow(
+                    locale.t("settings.overlayHideDetails"),
+                    locale.t("settings.overlayHideDetailsDescription"),
+                    settings.overlayHideDetails,
+                    (value) => onSetSetting("overlayHideDetails", value),
+                  )}
                 </div>
               {:else if active === "discord"}{@render Heading(
                   locale.t("settings.rpcTitle"),
                   locale.t("settings.rpcDescription"),
                 )}
                 <div class="flex flex-col gap-3">
+                  {@render SettingRow(
+                    locale.t("settings.rpcEnabled"),
+                    locale.t("settings.rpcEnabledDescription"),
+                    rpc.enabled,
+                    onToggleRpc,
+                    busy || !rpc.configured,
+                  )}
                   {@render LocaleRow(
                     locale.t("settings.rpcLanguage"),
                     locale.t("settings.rpcLanguageDescription"),
@@ -217,6 +289,115 @@
                     settings.enableRpcOnStart,
                     (value) => onSetSetting("enableRpcOnStart", value),
                   )}
+                  {@render SettingRow(
+                    locale.t("settings.rpcHideRank"),
+                    locale.t("settings.rpcHideRankDescription"),
+                    settings.rpcHideRank,
+                    (value) => onSetSetting("rpcHideRank", value),
+                  )}
+                  {@render SettingRow(
+                    locale.t("settings.rpcHideParty"),
+                    locale.t("settings.rpcHidePartyDescription"),
+                    settings.rpcHideParty,
+                    (value) => onSetSetting("rpcHideParty", value),
+                  )}
+                  {@render SettingRow(
+                    locale.t("settings.rpcHideElapsed"),
+                    locale.t("settings.rpcHideElapsedDescription"),
+                    settings.rpcHideElapsed,
+                    (value) => onSetSetting("rpcHideElapsed", value),
+                  )}
+                </div>
+              {:else if active === "updates"}{@render Heading(
+                  locale.t("updates.title"),
+                  locale.t("settings.updatesDescription"),
+                )}
+                {@render SettingRow(
+                  locale.t("settings.automaticUpdateChecks"),
+                  locale.t("settings.automaticUpdateChecksDescription"),
+                  settings.automaticUpdateChecks,
+                  (value) => onSetSetting("automaticUpdateChecks", value),
+                )}
+                <UpdatesCard
+                  {updater}
+                  version={appVersion}
+                  {canInstall}
+                  {lastChecked}
+                  {now}
+                  onCheck={onCheckUpdate}
+                  onInstall={onInstallUpdate}
+                />
+              {:else if active === "support"}{@render Heading(
+                  locale.t("settings.supportTitle"),
+                  locale.t("settings.supportDescription"),
+                )}
+                <dl class="rounded-lg border bg-background/40 px-4">
+                  {@render StatusRow(
+                    locale.t("quickInfo.tracking"),
+                    diagnostics.status.monitored,
+                  )}
+                  {@render StatusRow(
+                    locale.t("core.riotConnected"),
+                    diagnostics.localApiReady,
+                  )}
+                  {@render StatusRow(locale.t("discord.title"), rpc.connected)}
+                  {@render StatusRow(
+                    locale.t("quickInfo.overlay"),
+                    overlay.enabled,
+                  )}
+                </dl>
+                <div class="flex flex-col gap-3">
+                  <div>
+                    <h3 class="text-xs font-medium">
+                      {locale.t("settings.restartMonitor")}
+                    </h3>
+                    <p class="mt-1 text-xs text-muted-foreground">
+                      {locale.t("settings.restartMonitorDescription")}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    class="self-start"
+                    onclick={onRestartMonitor}
+                    disabled={busy}
+                  >
+                    <IconRefresh data-icon="inline-start" />{locale.t(
+                      "settings.restartMonitor",
+                    )}
+                  </Button>
+                </div>
+                <div class="flex flex-col gap-3">
+                  <div>
+                    <h3 class="text-xs font-medium">
+                      {locale.t("settings.supportReport")}
+                    </h3>
+                    <p class="mt-1 text-xs text-muted-foreground">
+                      {locale.t("settings.supportReportDescription")}
+                    </p>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      onclick={copySupportReport}
+                      disabled={copyingReport}
+                      aria-busy={copyingReport}
+                    >
+                      <IconCopy data-icon="inline-start" />{locale.t(
+                        "settings.copySupportReport",
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onclick={() =>
+                        onOpenUrl(
+                          "https://github.com/builtbyshnk/radianite_val/issues",
+                        )}
+                    >
+                      <IconExternalLink data-icon="inline-start" />{locale.t(
+                        "settings.reportIssue",
+                      )}
+                    </Button>
+                  </div>
                 </div>
               {:else}{@render Heading(
                   locale.t("settings.aboutTitle"),
@@ -276,7 +457,7 @@
   description: string,
   checked: boolean,
   onchange: (value: boolean) => void,
-  disabled = false,
+  disabled = busy,
 )}<label
     class:cursor-pointer={!disabled}
     class:cursor-not-allowed={disabled}
@@ -286,7 +467,12 @@
       ><span class="text-xs font-medium">{title}</span><span
         class="text-xs text-muted-foreground">{description}</span
       ></span
-    ><Switch {checked} onCheckedChange={onchange} {disabled} /></label
+    ><Switch
+      {checked}
+      onCheckedChange={onchange}
+      {disabled}
+      aria-label={title}
+    /></label
   >{/snippet}
 {#snippet SelectRow(
   title: string,
@@ -295,14 +481,14 @@
   options: Array<{ value: string; label: string }>,
   onchange: (value: string) => void,
 )}<div
-    class="flex items-center justify-between gap-4 border-b px-1 py-4 last:border-b-0"
+    class="flex flex-col items-start justify-between gap-4 border-b px-1 py-4 last:border-b-0 sm:flex-row sm:items-center"
   >
     <span class="flex flex-col gap-1"
       ><span class="text-xs font-medium">{title}</span><span
         class="text-xs text-muted-foreground">{description}</span
       ></span
-    ><Select.Root type="single" {value} onValueChange={onchange}
-      ><Select.Trigger class="min-w-36" aria-label={title}
+    ><Select.Root type="single" {value} onValueChange={onchange} disabled={busy}
+      ><Select.Trigger class="w-full min-w-36 sm:w-auto" aria-label={title}
         ><span data-slot="select-value" class="flex-1 text-start"
           >{options.find((option) => option.value === value)?.label}</span
         ></Select.Trigger
@@ -324,14 +510,16 @@
   disabled = false,
   allowSystem = false,
 )}<div
-    class="flex items-center justify-between gap-4 border-b px-1 py-4 last:border-b-0"
+    class="flex flex-col items-start justify-between gap-4 border-b px-1 py-4 last:border-b-0 sm:flex-row sm:items-center"
   >
     <span class="flex flex-col gap-1"
       ><span class="text-xs font-medium">{title}</span><span
         class="text-xs text-muted-foreground">{description}</span
       ></span
     ><Select.Root type="single" {value} onValueChange={onchange} {disabled}
-      ><Select.Trigger class="min-w-44 shrink-0" aria-label={title}
+      ><Select.Trigger
+        class="w-full min-w-44 shrink-0 sm:w-auto"
+        aria-label={title}
         ><span data-slot="select-value" class="flex-1 text-start"
           >{value === "system"
             ? locale.t("settings.systemLanguage")
@@ -348,3 +536,14 @@
       ></Select.Root
     >
   </div>{/snippet}
+
+{#snippet StatusRow(title: string, ready: boolean)}
+  <div
+    class="flex items-center justify-between gap-4 border-b py-3 text-xs last:border-b-0"
+  >
+    <dt class="text-muted-foreground">{title}</dt>
+    <dd class={ready ? "text-success" : "text-muted-foreground"}>
+      {locale.t(ready ? "common.active" : "common.off")}
+    </dd>
+  </div>
+{/snippet}

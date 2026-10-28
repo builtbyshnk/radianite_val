@@ -145,6 +145,9 @@ export type Settings = {
   rememberWindowState: boolean
   lowResourceMode: boolean
   enableRpcOnStart: boolean
+  rpcHideRank: boolean
+  rpcHideParty: boolean
+  rpcHideElapsed: boolean
   overlayTheme: string
   overlayHideDetails: boolean
   uiLocale: string

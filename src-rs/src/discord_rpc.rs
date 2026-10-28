@@ -70,6 +70,13 @@ impl RpcConfig {
     }
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct RpcPrivacy {
+    pub hide_rank: bool,
+    pub hide_party: bool,
+    pub hide_elapsed: bool,
+}
+
 pub struct DiscordRpcManager {
     config: RpcConfig,
     enabled: bool,
@@ -77,6 +84,7 @@ pub struct DiscordRpcManager {
     status: RpcStatus,
     locale: String,
     content: Option<ValorantContent>,
+    privacy: RpcPrivacy,
 }
 
 impl DiscordRpcManager {
@@ -101,11 +109,26 @@ impl DiscordRpcManager {
             status,
             locale,
             content: None,
+            privacy: RpcPrivacy::default(),
         }
     }
 
     pub fn status(&self) -> RpcStatus {
         self.status.clone()
+    }
+
+    pub fn set_privacy(
+        &mut self,
+        privacy: RpcPrivacy,
+        snapshot: Option<&LiveSnapshot>,
+    ) -> RpcStatus {
+        if self.privacy != privacy {
+            self.privacy = privacy;
+            if let Some(snapshot) = snapshot {
+                return self.update_snapshot(snapshot);
+            }
+        }
+        self.status()
     }
 
     pub fn set_locale(
@@ -212,6 +235,7 @@ impl DiscordRpcManager {
             self.config.github_url.as_deref(),
             &self.locale,
             self.content.as_ref(),
+            self.privacy,
         );
         let result = self
             .client
@@ -296,6 +320,7 @@ impl DiscordRpcManager {
             self.config.github_url.as_deref(),
             &self.locale,
             self.content.as_ref(),
+            self.privacy,
         );
         self.status.preview = Some(preview);
         self.status.locale = self.locale.clone();
@@ -333,7 +358,21 @@ fn render_activity<'a>(
     github_url: Option<&'a str>,
     locale: &str,
     content: Option<&ValorantContent>,
+    privacy: RpcPrivacy,
 ) -> (Activity<'a>, RpcPreview) {
+    // Filter before rendering so text, asset tooltips, and the preview agree.
+    let mut snapshot = snapshot.clone();
+    if privacy.hide_rank {
+        snapshot.rank = None;
+    }
+    if privacy.hide_party {
+        snapshot.party.size = None;
+        snapshot.party.max_size = None;
+    }
+    if privacy.hide_elapsed {
+        snapshot.session_started_at = None;
+    }
+    let snapshot = &snapshot;
     let details = snapshot
         .is_valid
         .then(|| truncate_discord(&details_text(snapshot, locale, content)));
@@ -854,7 +893,7 @@ mod tests {
 
     use super::{
         details_text, large_asset, queue_label, render_activity, small_asset, state_text,
-        truncate_discord, RpcAssetConfig,
+        truncate_discord, RpcAssetConfig, RpcPrivacy,
     };
 
     fn snapshot(phase: MatchPhase) -> LiveSnapshot {
@@ -950,7 +989,14 @@ mod tests {
         let mut snapshot = snapshot(MatchPhase::Menus);
         snapshot.is_valid = false;
 
-        let (_, preview) = render_activity(&snapshot, &asset_config(), None, "en-US", None);
+        let (_, preview) = render_activity(
+            &snapshot,
+            &asset_config(),
+            None,
+            "en-US",
+            None,
+            RpcPrivacy::default(),
+        );
 
         assert_eq!(preview.name, "VALORANT w/ Radianite");
         assert!(preview.details.is_empty());
@@ -1037,7 +1083,14 @@ mod tests {
         ] {
             let mut snapshot = snapshot(phase);
             snapshot.is_idle = idle;
-            let (_, preview) = render_activity(&snapshot, &asset_config(), None, "en-US", None);
+            let (_, preview) = render_activity(
+                &snapshot,
+                &asset_config(),
+                None,
+                "en-US",
+                None,
+                RpcPrivacy::default(),
+            );
             assert_eq!(
                 preview.large_image_url,
                 Some(format!(
@@ -1052,7 +1105,14 @@ mod tests {
         let mut snapshot = snapshot(MatchPhase::Ingame);
         snapshot.map_name = Some("Ascent".to_string());
         snapshot.agent_name = Some("KAY/O".to_string());
-        let (_, preview) = render_activity(&snapshot, &asset_config(), None, "en-US", None);
+        let (_, preview) = render_activity(
+            &snapshot,
+            &asset_config(),
+            None,
+            "en-US",
+            None,
+            RpcPrivacy::default(),
+        );
         assert_eq!(
             preview.large_image_url,
             super::asset_url("splash_ascent_square")
@@ -1063,7 +1123,14 @@ mod tests {
 
         snapshot.map_name = Some("Missing map".to_string());
         snapshot.agent_name = Some("Missing agent".to_string());
-        let (_, preview) = render_activity(&snapshot, &asset_config(), None, "en-US", None);
+        let (_, preview) = render_activity(
+            &snapshot,
+            &asset_config(),
+            None,
+            "en-US",
+            None,
+            RpcPrivacy::default(),
+        );
         assert!(preview.large_image_url.is_none());
         assert!(preview.small_image_url.is_none());
     }
@@ -1206,7 +1273,14 @@ mod tests {
                 icon_url: None,
             });
 
-            let (activity, _) = render_activity(&snapshot, &asset_config(), None, "en-US", None);
+            let (activity, _) = render_activity(
+                &snapshot,
+                &asset_config(),
+                None,
+                "en-US",
+                None,
+                RpcPrivacy::default(),
+            );
             let rendered = serde_json::to_value(activity).expect("serialized activity");
 
             assert_eq!(
@@ -1252,7 +1326,14 @@ mod tests {
         let mut snapshot = snapshot(MatchPhase::Ingame);
         snapshot.session_started_at = Some("2026-06-26T10:11:12.345Z".to_string());
 
-        let (activity, preview) = render_activity(&snapshot, &asset_config(), None, "en-US", None);
+        let (activity, preview) = render_activity(
+            &snapshot,
+            &asset_config(),
+            None,
+            "en-US",
+            None,
+            RpcPrivacy::default(),
+        );
         let rendered = serde_json::to_value(activity).expect("serialized activity");
 
         assert_eq!(
@@ -1276,6 +1357,88 @@ mod tests {
                 expected
             );
         }
+    }
+
+    #[test]
+    fn privacy_filters_payload_and_preview_independently_without_changing_live_data() {
+        let mut snapshot = snapshot(MatchPhase::Menus);
+        snapshot.rank = Some(RankSnapshot {
+            tier: Some(15),
+            tier_name: Some("Silver 2".to_string()),
+            ranked_rating: Some(47),
+            last_match_delta: None,
+            leaderboard_rank: None,
+            season_id: None,
+            icon_url: None,
+        });
+        snapshot.session_started_at = Some("2026-06-26T10:11:12.345Z".to_string());
+        let original = snapshot.clone();
+        let cases = [
+            RpcPrivacy::default(),
+            RpcPrivacy {
+                hide_rank: true,
+                ..RpcPrivacy::default()
+            },
+            RpcPrivacy {
+                hide_party: true,
+                ..RpcPrivacy::default()
+            },
+            RpcPrivacy {
+                hide_elapsed: true,
+                ..RpcPrivacy::default()
+            },
+            RpcPrivacy {
+                hide_rank: true,
+                hide_party: true,
+                hide_elapsed: true,
+            },
+        ];
+        for privacy in cases {
+            let (activity, preview) =
+                render_activity(&snapshot, &asset_config(), None, "en-US", None, privacy);
+            let payload = serde_json::to_value(activity).expect("serialized activity");
+            let text = payload.to_string();
+            assert_eq!(preview.state.contains("SILVER 2"), !privacy.hide_rank);
+            assert_eq!(text.contains("SILVER 2"), !privacy.hide_rank);
+            assert_eq!(preview.state.contains("Duo 2/5"), !privacy.hide_party);
+            assert_eq!(text.contains("Duo 2/5"), !privacy.hide_party);
+            assert_eq!(preview.started_at.is_some(), !privacy.hide_elapsed);
+            assert_eq!(
+                payload.pointer("/timestamps/start").is_some(),
+                !privacy.hide_elapsed
+            );
+            if privacy.hide_rank {
+                assert!(!payload["assets"]["small_image"]
+                    .as_str()
+                    .unwrap()
+                    .starts_with("rank_"));
+                assert!(!payload["assets"]["small_text"]
+                    .as_str()
+                    .unwrap()
+                    .contains("Silver"));
+            }
+        }
+        assert_eq!(snapshot, original);
+    }
+
+    #[test]
+    fn privacy_changes_refresh_an_existing_preview() {
+        let mut manager = super::DiscordRpcManager::new(super::RpcConfig::from_env());
+        let mut snapshot = snapshot(MatchPhase::Menus);
+        snapshot.session_started_at = Some("2026-06-26T10:11:12.345Z".to_string());
+        manager.update_snapshot(&snapshot);
+        let status = manager.set_privacy(
+            RpcPrivacy {
+                hide_party: true,
+                hide_elapsed: true,
+                ..RpcPrivacy::default()
+            },
+            Some(&snapshot),
+        );
+        let preview = status.preview.expect("updated preview");
+        assert!(!preview.state.contains("Duo"));
+        assert!(preview.started_at.is_none());
+        assert!(!status.enabled);
     }
 
     #[test]

@@ -3,6 +3,7 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_autostart::ManagerExt;
 use tauri_plugin_store::StoreExt;
 
+use crate::discord_rpc::RpcPrivacy;
 use crate::localization::{ensure_ui_locale, resolve_ui_locale, SYSTEM_LOCALE};
 use crate::{app_state::AppState, riot::state::RpcStatus};
 
@@ -19,6 +20,12 @@ pub struct Settings {
     pub remember_window_state: bool,
     pub low_resource_mode: bool,
     pub enable_rpc_on_start: bool,
+    #[serde(default)]
+    pub rpc_hide_rank: bool,
+    #[serde(default)]
+    pub rpc_hide_party: bool,
+    #[serde(default)]
+    pub rpc_hide_elapsed: bool,
     pub overlay_theme: String,
     pub overlay_hide_details: bool,
     pub ui_locale: String,
@@ -99,6 +106,18 @@ pub async fn initialize(
             .and_then(|value| value.as_bool())
             .unwrap_or(true),
         overlay_theme: valid_overlay_theme(store.get("overlayTheme").and_then(json_string)),
+        rpc_hide_rank: store
+            .get("rpcHideRank")
+            .and_then(|value| value.as_bool())
+            .unwrap_or(false),
+        rpc_hide_party: store
+            .get("rpcHideParty")
+            .and_then(|value| value.as_bool())
+            .unwrap_or(false),
+        rpc_hide_elapsed: store
+            .get("rpcHideElapsed")
+            .and_then(|value| value.as_bool())
+            .unwrap_or(false),
         overlay_hide_details: store
             .get("overlayHideDetails")
             .and_then(|value| value.as_bool())
@@ -117,6 +136,7 @@ pub async fn initialize(
     apply_autostart(app, settings.run_at_boot)?;
     let resolved_ui_locale = resolve_ui_locale(&settings.ui_locale);
     apply_ui_locale(app, &resolved_ui_locale)?;
+    state.set_rpc_privacy(settings.rpc_privacy()).await;
     state.set_rpc_locale(settings.rpc_locale.clone()).await;
     state
         .set_overlay_theme(settings.overlay_theme.clone())
@@ -156,11 +176,9 @@ pub async fn update(
         {
             apply_ui_locale(app, &resolved_ui_locale)?;
         }
-        let rpc_status = if previous_rpc_locale.as_deref() != Some(settings.rpc_locale.as_str()) {
-            state.set_rpc_locale(settings.rpc_locale.clone()).await
-        } else {
-            state.rpc_status().await
-        };
+        if previous_rpc_locale.as_deref() != Some(settings.rpc_locale.as_str()) {
+            state.set_rpc_locale(settings.rpc_locale.clone()).await;
+        }
         state
             .set_overlay_theme(settings.overlay_theme.clone())
             .await;
@@ -168,7 +186,7 @@ pub async fn update(
             .set_overlay_hide_details(settings.overlay_hide_details)
             .await;
         save(app, &settings)?;
-        Ok::<_, String>(rpc_status)
+        Ok::<_, String>(state.set_rpc_privacy(settings.rpc_privacy()).await)
     }
     .await;
 
@@ -197,6 +215,16 @@ fn startup_settings_from_values(
     StartupSettings {
         remember_window_state: remember_window_state.unwrap_or(false),
         low_resource_mode,
+    }
+}
+
+impl Settings {
+    fn rpc_privacy(&self) -> RpcPrivacy {
+        RpcPrivacy {
+            hide_rank: self.rpc_hide_rank,
+            hide_party: self.rpc_hide_party,
+            hide_elapsed: self.rpc_hide_elapsed,
+        }
     }
 }
 
@@ -245,6 +273,9 @@ fn save(app: &AppHandle, settings: &Settings) -> Result<(), String> {
     store.delete("minimizeToTray");
     store.set("lowResourceMode", settings.low_resource_mode);
     store.set("enableRpcOnStart", settings.enable_rpc_on_start);
+    store.set("rpcHideRank", settings.rpc_hide_rank);
+    store.set("rpcHideParty", settings.rpc_hide_party);
+    store.set("rpcHideElapsed", settings.rpc_hide_elapsed);
     store.set("overlayTheme", settings.overlay_theme.clone());
     store.set("overlayHideDetails", settings.overlay_hide_details);
     store.set("uiLocale", settings.ui_locale.clone());
@@ -303,6 +334,32 @@ fn ensure_locale(locale: &str) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::{startup_settings_from_values, StartupSettings};
+
+    #[test]
+    fn existing_settings_default_to_current_discord_visibility() {
+        let mut stored = serde_json::json!({
+            "runAtBoot": false, "automaticUpdateChecks": false, "reduceMotion": false,
+            "interfaceScale": "default", "rememberWindowState": false,
+            "lowResourceMode": true, "enableRpcOnStart": true,
+            "overlayTheme": "nightfall", "overlayHideDetails": false,
+            "uiLocale": "system", "rpcLocale": "en-US"
+        });
+        let settings: super::Settings = serde_json::from_value(stored.clone()).unwrap();
+        assert_eq!(
+            settings.rpc_privacy(),
+            crate::discord_rpc::RpcPrivacy::default()
+        );
+        stored["rpcHideRank"] = true.into();
+        stored["rpcHideParty"] = true.into();
+        stored["rpcHideElapsed"] = true.into();
+        let settings: super::Settings = serde_json::from_value(stored).unwrap();
+        let round_trip: super::Settings =
+            serde_json::from_value(serde_json::to_value(&settings).unwrap()).unwrap();
+        assert_eq!(settings, round_trip);
+        assert!(round_trip.rpc_privacy().hide_rank);
+        assert!(round_trip.rpc_privacy().hide_party);
+        assert!(round_trip.rpc_privacy().hide_elapsed);
+    }
 
     #[test]
     fn startup_settings_use_safe_defaults_when_missing() {

@@ -18,6 +18,45 @@ pub async fn app_get_snapshot(state: State<'_, AppState>) -> Result<AppSnapshot,
 }
 
 #[tauri::command]
+pub async fn app_support_report(
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    let snapshot = state.app_snapshot().await;
+    serde_json::to_string_pretty(&support_report(
+        &snapshot,
+        &app.package_info().version.to_string(),
+    ))
+    .map_err(|err| err.to_string())
+}
+
+fn support_report(snapshot: &AppSnapshot, version: &str) -> serde_json::Value {
+    let diagnostics = &snapshot.diagnostics;
+    // Allowlist fields: raw diagnostics contain account names, paths, and errors.
+    serde_json::json!({
+        "appVersion": version,
+        "os": std::env::consts::OS,
+        "architecture": std::env::consts::ARCH,
+        "generatedAt": crate::riot::state::now_timestamp(),
+        "status": diagnostics.status.kind,
+        "monitoring": diagnostics.status.monitored,
+        "riotInstalled": diagnostics.riot_installs_json_exists,
+        "lockfileFound": diagnostics.lockfile_exists,
+        "localApiReady": diagnostics.local_api_ready,
+        "valorantSessionPresent": diagnostics.valorant_session_present,
+        "accessTokenReady": diagnostics.access_token_ready,
+        "entitlementTokenReady": diagnostics.entitlement_token_ready,
+        "discord": {
+            "enabled": snapshot.rpc_status.enabled,
+            "connected": snapshot.rpc_status.connected,
+            "configured": snapshot.rpc_status.configured,
+        },
+        "overlayRunning": snapshot.overlay_status.enabled,
+        "updatedAt": diagnostics.updated_at,
+    })
+}
+
+#[tauri::command]
 pub async fn riot_start_monitor(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -146,4 +185,26 @@ pub async fn settings_set(
     app.state::<UiLifecycle>()
         .apply_user_setting(bootstrap.settings.low_resource_mode);
     Ok(bootstrap)
+}
+
+#[cfg(test)]
+mod tests {
+    #[tokio::test]
+    async fn support_report_excludes_identity_paths_and_raw_errors() {
+        let mut snapshot = crate::app_state::AppState::new().app_snapshot().await;
+        snapshot.diagnostics.game_name = Some("private-player".to_string());
+        snapshot.diagnostics.game_tag = Some("private-tag".to_string());
+        snapshot.diagnostics.lockfile_path = Some("private-lockfile-path".to_string());
+        snapshot.diagnostics.riot_installs_path = Some("private-install-path".to_string());
+        snapshot.diagnostics.last_error = Some("private-raw-error".to_string());
+        snapshot.diagnostics.status.message.detail = Some("private-error-detail".to_string());
+        snapshot.overlay_status.url = Some("private-overlay-url".to_string());
+        let report = super::support_report(&snapshot, "1.4.0");
+        let text = report.to_string();
+        assert!(!text.contains("private-"));
+        assert_eq!(report["appVersion"], "1.4.0");
+        assert_eq!(report["monitoring"], false);
+        assert!(report["generatedAt"].is_string());
+        assert!(report["accessTokenReady"].is_boolean());
+    }
 }

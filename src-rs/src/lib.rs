@@ -115,6 +115,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::app_get_snapshot,
+            commands::app_support_report,
             commands::riot_start_monitor,
             commands::riot_stop_monitor,
             commands::riot_get_diagnostics,

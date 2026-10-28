@@ -75,6 +75,9 @@ const defaultSettings: Settings = {
   rememberWindowState: false,
   lowResourceMode: true,
   enableRpcOnStart: true,
+  rpcHideRank: false,
+  rpcHideParty: false,
+  rpcHideElapsed: false,
   overlayTheme: "nightfall",
   overlayHideDetails: false,
   uiLocale: "system",
@@ -250,6 +253,12 @@ export class RadianiteController {
     this.run(async () => {
       await this.client.invoke("riot_stop_monitor")
     })
+  restartMonitor = () =>
+    this.run(async () => {
+      await this.client.invoke("riot_stop_monitor")
+      await this.client.invoke("riot_start_monitor")
+      toast.success(i18n.t("settings.monitorRestarted"))
+    })
   toggleRpc = () =>
     this.run(async () => {
       await this.client.invoke("discord_rpc_set_enabled", {
@@ -258,8 +267,16 @@ export class RadianiteController {
     })
 
   setOverlayTheme = (theme: OverlayTheme) => {
-    this.overlayTheme = theme
     void this.setSetting("overlayTheme", theme)
+  }
+  async copySupportReport() {
+    try {
+      const report = await this.client.invoke<string>("app_support_report")
+      await navigator.clipboard.writeText(report)
+      toast.success(i18n.t("settings.supportReportCopied"))
+    } catch (error) {
+      toast.error(errorText(error))
+    }
   }
   async copyOverlayUrl() {
     const url = this.overlayStatus.url
@@ -284,12 +301,13 @@ export class RadianiteController {
   }
 
   async setSetting<K extends SettingKey>(key: K, value: Settings[K]) {
+    if (this.busy) return
     const previous = this.settings
     const previousLocale = this.resolvedUiLocale
     const next = { ...previous, [key]: value }
-    const localeChange = key === "uiLocale" || key === "rpcLocale"
-    if (localeChange) this.busy = true
+    this.busy = true
     this.settings = next
+    this.overlayTheme = next.overlayTheme as OverlayTheme
     applyInterfacePreferences(next)
     try {
       const result = await this.client.invoke<SettingsBootstrap>(
@@ -298,11 +316,13 @@ export class RadianiteController {
       )
       this.resolvedUiLocale = await applyUiLocale(result.resolvedUiLocale)
       this.settings = result.settings
+      this.overlayTheme = result.settings.overlayTheme as OverlayTheme
       applyInterfacePreferences(result.settings)
       this.rpcStatus = result.rpcStatus
       if (key === "uiLocale") await this.loadPresentation(true)
     } catch (error) {
       this.settings = previous
+      this.overlayTheme = previous.overlayTheme as OverlayTheme
       applyInterfacePreferences(previous)
       if (key === "uiLocale") {
         this.resolvedUiLocale = await applyUiLocale(previousLocale)
@@ -310,7 +330,7 @@ export class RadianiteController {
       }
       toast.error(errorText(error))
     } finally {
-      if (localeChange) this.busy = false
+      this.busy = false
     }
   }
 

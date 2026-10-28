@@ -26,6 +26,9 @@ const settings: Settings = {
   rememberWindowState: false,
   lowResourceMode: true,
   enableRpcOnStart: true,
+  rpcHideRank: false,
+  rpcHideParty: false,
+  rpcHideElapsed: false,
   overlayTheme: "nightfall",
   overlayHideDetails: false,
   uiLocale: "en-US",
@@ -33,6 +36,27 @@ const settings: Settings = {
 }
 describe("RadianiteController", () => {
   afterEach(() => applyUiLocale("en-US"))
+
+  it("prevents overlapping settings writes and restores the overlay theme after a failed save", async () => {
+    let rejectSave: (reason: Error) => void = () => undefined
+    const invoke = vi.fn(
+      () => new Promise<never>((_, reject) => (rejectSave = reject)),
+    )
+    const controller = new RadianiteController({
+      invoke,
+    } as unknown as RadianiteClient)
+    const pending = controller.setSetting("overlayTheme", "porcelain")
+    expect(controller.busy).toBe(true)
+    expect(controller.overlayTheme).toBe("porcelain")
+    await controller.setSetting("rpcHideRank", true)
+    expect(invoke).toHaveBeenCalledTimes(1)
+    expect(controller.settings.rpcHideRank).toBe(false)
+    rejectSave(new Error("Settings could not be saved"))
+    await pending
+    expect(controller.busy).toBe(false)
+    expect(controller.settings.overlayTheme).toBe("nightfall")
+    expect(controller.overlayTheme).toBe("nightfall")
+  })
 
   it("initializes listeners and releases them on destroy", async () => {
     const unlisten = vi.fn()
