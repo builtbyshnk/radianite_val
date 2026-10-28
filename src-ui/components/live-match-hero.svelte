@@ -298,8 +298,8 @@
     gap: 0.8cqw;
     max-width: 48%;
     padding: 0.6cqw 1.8cqw;
-    background: #ff6572;
-    color: #211b1a;
+    background: var(--primary);
+    color: var(--primary-foreground);
     font-size: clamp(9px, 1.7cqw, 14px);
     font-weight: 800;
     line-height: 1.3;
