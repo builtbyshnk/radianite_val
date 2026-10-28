@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { applyUiLocale } from "@/lib/i18n"
 import { RadianiteController } from "@/lib/radianite-controller.svelte"
 import type { RadianiteClient } from "@/lib/radianite-client"
+import type { Update } from "@tauri-apps/plugin-updater"
 import type { AppSnapshot, CoreStatus, RpcStatus, Settings } from "@/lib/types"
 
 const status: CoreStatus = {
@@ -36,6 +37,35 @@ const settings: Settings = {
 }
 describe("RadianiteController", () => {
   afterEach(() => applyUiLocale("en-US"))
+
+  it.each([false, true])(
+    "loads tagged GitHub notes without losing the update when notes fail (%s)",
+    async (notesFail) => {
+      const update = {
+        currentVersion: "1.3.1",
+        version: "1.4.0",
+        body: "Stale latest.json notes",
+      } as Update
+      const invoke = notesFail
+        ? vi.fn().mockRejectedValue(new Error("GitHub unavailable"))
+        : vi.fn().mockResolvedValue({ body: "## GitHub release notes" })
+      const controller = new RadianiteController({
+        checkForUpdate: async () => update,
+        invoke,
+      } as unknown as RadianiteClient)
+
+      await controller.checkForUpdate()
+
+      expect(invoke).toHaveBeenCalledWith("release_get_notes", {
+        version: "1.4.0",
+      })
+      expect(controller.availableUpdate).toBe(update)
+      expect(controller.updater.status).toBe("available")
+      expect(controller.updater.body).toBe(
+        notesFail ? null : "## GitHub release notes",
+      )
+    },
+  )
 
   it("prevents overlapping settings writes and restores the overlay theme after a failed save", async () => {
     let rejectSave: (reason: Error) => void = () => undefined

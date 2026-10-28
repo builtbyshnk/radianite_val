@@ -133,6 +133,7 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            commands::release_get_notes,
             commands::app_get_snapshot,
             commands::app_support_report,
             commands::dev_mode_get_enabled,

@@ -1,5 +1,41 @@
 use tauri::{AppHandle, Emitter, Manager, State};
 
+#[derive(serde::Deserialize, serde::Serialize)]
+pub struct ReleaseNotes {
+    body: Option<String>,
+    #[serde(rename(deserialize = "published_at"))]
+    date: Option<String>,
+    #[serde(rename(deserialize = "html_url"))]
+    url: String,
+}
+
+#[tauri::command]
+pub async fn release_get_notes(version: String) -> Result<ReleaseNotes, String> {
+    let tag = format!("v{}", version.trim_start_matches(['v', 'V']));
+    let mut url = reqwest::Url::parse(
+        "https://api.github.com/repos/builtbyshnk/radianite_val/releases/tags/",
+    )
+    .map_err(|err| err.to_string())?;
+    url.path_segments_mut()
+        .map_err(|_| "invalid release URL")?
+        .pop_if_empty()
+        .push(&tag);
+    reqwest::Client::builder()
+        .user_agent("radianite")
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|err| err.to_string())?
+        .get(url)
+        .header(reqwest::header::ACCEPT, "application/vnd.github+json")
+        .send()
+        .await
+        .and_then(reqwest::Response::error_for_status)
+        .map_err(|err| err.to_string())?
+        .json::<ReleaseNotes>()
+        .await
+        .map_err(|err| err.to_string())
+}
+
 use crate::{
     app_state::AppState,
     lifecycle::UiLifecycle,

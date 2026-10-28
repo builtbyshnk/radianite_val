@@ -187,7 +187,6 @@
     onOpenChange={(open: boolean) => {
       if (!open) selected = null
     }}
-    fetchFromGitHub={selected === "current"}
     release={selected === "latest"
       ? {
           version: updater.version ?? "",

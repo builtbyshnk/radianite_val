@@ -352,7 +352,7 @@ export class RadianiteController {
             currentVersion: update.currentVersion,
             version: update.version,
             date: update.date,
-            body: update.body,
+            body: null,
             progress: null,
           }
         : {
@@ -361,6 +361,15 @@ export class RadianiteController {
             message: message("updates.current"),
             progress: null,
           }
+      if (update) {
+        const notes = await this.client
+          .invoke<{ body: string | null }>("release_get_notes", {
+            version: update.version,
+          })
+          .catch(() => null)
+        if (this.availableUpdate === update && notes)
+          this.updater = { ...this.updater, body: notes.body }
+      }
     } catch (error) {
       const detail = String(error instanceof Error ? error.message : error)
       this.updater = {

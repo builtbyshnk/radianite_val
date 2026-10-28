@@ -12,6 +12,7 @@
   import { formatDate } from "@/lib/format"
   import { locale } from "@/lib/locale.svelte"
   import { openUrl } from "@tauri-apps/plugin-opener"
+  import { invoke } from "@tauri-apps/api/core"
   type Release = {
     version: string
     body?: string | null
@@ -22,12 +23,10 @@
     open = $bindable(),
     onOpenChange,
     release,
-    fetchFromGitHub = false,
   }: {
     open: boolean
     onOpenChange: (open: boolean) => void
     release: Release
-    fetchFromGitHub?: boolean
   } = $props()
   let notes = $state<Release>(untrack(() => release)),
     loading = $state(false),
@@ -46,32 +45,30 @@
     ),
   )
   $effect(() => {
-    if (!open || !fetchFromGitHub) return
-    const controller = new AbortController()
+    if (!open) return
+    const requestedRelease = release
+    let cancelled = false
     loading = true
-    fetch(
-      `https://api.github.com/repos/builtbyshnk/radianite_val/releases/tags/v${version}`,
-      { signal: controller.signal },
-    )
-      .then((r) => {
-        if (!r.ok) throw new Error(String(r.status))
-        return r.json()
-      })
+    error = false
+    invoke<Omit<Release, "version">>("release_get_notes", {
+      version: requestedRelease.version,
+    })
       .then((data) => {
+        if (cancelled) return
         notes = {
-          ...notes,
-          body: data.body,
-          date: data.published_at,
-          url: data.html_url,
+          ...requestedRelease,
+          ...data,
         }
       })
-      .catch((e) => {
-        if (e.name !== "AbortError") error = true
+      .catch(() => {
+        if (!cancelled) error = true
       })
       .finally(() => {
-        loading = false
+        if (!cancelled) loading = false
       })
-    return () => controller.abort()
+    return () => {
+      cancelled = true
+    }
   })
   function handleLinks(event: MouseEvent) {
     const link = (event.target as Element).closest("a")
