@@ -32,6 +32,8 @@ pub struct AppState {
     overlay_hide_details: Arc<RwLock<bool>>,
     overlay_server: Arc<Mutex<Option<JoinHandle<()>>>>,
     settings_lock: Arc<Mutex<()>>,
+    #[cfg(debug_assertions)]
+    dev_mode: Arc<std::sync::atomic::AtomicBool>,
     content_cache: ValorantContentCache,
     public_cache: Arc<OnceLock<PublicCacheContext>>,
 }
@@ -81,6 +83,8 @@ impl AppState {
             overlay_hide_details: Arc::new(RwLock::new(false)),
             overlay_server: Arc::new(Mutex::new(None)),
             settings_lock: Arc::new(Mutex::new(())),
+            #[cfg(debug_assertions)]
+            dev_mode: Arc::new(std::sync::atomic::AtomicBool::new(false)),
             content_cache: ValorantContentCache::default(),
             public_cache: Arc::new(OnceLock::new()),
         }
@@ -88,6 +92,30 @@ impl AppState {
 
     pub async fn lock_settings(&self) -> MutexGuard<'_, ()> {
         self.settings_lock.lock().await
+    }
+
+    pub fn dev_mode(&self) -> Option<bool> {
+        #[cfg(debug_assertions)]
+        return Some(self.dev_mode.load(std::sync::atomic::Ordering::Relaxed));
+        #[cfg(not(debug_assertions))]
+        None
+    }
+
+    pub async fn set_dev_mode(&self, app: AppHandle, enabled: bool) -> Result<(), String> {
+        #[cfg(debug_assertions)]
+        {
+            let _guard = self.lock_settings().await;
+            self.stop_monitor().await;
+            self.dev_mode
+                .store(enabled, std::sync::atomic::Ordering::Relaxed);
+            self.start_monitor(app).await;
+            Ok(())
+        }
+        #[cfg(not(debug_assertions))]
+        {
+            let _ = (app, enabled);
+            Err("Mock data is only available in development builds".to_string())
+        }
     }
 
     pub async fn start_overlay_server(&self) -> OverlayStatus {

@@ -959,10 +959,28 @@ impl EventSource for PollingEventSource {
 pub async fn run_monitor_loop(state: AppState, app: AppHandle, mut stop_rx: oneshot::Receiver<()>) {
     let mut source =
         PollingEventSource::with_public_cache(state.content_cache(), state.public_cache_context());
+    #[cfg(debug_assertions)]
+    let mut mock = crate::dev_mode::MockSource::new();
 
     loop {
-        let result = source.poll().await;
+        let poll = async {
+            #[cfg(debug_assertions)]
+            if state.dev_mode() == Some(true) {
+                return mock.poll(state.content_cache()).await;
+            }
+            source.poll().await
+        };
+        let result = tokio::select! {
+            _ = &mut stop_rx => break,
+            result = poll => result,
+        };
         let delay = result.next_delay();
+        #[cfg(debug_assertions)]
+        let delay = if state.dev_mode() == Some(true) {
+            Duration::from_secs(4)
+        } else {
+            delay
+        };
         let changes = state.apply_poll_result(result).await;
 
         if let Some(status) = changes.status {

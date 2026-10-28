@@ -229,6 +229,8 @@
     "uptime": "Tiempo activo"
   },
   "settings": {
+    "devMode": "Datos de prueba para desarrollo",
+    "devModeDescription": "Prueba la aplicación, Discord RPC y la superposición con datos aleatorios sin VALORANT. Alterna entre sala, búsqueda de partida, selección de agente y partida. Se restablece al reiniciar.",
     "title": "Ajustes",
     "description": "Configura las preferencias de Radianite.",
     "nav": {

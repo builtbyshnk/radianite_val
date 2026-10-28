@@ -229,6 +229,8 @@
     "uptime": "运行时间"
   },
   "settings": {
+    "devMode": "开发模拟数据",
+    "devModeDescription": "无需启动 VALORANT，即可使用随机数据测试应用、Discord RPC 和叠加层。循环展示大厅、匹配、特工选择和对局。重启后重置。",
     "title": "设置",
     "description": "配置 Radianite 偏好设置。",
     "nav": {

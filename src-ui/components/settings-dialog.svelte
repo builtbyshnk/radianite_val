@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { onMount } from "svelte"
+  import { invoke } from "@tauri-apps/api/core"
+  import { toast } from "svelte-sonner"
   import DiscordIcon from "@/components/discord-icon.svelte"
   import IconBroadcast from "@icons-pack/svelte-simple-icons/icons/SiObsstudio"
   import IconCopy from "@solar-icons/svelte/bold/copy"
@@ -82,6 +85,8 @@
     onCopySupportReport: () => Promise<void>
   } = $props()
   let active = $state<Tab>("general")
+  let devMode = $state<boolean | null>(null)
+  let devModeBusy = $state(false)
   let copyingReport = $state(false)
 
   async function copySupportReport() {
@@ -93,6 +98,25 @@
     }
   }
 
+  onMount(() => {
+    if (import.meta.env.DEV) {
+      void invoke<boolean | null>("dev_mode_get_enabled")
+        .then((enabled) => (devMode = enabled))
+        .catch((error: unknown) => toast.error(String(error)))
+    }
+  })
+
+  async function setDevMode(enabled: boolean) {
+    devModeBusy = true
+    try {
+      await invoke("dev_mode_set_enabled", { enabled })
+      devMode = enabled
+    } catch (error) {
+      toast.error(String(error))
+    } finally {
+      devModeBusy = false
+    }
+  }
   const nav = [
     { id: "general", key: "settings.nav.general", icon: IconSettings },
     { id: "appearance", key: "settings.nav.appearance", icon: IconPalette },
@@ -176,6 +200,15 @@
                     settings.rememberWindowState,
                     (value) => onSetSetting("rememberWindowState", value),
                   )}
+                  {#if devMode !== null}
+                    {@render SettingRow(
+                      locale.t("settings.devMode"),
+                      locale.t("settings.devModeDescription"),
+                      devMode,
+                      setDevMode,
+                      devModeBusy,
+                    )}
+                  {/if}
                 </div>
               {:else if active === "appearance"}{@render Heading(
                   locale.t("settings.appearanceTitle"),

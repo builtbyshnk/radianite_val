@@ -249,6 +249,8 @@
     "copySupportReport": "Copy support report",
     "supportReportCopied": "Support report copied",
     "reportIssue": "Report an issue",
+    "devMode": "Development mock data",
+    "devModeDescription": "Test the app, Discord RPC, and overlay with random data without VALORANT. Cycles through lobby, matchmaking, agent select, and a match. Resets on restart.",
     "title": "Settings",
     "description": "Configure Radianite preferences.",
     "nav": {

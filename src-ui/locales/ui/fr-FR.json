@@ -229,6 +229,8 @@
     "uptime": "Durée de fonctionnement"
   },
   "settings": {
+    "devMode": "Données de test de développement",
+    "devModeDescription": "Testez l’application, Discord RPC et l’overlay avec des données aléatoires sans VALORANT. Alterne entre salon, recherche de partie, sélection d’agent et partie. Se réinitialise au redémarrage.",
     "title": "Paramètres",
     "description": "Configurez les préférences de Radianite.",
     "nav": {

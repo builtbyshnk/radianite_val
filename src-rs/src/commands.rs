@@ -13,6 +13,20 @@ use crate::{
 };
 
 #[tauri::command]
+pub fn dev_mode_get_enabled(state: State<'_, AppState>) -> Option<bool> {
+    state.dev_mode()
+}
+
+#[tauri::command]
+pub async fn dev_mode_set_enabled(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    enabled: bool,
+) -> Result<(), String> {
+    state.set_dev_mode(app, enabled).await
+}
+
+#[tauri::command]
 pub async fn app_get_snapshot(state: State<'_, AppState>) -> Result<AppSnapshot, String> {
     Ok(state.app_snapshot().await)
 }

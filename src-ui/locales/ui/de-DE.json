@@ -229,6 +229,8 @@
     "uptime": "Laufzeit"
   },
   "settings": {
+    "devMode": "Testdaten für die Entwicklung",
+    "devModeDescription": "Teste App, Discord RPC und Overlay mit Zufallsdaten ohne VALORANT. Wechselt zwischen Lobby, Spielsuche, Agentenauswahl und Match. Wird beim Neustart zurückgesetzt.",
     "title": "Einstellungen",
     "description": "Radianite-Einstellungen anpassen.",
     "nav": {

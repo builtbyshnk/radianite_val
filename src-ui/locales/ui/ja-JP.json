@@ -229,6 +229,8 @@
     "uptime": "稼働時間"
   },
   "settings": {
+    "devMode": "開発用モックデータ",
+    "devModeDescription": "VALORANTを起動せずにランダムなデータでアプリ、Discord RPC、オーバーレイをテストします。ロビー、マッチ検索、エージェント選択、試合を順に切り替えます。再起動時にリセットされます。",
     "title": "設定",
     "description": "Radianite の設定を変更します。",
     "nav": {

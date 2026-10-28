@@ -1,5 +1,7 @@
 mod app_state;
 mod commands;
+#[cfg(debug_assertions)]
+mod dev_mode;
 mod discord_rpc;
 mod lifecycle;
 mod localization;
@@ -116,6 +118,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::app_get_snapshot,
             commands::app_support_report,
+            commands::dev_mode_get_enabled,
+            commands::dev_mode_set_enabled,
             commands::riot_start_monitor,
             commands::riot_stop_monitor,
             commands::riot_get_diagnostics,
