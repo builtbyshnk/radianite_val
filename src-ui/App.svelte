@@ -11,6 +11,7 @@
   import TitleBar from "@/components/title-bar.svelte"
   import UpdatesCard from "@/components/updates-card.svelte"
   import { localeInfo } from "@/lib/i18n"
+  import { fitWindow } from "@/lib/fit-window"
   import { RadianiteController } from "@/lib/radianite-controller.svelte"
   const r = new RadianiteController()
   let settingsOpen = $state(false),
@@ -73,7 +74,7 @@
       onStopMonitor={r.stopMonitor}
       onOpenSettings={openSettings}
     />
-    <main class="flex-1 overflow-y-auto p-3">
+    <main use:fitWindow class="flex-1 overflow-y-auto p-3">
       <div class="mx-auto flex w-full max-w-[1400px] flex-col gap-3">
         <div
           class="grid gap-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(22rem,1fr)]"

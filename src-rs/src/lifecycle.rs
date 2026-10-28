@@ -86,9 +86,10 @@ mod tests {
         let window = &config.app.windows[0];
         assert!(!window.maximizable);
         for (width, height, expected_width, expected_height) in [
-            (800.0, 600.0, 1024.0, 700.0),
+            (800.0, 600.0, 1152.0, 700.0),
             (1920.0, 1080.0, 1280.0, 900.0),
             (1152.0, 768.0, 1152.0, 768.0),
+            (1200.0, 880.0, 1200.0, 880.0),
         ] {
             assert_eq!(
                 bounded_window_size(window, tauri::LogicalSize::new(width, height)),
