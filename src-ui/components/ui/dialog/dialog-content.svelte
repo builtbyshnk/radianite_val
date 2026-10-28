@@ -42,7 +42,7 @@
             {...props}
             type="button"
             aria-label={locale.t("titleBar.close")}
-            class="absolute top-2 end-2 flex h-8 w-9 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            class="absolute top-2 end-2 flex size-8 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
           >
             <IconX class="size-4" strokeWidth={2.5} />
           </button>
