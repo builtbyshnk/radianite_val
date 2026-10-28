@@ -6,7 +6,7 @@
   import IconRefresh from "@solar-icons/svelte/bold/refresh"
   import IconSettings from "@solar-icons/svelte/bold/settings"
   import IconX from "@solar-icons/svelte/linear/close"
-  import AppIcon from "@/components/app-icon.svelte"
+  import appMark from "@/assets/app-mark.svg"
   import { Button } from "@/components/ui/button"
   import { statusPill } from "@/lib/format"
   import { locale } from "@/lib/locale.svelte"
@@ -44,7 +44,7 @@
   class="flex h-12 shrink-0 items-center justify-between gap-3 border-b bg-background px-3 select-none"
 >
   <div data-tauri-drag-region class="flex min-w-0 items-center gap-3">
-    <AppIcon class="size-5 rounded-sm" />
+    <img src={appMark} alt="" class="size-7 shrink-0 object-contain" />
     <span class="truncate text-sm font-semibold">Radianite</span>
     <span class="font-mono text-xs text-muted-foreground"
       >v{version ?? "—"}</span

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="5 6 38 38">
+  <title>Radianite ore cart</title>
+  <g stroke="#08141b" stroke-width="1.5" stroke-linejoin="round">
+    <path d="m9 23 2-9 7-3 6 9-3 5Z" fill="#68838c"/>
+    <path d="m11 14 7-3 6 9-7-3Z" fill="#b1c6c8"/>
+    <path d="m18 22 1-12 7-3 6 5-1 12Z" fill="#3f5964"/>
+    <path d="m19 10 7-3 3 5-7 5Z" fill="#b4ffe0"/>
+    <path d="m22 17 7-5-1 10-5 3-5-3Z" fill="#4de4a7"/>
+    <path d="m29 24 2-10 7 2 2 8Z" fill="#379b83"/>
+    <path d="m31 14 7 2-5 4-4 4Z" fill="#7df4bf"/>
+    <path d="M8 25h32l-4 11H12Z" fill="#f4bd55"/>
+    <path d="M24 25h16l-4 11H24Z" fill="#e5a13f" stroke="none"/>
+    <rect x="6.5" y="22.5" width="35" height="4" rx="1" fill="#c0cdd2"/>
+  </g>
+  <g fill="#91a5af" stroke="#08141b" stroke-width="2.5">
+    <circle cx="14" cy="37.5" r="4.5"/>
+    <circle cx="34" cy="37.5" r="4.5"/>
+  </g>
+  <g fill="#101e28">
+    <circle cx="14" cy="37.5" r="1.25"/>
+    <circle cx="34" cy="37.5" r="1.25"/>
+  </g>
+</svg>

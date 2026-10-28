@@ -5,8 +5,7 @@
   import * as Dialog from "./index.js"
   import { cn, type WithoutChildrenOrChild } from "@/lib/utils.js"
   import type { ComponentProps } from "svelte"
-  import { Button } from "@/components/ui/button/index.js"
-  import IconX from "@solar-icons/svelte/bold/close"
+  import IconX from "@solar-icons/svelte/linear/close"
   import { locale } from "@/lib/locale.svelte"
 
   let {
@@ -39,15 +38,14 @@
     {#if showCloseButton}
       <DialogPrimitive.Close data-slot="dialog-close">
         {#snippet child({ props })}
-          <Button
-            variant="ghost"
-            class="absolute top-2 end-2"
-            size="icon-sm"
+          <button
             {...props}
+            type="button"
+            aria-label={locale.t("titleBar.close")}
+            class="absolute top-2 end-2 flex h-8 w-9 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-[#c42b1c] hover:text-white focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <IconX />
-            <span class="sr-only">{locale.t("titleBar.close")}</span>
-          </Button>
+            <IconX class="size-4" strokeWidth={2.5} />
+          </button>
         {/snippet}
       </DialogPrimitive.Close>
     {/if}
