@@ -22,6 +22,14 @@ use tauri::{
 };
 use tauri_plugin_window_state::{StateFlags, WindowExt};
 
+const BACKGROUND_LAUNCH_ARG: &str = "--background";
+
+fn is_background_launch(args: impl IntoIterator<Item = String>) -> bool {
+    args.into_iter()
+        .skip(1)
+        .any(|arg| arg == BACKGROUND_LAUNCH_ARG)
+}
+
 #[cfg(not(debug_assertions))]
 fn prevent_default_shortcuts() -> tauri::plugin::TauriPlugin<tauri::Wry> {
     use tauri_plugin_prevent_default::{Builder, PlatformOptions};
@@ -37,6 +45,7 @@ fn prevent_default_shortcuts() -> tauri::plugin::TauriPlugin<tauri::Wry> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let background_launch = is_background_launch(std::env::args());
     let mut context = tauri::generate_context!();
     let main_window = context
         .config()
@@ -71,9 +80,15 @@ pub fn run() {
                     .skip_initial_state("main")
                     .build(),
             )
-            .plugin(tauri_plugin_autostart::Builder::new().build())
-            .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-                show_main_window(app);
+            .plugin(
+                tauri_plugin_autostart::Builder::new()
+                    .arg(BACKGROUND_LAUNCH_ARG)
+                    .build(),
+            )
+            .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+                if !is_background_launch(args) {
+                    show_main_window(app);
+                }
             }));
 
         #[cfg(not(debug_assertions))]
@@ -107,7 +122,9 @@ pub fn run() {
                     let _ = window.restore_state(StateFlags::SIZE | StateFlags::POSITION);
                 }
             }
-            lifecycle.show_main_window(app.handle());
+            if !background_launch {
+                lifecycle.show_main_window(app.handle());
+            }
             tauri::async_runtime::spawn(async move {
                 state.start_overlay_server().await;
                 state.start_monitor(app_handle).await;
@@ -191,4 +208,28 @@ pub(crate) fn refresh_tray_menu(app: &tauri::AppHandle) -> tauri::Result<()> {
 
 fn show_main_window(app: &tauri::AppHandle) {
     app.state::<UiLifecycle>().show_main_window(app);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_background_launch;
+
+    #[test]
+    fn autostart_launches_stay_in_the_background() {
+        assert!(is_background_launch(
+            ["radianite.exe", "--background"].map(String::from)
+        ));
+    }
+
+    #[test]
+    fn manual_launches_open_the_window() {
+        for args in [
+            vec!["radianite.exe"],
+            vec!["radianite.exe", "--other-flag"],
+            vec!["radianite.exe", "--background=false"],
+            vec!["--background"],
+        ] {
+            assert!(!is_background_launch(args.into_iter().map(String::from)));
+        }
+    }
 }

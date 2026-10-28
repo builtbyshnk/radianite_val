@@ -235,8 +235,8 @@ fn apply_autostart(app: &AppHandle, enabled: bool) -> Result<(), String> {
     let autolaunch = app.autolaunch();
     let autolaunch_enabled = autolaunch.is_enabled().map_err(|err| err.to_string())?;
     if enabled {
-        // Re-register so existing installs drop obsolete launch arguments and
-        // refresh the executable path after updates.
+        // Re-register so existing installs use the background launch argument
+        // and refresh the executable path after updates.
         autolaunch.enable().map_err(|err| err.to_string())?;
     } else if !enabled && autolaunch_enabled {
         autolaunch.disable().map_err(|err| err.to_string())?;

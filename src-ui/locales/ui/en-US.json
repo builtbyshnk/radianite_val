@@ -265,7 +265,7 @@
     "appLanguage": "App language",
     "appLanguageDescription": "Choose the interface and tray language. System language follows Windows, with English as the fallback.",
     "runAtBoot": "Run at boot",
-    "runAtBootDescription": "Launch Radianite automatically when you sign in to Windows.",
+    "runAtBootDescription": "Start Radianite in the background when you sign in to Windows. Open it from the tray whenever you need it.",
     "closeBehavior": "When closing the window",
     "closeBehaviorDescription": "Choose whether Radianite keeps working in the tray or quits completely.",
     "closeBehaviorTray": "Keep in tray",
