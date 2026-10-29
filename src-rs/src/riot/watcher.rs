@@ -26,7 +26,7 @@ use super::{
         active_season_id, build_valorant_http_client, extract_region_and_shard,
         fetch_public_client_version, i32_path, rank_from_competitive_updates, rank_from_mmr,
         season_id_from_competitive_updates, str_path, u32_path, ValorantClient, ValorantContent,
-        ValorantContentCache,
+        ValorantContentCache, ValorantHttpError,
     },
 };
 
@@ -36,6 +36,7 @@ const CREDENTIAL_CACHE_MAX_TTL: Duration = Duration::from_secs(600);
 const CREDENTIAL_EXPIRY_MARGIN: u64 = 60;
 const CLIENT_VERSION_CACHE_SCHEMA: u8 = 1;
 const CLIENT_VERSION_CACHE_TTL_SECONDS: i64 = 12 * 60 * 60;
+const PHASE_PROBE_TTL: Duration = Duration::from_secs(10);
 
 #[derive(Debug, Clone)]
 pub struct PollResult {
@@ -94,6 +95,7 @@ pub struct PollingEventSource {
     cached_credentials: Option<CachedCredentials>,
     valorant_http_client: Option<reqwest::Client>,
     phase_match_id: Option<PhaseMatchId>,
+    phase_probe: Option<PhaseProbe>,
     coregame_metadata: Option<CoregameMetadata>,
     cached_rank: Option<RankSnapshot>,
     cached_queue_id: Option<String>,
@@ -135,9 +137,16 @@ struct CachedCredentials {
     value: EntitlementsToken,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct PhaseMatchId {
     phase: MatchPhase,
     match_id: String,
+}
+
+struct PhaseProbe {
+    reported_phase: MatchPhase,
+    fetched_at: Instant,
+    detected: Option<PhaseMatchId>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -168,6 +177,14 @@ impl CoregameMetadata {
     fn apply(&self, snapshot: &mut LiveSnapshot) {
         if self.map_id.is_some() {
             snapshot.map_id.clone_from(&self.map_id);
+        }
+        if snapshot.phase == MatchPhase::Ingame
+            && self
+                .map_id
+                .as_deref()
+                .is_some_and(|map| map.to_ascii_lowercase().contains("/range/"))
+        {
+            snapshot.phase = MatchPhase::Range;
         }
         if self.agent_id.is_some() {
             snapshot.agent_id.clone_from(&self.agent_id);
@@ -207,6 +224,7 @@ impl PollingEventSource {
             cached_credentials: None,
             valorant_http_client: None,
             phase_match_id: None,
+            phase_probe: None,
             coregame_metadata: None,
             cached_rank: None,
             cached_queue_id: None,
@@ -330,6 +348,7 @@ impl PollingEventSource {
 
         if !diagnostics.valorant_session_present {
             self.cached_affinity = None;
+            self.phase_probe = None;
             return finish(
                 diagnostics,
                 None,
@@ -428,6 +447,7 @@ impl PollingEventSource {
         };
 
         if let Some(client) = valorant_client.as_ref() {
+            self.recover_phase(client, &puuid, &mut live_snapshot).await;
             self.refresh_rank(client, &puuid, &live_snapshot.phase)
                 .await;
             live_snapshot.rank = self.cached_rank.clone();
@@ -509,6 +529,7 @@ impl PollingEventSource {
             self.cached_identity = None;
             self.cached_credentials = None;
             self.coregame_metadata = None;
+            self.phase_probe = None;
         }
 
         self.local_client
@@ -657,6 +678,44 @@ impl PollingEventSource {
                 self.client_version.clone(),
             )
         })
+    }
+
+    async fn recover_phase(
+        &mut self,
+        client: &ValorantClient,
+        puuid: &str,
+        snapshot: &mut LiveSnapshot,
+    ) {
+        if !matches!(
+            snapshot.phase,
+            MatchPhase::Unknown | MatchPhase::Menus | MatchPhase::Matchmaking
+        ) {
+            self.phase_probe = None;
+            return;
+        }
+
+        let fresh = self.phase_probe.as_ref().is_some_and(|probe| {
+            probe.reported_phase == snapshot.phase && probe.fetched_at.elapsed() < PHASE_PROBE_TTL
+        });
+        if !fresh {
+            let detected =
+                probe_match_phase(client.pregame_player(puuid), client.coregame_player(puuid))
+                    .await;
+            self.phase_probe = Some(PhaseProbe {
+                reported_phase: snapshot.phase.clone(),
+                fetched_at: Instant::now(),
+                detected,
+            });
+        }
+
+        if let Some(detected) = self
+            .phase_probe
+            .as_ref()
+            .and_then(|probe| probe.detected.as_ref())
+        {
+            snapshot.phase = detected.phase.clone();
+            snapshot.match_id = Some(detected.match_id.clone());
+        }
     }
 
     async fn enrich_phase(
@@ -1215,12 +1274,38 @@ fn normalize_live_snapshot(
     }
 }
 
+async fn probe_match_phase(
+    pregame: impl Future<Output = Result<Value, ValorantHttpError>>,
+    coregame: impl Future<Output = Result<Value, ValorantHttpError>>,
+) -> Option<PhaseMatchId> {
+    // Only a successful response with a match ID establishes a live phase.
+    // A timeout, auth error, or missing session must not force a menu state.
+    if let Some(match_id) = pregame
+        .await
+        .ok()
+        .and_then(|player| str_path(&player, &["MatchID"]))
+        .filter(|id| !id.trim().is_empty())
+    {
+        return Some(PhaseMatchId {
+            phase: MatchPhase::Pregame,
+            match_id,
+        });
+    }
+    let player = coregame.await.ok()?;
+    let match_id = str_path(&player, &["MatchID"]).filter(|id| !id.trim().is_empty())?;
+    Some(PhaseMatchId {
+        phase: MatchPhase::Ingame,
+        match_id,
+    })
+}
+
 fn match_phase(presence: &Value) -> MatchPhase {
     let session = first_str(
         presence,
         &[
             &["matchPresenceData", "sessionLoopState"],
             &["sessionLoopState"],
+            &["partyPresenceData", "sessionLoopState"],
         ],
     )
     .unwrap_or_default();
@@ -1242,12 +1327,25 @@ fn match_phase(presence: &Value) -> MatchPhase {
     )
     .unwrap_or_default();
 
-    if session == "INGAME" && provisioning_flow == "ShootingRange" {
+    let session = session.trim().to_ascii_uppercase();
+    if session == "REPLAY" || provisioning_flow.to_ascii_lowercase().contains("replay") {
+        return MatchPhase::Replay;
+    }
+    if (session == "INGAME" || session.is_empty())
+        && provisioning_flow.eq_ignore_ascii_case("ShootingRange")
+    {
         return MatchPhase::Range;
     }
 
     match session.as_str() {
-        "MENUS" if party_state == "MATCHMAKING" => MatchPhase::Matchmaking,
+        "MENUS" | ""
+            if matches!(
+                party_state.trim().to_ascii_uppercase().as_str(),
+                "MATCHMAKING" | "IN_QUEUE" | "INQUEUE" | "SEARCHING" | "QUEUED"
+            ) =>
+        {
+            MatchPhase::Matchmaking
+        }
         "MENUS" => MatchPhase::Menus,
         "PREGAME" => MatchPhase::Pregame,
         "INGAME" => MatchPhase::Ingame,
@@ -1352,6 +1450,190 @@ mod tests {
         });
 
         assert_eq!(match_phase(&presence), MatchPhase::Matchmaking);
+    }
+
+    #[test]
+    fn recognizes_queue_variants_and_explicit_replay_or_range() {
+        for state in ["IN_QUEUE", "InQueue", "INQUEUE", "SEARCHING", "QUEUED"] {
+            for session in ["MENUS", ""] {
+                assert_eq!(
+                    match_phase(&json!({
+                        "sessionLoopState": session,
+                        "partyPresenceData": { "partyState": state }
+                    })),
+                    MatchPhase::Matchmaking
+                );
+            }
+        }
+        assert_eq!(
+            match_phase(&json!({
+                "partyPresenceData": { "sessionLoopState": "replay" }
+            })),
+            MatchPhase::Replay
+        );
+        assert_eq!(
+            match_phase(&json!({
+                "sessionLoopState": "MENUS", "provisioningFlow": "Replay"
+            })),
+            MatchPhase::Replay
+        );
+        assert_eq!(
+            match_phase(&json!({ "provisioningFlow": "ShootingRange" })),
+            MatchPhase::Range
+        );
+        assert_eq!(match_phase(&json!({})), MatchPhase::Unknown);
+    }
+
+    #[tokio::test]
+    async fn phase_probe_prefers_pregame_without_polling_coregame() {
+        let detected =
+            super::probe_match_phase(async { Ok(json!({"MatchID": "pregame-match"})) }, async {
+                panic!("coregame should not be requested during pregame")
+            })
+            .await
+            .expect("pregame detected");
+        assert_eq!(detected.phase, MatchPhase::Pregame);
+        assert_eq!(detected.match_id, "pregame-match");
+    }
+
+    #[tokio::test]
+    async fn phase_probe_uses_coregame_after_failure_or_incomplete_pregame() {
+        for pregame in [
+            Err(super::ValorantHttpError {
+                message: "session unavailable".into(),
+            }),
+            Ok(json!({})),
+            Ok(json!({"MatchID": " "})),
+        ] {
+            let detected = super::probe_match_phase(async { pregame }, async {
+                Ok(json!({"MatchID": "live-match"}))
+            })
+            .await
+            .expect("coregame detected");
+            assert_eq!(detected.phase, MatchPhase::Ingame);
+            assert_eq!(detected.match_id, "live-match");
+        }
+    }
+
+    #[tokio::test]
+    async fn phase_probe_does_not_invent_a_phase_on_errors_or_invalid_responses() {
+        for coregame in [
+            Err(super::ValorantHttpError {
+                message: "request timed out".into(),
+            }),
+            Ok(json!({})),
+            Ok(json!({"MatchID": ""})),
+        ] {
+            assert!(super::probe_match_phase(
+                async {
+                    Err(super::ValorantHttpError {
+                        message: "auth expired".into(),
+                    })
+                },
+                async { coregame },
+            )
+            .await
+            .is_none());
+        }
+    }
+
+    #[tokio::test]
+    async fn cached_phase_recovery_preserves_state_on_failure_and_skips_explicit_phases() {
+        let mut source = super::PollingEventSource::new(ValorantContentCache::default());
+        // Invalid headers make any unintended network attempt fail locally.
+        let client = super::ValorantClient::from_http_client(
+            reqwest::Client::new(),
+            "ap".into(),
+            "ap".into(),
+            crate::riot::local_client::EntitlementsToken {
+                access_token: "\n".into(),
+                entitlements_token: "\n".into(),
+            },
+            None,
+        );
+        for phase in [
+            MatchPhase::Unknown,
+            MatchPhase::Menus,
+            MatchPhase::Matchmaking,
+        ] {
+            for detected in [
+                None,
+                Some(super::PhaseMatchId {
+                    phase: MatchPhase::Pregame,
+                    match_id: "recovered-match".into(),
+                }),
+            ] {
+                let mut snapshot =
+                    normalize_live_snapshot(None, PlayerIdentity::default(), None, None, None);
+                snapshot.phase = phase.clone();
+                source.phase_probe = Some(super::PhaseProbe {
+                    reported_phase: phase.clone(),
+                    fetched_at: std::time::Instant::now(),
+                    detected: detected.clone(),
+                });
+                source.recover_phase(&client, "player", &mut snapshot).await;
+                assert_eq!(
+                    snapshot.phase,
+                    detected
+                        .as_ref()
+                        .map(|d| d.phase.clone())
+                        .unwrap_or(phase.clone())
+                );
+                assert_eq!(snapshot.match_id, detected.map(|d| d.match_id));
+            }
+        }
+        for phase in [
+            MatchPhase::Replay,
+            MatchPhase::Range,
+            MatchPhase::Pregame,
+            MatchPhase::Ingame,
+        ] {
+            let mut snapshot =
+                normalize_live_snapshot(None, PlayerIdentity::default(), None, None, None);
+            snapshot.phase = phase;
+            let before = snapshot.clone();
+            source.recover_phase(&client, "player", &mut snapshot).await;
+            assert_eq!(snapshot, before);
+            assert!(source.phase_probe.is_none());
+        }
+        for (reported_phase, age) in [
+            (MatchPhase::Unknown, super::PHASE_PROBE_TTL),
+            (MatchPhase::Menus, std::time::Duration::ZERO),
+        ] {
+            let mut snapshot =
+                normalize_live_snapshot(None, PlayerIdentity::default(), None, None, None);
+            snapshot.phase = MatchPhase::Unknown;
+            source.phase_probe = Some(super::PhaseProbe {
+                reported_phase,
+                fetched_at: std::time::Instant::now() - age,
+                detected: Some(super::PhaseMatchId {
+                    phase: MatchPhase::Pregame,
+                    match_id: "stale-match".into(),
+                }),
+            });
+            // Expired or mismatched cache entries must be probed again. The
+            // invalid headers fail both requests without changing the phase.
+            source.recover_phase(&client, "player", &mut snapshot).await;
+            assert_eq!(snapshot.phase, MatchPhase::Unknown);
+            assert!(snapshot.match_id.is_none());
+            assert!(source.phase_probe.as_ref().unwrap().detected.is_none());
+        }
+    }
+
+    #[test]
+    fn recovered_coregame_range_is_identified_from_map_metadata() {
+        let mut snapshot =
+            normalize_live_snapshot(None, PlayerIdentity::default(), None, None, None);
+        snapshot.phase = MatchPhase::Ingame;
+        CoregameMetadata::from_response(
+            "range-match",
+            "player",
+            &json!({
+                "MapID": "/Game/Maps/Poveglia/Range/Range"
+            }),
+        )
+        .apply(&mut snapshot);
+        assert_eq!(snapshot.phase, MatchPhase::Range);
     }
 
     #[test]

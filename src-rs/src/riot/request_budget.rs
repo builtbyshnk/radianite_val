@@ -56,7 +56,7 @@ impl RequestBudget {
                         + seconds / 12
                         + div_ceil(seconds, 300)
                         + div_ceil(seconds, 600),
-                    authenticated_riot: 1 + div_ceil(seconds, 300) * 2,
+                    authenticated_riot: 1 + div_ceil(seconds, 300) * 2 + div_ceil(seconds, 10) * 2,
                     public_https: 0,
                     tauri_ipc_reads: 0,
                 }
@@ -142,7 +142,7 @@ mod tests {
             RequestBudget::optimized_warm(Scenario::ValorantMenus, TEN_MINUTES),
             RequestBudget {
                 local_riot: 253,
-                authenticated_riot: 5,
+                authenticated_riot: 125,
                 public_https: 0,
                 tauri_ipc_reads: 0,
             }
