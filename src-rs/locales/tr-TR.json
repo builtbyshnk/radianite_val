@@ -1,5 +1,9 @@
 {
   "_version": 1,
+  "tray.show": "Radianite'ı göster",
+  "tray.quit": "Çıkış",
+  "overlay.rankAvailable": "Kademe verileri kullanılabilir",
+  "overlay.waitingRank": "Rekabete dayalı kademe verileri bekleniyor",
   "rpc.phase.menu": "%{mode} - Menü",
   "rpc.phase.queue": "%{mode} - Sırada",
   "rpc.phase.pregame": "%{mode} - Ajan Seçiyor",

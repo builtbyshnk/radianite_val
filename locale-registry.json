@@ -65,7 +65,7 @@
       "englishName": "Italian",
       "direction": "ltr",
       "contributors": ["@zaykenyon (valorant-rpc)"],
-      "ui": false,
+      "ui": true,
       "rpc": true
     },
     {
@@ -104,7 +104,7 @@
       "englishName": "Polish",
       "direction": "ltr",
       "contributors": ["@kyanbasu (valorant-rpc)"],
-      "ui": false,
+      "ui": true,
       "rpc": true
     },
     {
@@ -137,7 +137,7 @@
         "@MKerem#2078 (valorant-rpc)",
         "@Ozefear#3083 (valorant-rpc)"
       ],
-      "ui": false,
+      "ui": true,
       "rpc": true
     },
     {
@@ -200,7 +200,7 @@
       "englishName": "Indonesian",
       "direction": "ltr",
       "contributors": ["@sryo#9955 (valorant-rpc)"],
-      "ui": false,
+      "ui": true,
       "rpc": true
     },
     {
@@ -209,7 +209,7 @@
       "englishName": "Vietnamese",
       "direction": "ltr",
       "contributors": ["@Mistral#9699 (valorant-rpc)"],
-      "ui": false,
+      "ui": true,
       "rpc": true
     },
     {

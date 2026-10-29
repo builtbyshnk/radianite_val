@@ -1,5 +1,9 @@
 {
   "_version": 1,
+  "tray.show": "Tampilkan Radianite",
+  "tray.quit": "Keluar",
+  "overlay.rankAvailable": "Data peringkat tersedia",
+  "overlay.waitingRank": "Menunggu data peringkat kompetitif",
   "rpc.phase.menu": "%{mode} - Menu",
   "rpc.phase.queue": "%{mode} - Antre",
   "rpc.phase.pregame": "%{mode} - Memilih",

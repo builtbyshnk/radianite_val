@@ -21,8 +21,17 @@ describe("resolveLocale", () => {
     expect(resolveLocale(["fr-CA"], "ui")).toBe("fr-FR")
     expect(resolveLocale(["pt-PT"], "ui")).toBe("pt-BR")
     expect(resolveLocale(["ar-SA"], "ui")).toBe("ar-AE")
-    expect(resolveLocale(["it-IT"], "ui")).toBe(FALLBACK_LOCALE)
+    expect(resolveLocale(["it-CH"], "ui")).toBe("it-IT")
+    expect(resolveLocale(["nl-NL"], "ui")).toBe(FALLBACK_LOCALE)
   })
+
+  it.each(["it-IT", "tr-TR", "pl-PL", "id-ID", "vi-VN"])(
+    "resolves %s as an app language",
+    (tag) => {
+      expect(resolveLocale([tag], "ui")).toBe(tag)
+      expect(resolveLocale([tag.split("-")[0]], "ui")).toBe(tag)
+    },
+  )
 })
 
 describe("app translations", () => {
@@ -40,6 +49,11 @@ describe("app translations", () => {
     "ja-JP": "設定",
     "ko-KR": "설정",
     "ar-AE": "الإعدادات",
+    "it-IT": "Impostazioni",
+    "tr-TR": "Ayarlar",
+    "pl-PL": "Ustawienia",
+    "id-ID": "Pengaturan",
+    "vi-VN": "Cài đặt",
   }
 
   function flatten(
@@ -57,7 +71,7 @@ describe("app translations", () => {
     )
   }
 
-  it("provides a complete catalog for English and ten other app languages", () => {
+  it("provides a complete catalog for every enabled app language", () => {
     expect(uiLocales.map(({ tag }) => tag).sort()).toEqual(
       Object.keys(titles).sort(),
     )

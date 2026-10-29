@@ -86,6 +86,7 @@ mod tests {
     fn matches_supported_display_languages_and_regional_variants() {
         for tag in ui_locales() {
             assert_eq!(match_ui_locale(&tag), tag);
+            assert!(ensure_ui_locale(&tag).is_ok());
         }
         assert_eq!(match_ui_locale("de-AT"), "de-DE");
         assert_eq!(match_ui_locale("es-MX"), "es-ES");
@@ -93,13 +94,14 @@ mod tests {
         assert_eq!(match_ui_locale("ar-SA"), "ar-AE");
         assert_eq!(match_ui_locale("zh-Hans-CN"), "zh-CN");
         assert_eq!(match_ui_locale("fr-ca"), "fr-FR");
+        assert_eq!(match_ui_locale("it-CH"), "it-IT");
     }
 
     #[test]
     fn unsupported_display_languages_fall_back_to_english() {
-        assert_eq!(match_ui_locale("it-IT"), FALLBACK_LOCALE);
+        assert_eq!(match_ui_locale("nl-NL"), FALLBACK_LOCALE);
         assert_eq!(match_ui_locale(""), FALLBACK_LOCALE);
-        assert!(ensure_ui_locale("it-IT").is_err());
+        assert!(ensure_ui_locale("nl-NL").is_err());
         assert!(ensure_ui_locale(SYSTEM_LOCALE).is_ok());
     }
 

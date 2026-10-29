@@ -1,5 +1,9 @@
 {
   "_version": 1,
+  "tray.show": "Pokaż Radianite",
+  "tray.quit": "Zakończ",
+  "overlay.rankAvailable": "Dane rangi są dostępne",
+  "overlay.waitingRank": "Oczekiwanie na dane rangi w trybie rankingowym",
   "rpc.phase.menu": "%{mode} - Menu",
   "rpc.phase.queue": "%{mode} - Kolejka",
   "rpc.phase.pregame": "%{mode} - Wybieranie",

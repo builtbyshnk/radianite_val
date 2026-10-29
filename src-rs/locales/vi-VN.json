@@ -1,5 +1,9 @@
 {
   "_version": 1,
+  "tray.show": "Hiện Radianite",
+  "tray.quit": "Thoát",
+  "overlay.rankAvailable": "Đã có dữ liệu xếp hạng",
+  "overlay.waitingRank": "Đang chờ dữ liệu bậc xếp hạng thi đấu",
   "rpc.phase.menu": "%{mode} - Menu",
   "rpc.phase.queue": "%{mode} - Trong hàng chờ",
   "rpc.phase.pregame": "%{mode} - Đang chọn",
