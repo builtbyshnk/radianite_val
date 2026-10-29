@@ -5,12 +5,11 @@
   import { toast } from "svelte-sonner"
   import { Button } from "@/components/ui/button"
   import { locale } from "@/lib/locale.svelte"
+  import upiQrUrl from "@/assets/upi-qr.svg"
 
   let { onOpenUrl }: { onOpenUrl: (url: string) => void } = $props()
 
   const UPI_VPA = "radcolor@upi"
-  const UPI_URI = `upi://pay?pa=${encodeURIComponent(UPI_VPA)}&pn=${encodeURIComponent("radcolor")}&cu=INR`
-  const UPI_QR_URL = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=6&data=${encodeURIComponent(UPI_URI)}`
   const RAZORPAY_URL = "https://razorpay.me/@shashankbaghel705"
   const GITHUB_SPONSORS_URL = "https://github.com/sponsors/radcolor"
 
@@ -83,12 +82,12 @@
       </div>
 
       <div
-        class="mx-auto flex w-fit shrink-0 flex-col items-center gap-1.5 rounded-xl border border-white/15 bg-white p-2.5 shadow-md md:mx-0"
+        class="mx-auto w-fit shrink-0 overflow-hidden rounded-lg border border-white/25 bg-white shadow-sm md:mx-0"
       >
         <img
-          src={UPI_QR_URL}
+          src={upiQrUrl}
           alt={locale.t("settings.upiQrAlt", { vpa: UPI_VPA })}
-          class="size-40 rounded-lg"
+          class="block size-40"
           width="160"
           height="160"
         />
