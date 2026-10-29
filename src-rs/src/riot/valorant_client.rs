@@ -18,7 +18,7 @@ use super::{
 
 const RIOT_CLIENT_PLATFORM: &str =
     "eyJwbGF0Zm9ybVR5cGUiOiJQQyIsInBsYXRmb3JtT1MiOiJXaW5kb3dzIiwicGxhdGZvcm1PU1ZlcnNpb24iOiIxMC4wLjE5MDQ1LjEuMjU2LjY0Yml0IiwicGxhdGZvcm1DaGlwc2V0IjoiVW5rbm93biJ9";
-const CONTENT_CACHE_SCHEMA: u8 = 1;
+const CONTENT_CACHE_SCHEMA: u8 = 2;
 const CONTENT_CACHE_TTL_SECONDS: i64 = 24 * 60 * 60;
 const MAX_ASSET_BYTES: usize = 10 * 1024 * 1024;
 
@@ -230,6 +230,8 @@ pub struct ValorantContent {
 struct ContentAgent {
     uuid: String,
     display_name: String,
+    #[serde(default)]
+    developer_name: Option<String>,
     display_icon: Option<String>,
     full_portrait: Option<String>,
 }
@@ -299,6 +301,8 @@ impl ValorantContentCache {
     }
 
     pub async fn get(&self, locale: &str) -> Result<ValorantContent, ValorantHttpError> {
+        // The app supports Hindi, but VALORANT's content API does not.
+        let locale = if locale == "hi-IN" { "en-US" } else { locale };
         let mut content = self.inner.lock().await;
         match content.get(locale) {
             Some(CachedValorantContent::Ready(cached)) => return Ok(cached.clone()),
@@ -413,7 +417,11 @@ fn content_cache_path(context: &PublicCacheContext, locale: &str) -> Option<std:
     locale
         .chars()
         .all(|character| character.is_ascii_alphanumeric() || character == '-')
-        .then(|| context.root().join(format!("content-{locale}-v1.json")))
+        .then(|| {
+            context
+                .root()
+                .join(format!("content-{locale}-v{CONTENT_CACHE_SCHEMA}.json"))
+        })
 }
 
 fn load_cached_content(
@@ -474,6 +482,18 @@ fn asset_extension(url: &str) -> Option<&'static str> {
 }
 
 impl ValorantContent {
+    pub fn agent_id_for_codename(&self, codename: &str) -> Option<&str> {
+        self.agents
+            .iter()
+            .find(|agent| {
+                agent
+                    .developer_name
+                    .as_deref()
+                    .is_some_and(|name| name.eq_ignore_ascii_case(codename))
+            })
+            .map(|agent| agent.uuid.as_str())
+    }
+
     pub fn agent_name(&self, uuid: &str) -> Option<String> {
         self.agents
             .iter()
@@ -563,6 +583,7 @@ pub async fn fetch_public_content_for_locale(
             Some(ContentAgent {
                 uuid: agent.uuid?,
                 display_name: agent.display_name?,
+                developer_name: agent.developer_name,
                 display_icon: agent.display_icon,
                 full_portrait: agent.full_portrait,
             })
@@ -643,6 +664,7 @@ struct ValorantApiList<T> {
 struct AgentDto {
     uuid: Option<String>,
     display_name: Option<String>,
+    developer_name: Option<String>,
     display_icon: Option<String>,
     full_portrait: Option<String>,
 }
@@ -954,6 +976,7 @@ mod tests {
             agents: vec![ContentAgent {
                 uuid: "agent-id".to_string(),
                 display_name: "Agent".to_string(),
+                developer_name: None,
                 display_icon: Some("https://example.test/agent-icon.png".to_string()),
                 full_portrait: Some("https://example.test/agent-portrait.png".to_string()),
             }],
@@ -990,24 +1013,99 @@ mod tests {
         );
     }
 
-    #[test]
-    fn resolves_hush_from_content_without_artwork() {
+    #[tokio::test]
+    async fn resolves_hush_from_content_with_published_artwork_and_hindi_fallback() {
+        let uuid = "ddd5a15c-4fbe-42fa-3789-11a55ca5ee04";
+        let icon = format!("https://media.valorant-api.com/agents/{uuid}/displayicon.png");
+        let portrait = format!("https://media.valorant-api.com/agents/{uuid}/fullportrait.png");
         let content = ValorantContent {
             agents: vec![ContentAgent {
-                // Test fixture only: Hush's real UUID has not been published yet.
-                uuid: "hush-test-id".to_string(),
+                uuid: uuid.to_string(),
                 display_name: "Hush".to_string(),
-                display_icon: None,
-                full_portrait: None,
+                developer_name: Some("Paprika".to_string()),
+                display_icon: Some(icon.clone()),
+                full_portrait: Some(portrait.clone()),
             }],
             ..ValorantContent::default()
         };
 
-        assert_eq!(content.agent_name("hush-test-id").as_deref(), Some("Hush"));
-        let presentation = content.presentation(Some("hush-test-id"), None, None);
+        assert_eq!(content.agent_name(uuid).as_deref(), Some("Hush"));
+        assert_eq!(content.agent_id_for_codename("paprika"), Some(uuid));
+        assert!(content.agent_id_for_codename("unknown").is_none());
+        let presentation = content.presentation(Some(&uuid.to_uppercase()), None, None);
         assert_eq!(presentation.agent_name.as_deref(), Some("Hush"));
-        assert!(presentation.agent_icon_url.is_none());
-        assert!(presentation.agent_portrait_url.is_none());
+        assert_eq!(presentation.agent_icon_url.as_deref(), Some(icon.as_str()));
+        assert_eq!(
+            presentation.agent_portrait_url.as_deref(),
+            Some(portrait.as_str())
+        );
+        let cache = super::ValorantContentCache::default();
+        cache.inner.lock().await.insert(
+            "en-US".to_string(),
+            super::CachedValorantContent::Ready(content),
+        );
+        let hindi = cache
+            .get("hi-IN")
+            .await
+            .expect("Hindi should reuse English content");
+        assert_eq!(hindi.presentation(Some(uuid), None, None), presentation);
+    }
+
+    #[tokio::test]
+    #[ignore = "requires the live VALORANT content and artwork APIs"]
+    async fn live_hush_content_and_artwork_survive_disk_cache() {
+        let uuid = "ddd5a15c-4fbe-42fa-3789-11a55ca5ee04";
+        let content = super::fetch_public_content_for_locale("en-US")
+            .await
+            .expect("live content should load");
+        let presentation = content.presentation(Some(uuid), None, None);
+        assert_eq!(content.agent_id_for_codename("Paprika"), Some(uuid));
+        assert_eq!(presentation.agent_name.as_deref(), Some("Hush"));
+        assert_eq!(
+            presentation.agent_icon_url,
+            Some(format!(
+                "https://media.valorant-api.com/agents/{uuid}/displayicon.png"
+            ))
+        );
+        assert_eq!(
+            presentation.agent_portrait_url,
+            Some(format!(
+                "https://media.valorant-api.com/agents/{uuid}/fullportrait.png"
+            ))
+        );
+
+        let root = std::env::temp_dir().join(format!(
+            "radianite-hush-cache-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let context = PublicCacheContext::new(root.clone(), "hush-test".to_string());
+        store_cached_content(&context, "en-US", &content, chrono::Utc::now().timestamp())
+            .expect("Hush content should cache");
+        let cache = super::ValorantContentCache::default();
+        cache.configure_public_cache(context);
+        let cached = cache
+            .get("en-US")
+            .await
+            .expect("cached content should load");
+        assert_eq!(cached.presentation(Some(uuid), None, None), presentation);
+        let hindi = cache
+            .get("hi-IN")
+            .await
+            .expect("Hindi should use English content");
+        assert_eq!(hindi.presentation(Some(uuid), None, None), presentation);
+        let cached_art = cache.cache_presentation_assets(presentation).await;
+        for path in [cached_art.agent_icon_url, cached_art.agent_portrait_url] {
+            let path = std::path::PathBuf::from(path.expect("Hush artwork should be present"));
+            assert!(path.starts_with(&root));
+            assert!(fs::read(path)
+                .expect("cached artwork should be readable")
+                .starts_with(b"\x89PNG\r\n\x1a\n"));
+        }
+        fs::remove_dir_all(root).expect("Hush cache fixture should be removed");
     }
 
     #[test]
@@ -1066,6 +1164,7 @@ mod tests {
             agents: vec![ContentAgent {
                 uuid: "agent".to_string(),
                 display_name: "Cached Agent".to_string(),
+                developer_name: None,
                 display_icon: None,
                 full_portrait: None,
             }],

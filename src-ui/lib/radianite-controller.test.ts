@@ -89,6 +89,8 @@ describe("RadianiteController", () => {
   })
 
   it("initializes listeners and releases them on destroy", async () => {
+    const hushId = "ddd5a15c-4fbe-42fa-3789-11a55ca5ee04"
+    const hushArt = `https://media.valorant-api.com/agents/${hushId}`
     const unlisten = vi.fn()
     const closeWindow = vi.fn(async () => undefined)
     const presentationCalls = vi.fn()
@@ -139,7 +141,11 @@ describe("RadianiteController", () => {
       }
       if (command === "valorant_get_presentation") {
         presentationCalls()
-        return {} as T
+        return {
+          agentName: "Hush",
+          agentIconUrl: `${hushArt}/displayicon.png`,
+          agentPortraitUrl: `${hushArt}/fullportrait.png`,
+        } as T
       }
       throw new Error(`Unexpected command: ${command}`)
     }
@@ -184,13 +190,26 @@ describe("RadianiteController", () => {
     expect(document.documentElement.dataset.interfaceScale).toBe("compact")
     expect(document.documentElement.dataset.reduceMotion).toBe("true")
     const snapshot = {
-      agentId: "agent",
+      agentId: hushId,
       mapId: "map",
       rank: { tier: 12 },
     }
     handlers.get("riot:snapshot")?.(snapshot)
     handlers.get("riot:snapshot")?.(snapshot)
     await vi.waitFor(() => expect(presentationCalls).toHaveBeenCalledTimes(1))
+    expect(invokeCalls).toHaveBeenLastCalledWith(
+      "valorant_get_presentation",
+      expect.objectContaining({ agentId: hushId }),
+    )
+    await vi.waitFor(() =>
+      expect(controller.presentation?.agentName).toBe("Hush"),
+    )
+    expect(controller.presentation?.agentIconUrl).toBe(
+      `${hushArt}/displayicon.png`,
+    )
+    expect(controller.presentation?.agentPortraitUrl).toBe(
+      `${hushArt}/fullportrait.png`,
+    )
     handlers.get("riot:snapshot")?.({
       ...snapshot,
       rank: { tier: 13 },

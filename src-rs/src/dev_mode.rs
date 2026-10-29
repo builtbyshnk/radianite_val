@@ -82,6 +82,7 @@ impl MockSource {
                 ("add6443a-41bd-e414-f6ad-e58d267f4e95", "Jett"),
                 ("a3bfb853-43b2-7238-a4f1-ad90e9e46bcc", "Reyna"),
                 ("569fdd95-4d10-43ab-ca70-79becc718b46", "Sage"),
+                ("ddd5a15c-4fbe-42fa-3789-11a55ca5ee04", "Hush"),
             ];
             let (map_id, map_name) = maps[self.random(maps.len() as u32) as usize];
             let (agent_id, agent_name) = agents[self.random(agents.len() as u32) as usize];
@@ -148,6 +149,43 @@ mod tests {
             assert_eq!(snapshot.phase == MatchPhase::Ingame, step >= 9);
             assert!(!result.diagnostics.access_token_ready);
         }
+    }
+
+    #[tokio::test]
+    async fn hush_mock_reaches_agent_select_and_ingame_presence() {
+        let state = crate::app_state::AppState::new();
+        let mut source = MockSource::new();
+        source.seed = 1;
+        let mut checked_pregame = false;
+        for _ in 0..24 * 32 {
+            let result = source.next();
+            let snapshot = result.live_snapshot.as_ref().unwrap();
+            if snapshot.agent_name.as_deref() != Some("Hush") {
+                continue;
+            }
+            assert_eq!(
+                snapshot.agent_id.as_deref(),
+                Some("ddd5a15c-4fbe-42fa-3789-11a55ca5ee04")
+            );
+            let phase = snapshot.phase.clone();
+            if !matches!(phase, MatchPhase::Pregame | MatchPhase::Ingame) {
+                continue;
+            }
+            state.apply_poll_result(result).await;
+            let preview = state.rpc_status().await.preview.expect("Hush RPC preview");
+            let art = if phase == MatchPhase::Pregame {
+                checked_pregame = true;
+                preview.large_image_url
+            } else {
+                assert!(checked_pregame);
+                preview.small_image_url
+            };
+            assert!(art.is_some(), "Hush artwork should reach the RPC preview");
+            if phase == MatchPhase::Ingame {
+                return;
+            }
+        }
+        panic!("development mode should include Hush");
     }
 
     #[tokio::test]

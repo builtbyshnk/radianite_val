@@ -18,6 +18,7 @@ use super::{
     cache::PublicCacheContext,
     local_client::{ChatSession, EntitlementsToken, ExternalSessions, LocalClient, SessionFetch},
     lockfile::{default_paths, LockfilePaths, RiotLockfile},
+    range_agent::RangeAgentLog,
     state::{
         now_timestamp, CoreStatus, CoreStatusKind, DiagnosticSnapshot, LiveSnapshot,
         LocalizedMessage, MatchPhase, PartySnapshot, PlayerIdentity, RankSnapshot, ScoreSnapshot,
@@ -97,6 +98,7 @@ pub struct PollingEventSource {
     phase_match_id: Option<PhaseMatchId>,
     phase_probe: Option<PhaseProbe>,
     coregame_metadata: Option<CoregameMetadata>,
+    range_agent_log: RangeAgentLog,
     cached_rank: Option<RankSnapshot>,
     cached_queue_id: Option<String>,
     active_season_id: Option<String>,
@@ -182,7 +184,10 @@ impl CoregameMetadata {
             && self
                 .map_id
                 .as_deref()
-                .is_some_and(|map| map.to_ascii_lowercase().contains("/range/"))
+                .and_then(|map| map.rsplit('/').find(|part| !part.is_empty()))
+                .is_some_and(|part| {
+                    part.eq_ignore_ascii_case("Range") || part.eq_ignore_ascii_case("RangeV2")
+                })
         {
             snapshot.phase = MatchPhase::Range;
         }
@@ -226,6 +231,7 @@ impl PollingEventSource {
             phase_match_id: None,
             phase_probe: None,
             coregame_metadata: None,
+            range_agent_log: RangeAgentLog::default(),
             cached_rank: None,
             cached_queue_id: None,
             active_season_id: None,
@@ -454,6 +460,15 @@ impl PollingEventSource {
             self.enrich_phase(client, &puuid, &mut live_snapshot).await;
         }
         if let Some(content) = &self.content {
+            if live_snapshot.phase == MatchPhase::Range {
+                if let Some(agent_id) = self
+                    .range_agent_log
+                    .read()
+                    .and_then(|codename| content.agent_id_for_codename(codename))
+                {
+                    live_snapshot.agent_id = Some(agent_id.to_string());
+                }
+            }
             enrich_content_names(&mut live_snapshot, content);
         }
 
@@ -529,6 +544,7 @@ impl PollingEventSource {
             self.cached_identity = None;
             self.cached_credentials = None;
             self.coregame_metadata = None;
+            self.range_agent_log = RangeAgentLog::default();
             self.phase_probe = None;
         }
 
@@ -1622,18 +1638,18 @@ mod tests {
 
     #[test]
     fn recovered_coregame_range_is_identified_from_map_metadata() {
-        let mut snapshot =
-            normalize_live_snapshot(None, PlayerIdentity::default(), None, None, None);
-        snapshot.phase = MatchPhase::Ingame;
-        CoregameMetadata::from_response(
-            "range-match",
-            "player",
-            &json!({
-                "MapID": "/Game/Maps/Poveglia/Range/Range"
-            }),
-        )
-        .apply(&mut snapshot);
-        assert_eq!(snapshot.phase, MatchPhase::Range);
+        for map in [
+            "/Game/Maps/Poveglia/Range/Range",
+            "/Game/Maps/Poveglia/Range",
+            "/Game/Maps/PovegliaV2/RangeV2",
+        ] {
+            let mut snapshot =
+                normalize_live_snapshot(None, PlayerIdentity::default(), None, None, None);
+            snapshot.phase = MatchPhase::Ingame;
+            CoregameMetadata::from_response("range-match", "player", &json!({"MapID": map}))
+                .apply(&mut snapshot);
+            assert_eq!(snapshot.phase, MatchPhase::Range);
+        }
     }
 
     #[test]
@@ -1745,6 +1761,23 @@ mod tests {
         assert_eq!(snapshot.phase, MatchPhase::Pregame);
         assert_eq!(snapshot.agent_id.as_deref(), Some("agent-from-presence"));
         assert_eq!(snapshot.match_id.as_deref(), Some("pregame-match"));
+    }
+
+    #[tokio::test]
+    #[ignore = "requires a live VALORANT Range session with Hush selected using F2"]
+    async fn live_range_reports_hush_after_f2_switch() {
+        let mut source = super::PollingEventSource::new(ValorantContentCache::default());
+        for _ in 0..2 {
+            let result = source.poll_once().await;
+            let snapshot = result.live_snapshot.expect("live Range snapshot");
+            assert_eq!(snapshot.phase, MatchPhase::Range);
+            assert_eq!(snapshot.agent_name.as_deref(), Some("Hush"));
+            assert_eq!(
+                snapshot.agent_id.as_deref(),
+                Some("ddd5a15c-4fbe-42fa-3789-11a55ca5ee04")
+            );
+            println!("Range agent: Hush");
+        }
     }
 
     #[test]

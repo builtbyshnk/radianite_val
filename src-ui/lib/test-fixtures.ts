@@ -12,6 +12,10 @@ import type {
 
 const query = new URLSearchParams(location.search)
 const fixture = query.get("fixture") ?? "disconnected"
+const isHush = query.get("agent") === "hush"
+const agentId = isHush ? "ddd5a15c-4fbe-42fa-3789-11a55ca5ee04" : "jett"
+const agentName = isHush ? "Hush" : "Jett"
+const hushIconUrl = `https://media.valorant-api.com/agents/${agentId}/displayicon.png`
 
 const settings: Settings = {
   runAtBoot: false,
@@ -49,8 +53,8 @@ const liveSnapshot = (phase: LiveSnapshot["phase"]): LiveSnapshot => ({
   party: { state: "DEFAULT", size: 3, maxSize: 5, accessibility: "OPEN" },
   mapId: "Ascent",
   mapName: "Ascent",
-  agentId: "jett",
-  agentName: "Jett",
+  agentId,
+  agentName,
   score: phase === "ingame" ? { ally: 8, enemy: 6 } : null,
   rank: { tier: 18, tierName: "Diamond 3", rankedRating: 72 },
   matchId: "fixture-match",
@@ -61,11 +65,13 @@ const liveSnapshot = (phase: LiveSnapshot["phase"]): LiveSnapshot => ({
 const phase =
   fixture === "live"
     ? "ingame"
-    : fixture === "matchmaking"
-      ? "matchmaking"
-      : fixture === "menus"
-        ? "menus"
-        : null
+    : fixture === "pregame"
+      ? "pregame"
+      : fixture === "matchmaking"
+        ? "matchmaking"
+        : fixture === "menus"
+          ? "menus"
+          : null
 const snapshot = phase ? liveSnapshot(phase) : null
 const coreStatus = phase
   ? status("valorantReady")
@@ -81,6 +87,8 @@ const rpcStatus: RpcStatus = {
         name: "VALORANT",
         details: "Competitive",
         state: "Ascent",
+        largeImageUrl: isHush && phase === "pregame" ? hushIconUrl : null,
+        smallImageUrl: isHush && phase === "ingame" ? hushIconUrl : null,
         startedAt: 1_768_478_400_000,
       }
     : null,
@@ -118,7 +126,11 @@ const appSnapshot: AppSnapshot = {
 }
 
 const presentation: ValorantPresentation = {
-  agentName: "Jett",
+  agentName,
+  agentIconUrl: isHush ? hushIconUrl : null,
+  agentPortraitUrl: isHush
+    ? `https://media.valorant-api.com/agents/${agentId}/fullportrait.png`
+    : null,
   mapName: "Ascent",
   rankName: "Diamond 3",
 }

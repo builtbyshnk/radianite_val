@@ -710,7 +710,13 @@ fn map_asset(
 }
 
 fn square_map_asset(prefix: &str, label: &str) -> String {
-    format!("{}_square", prefixed_asset(prefix, label))
+    let slug = discord_asset_slug(label);
+    // All Skirmish variants share the same published splash artwork.
+    let slug = match slug.as_str() {
+        "skirmisha" | "skirmishb" | "skirmishc" | "skirmishd" | "skirmishe" => "skirmisha",
+        slug => slug,
+    };
+    format!("{prefix}{slug}_square")
 }
 
 fn rank_asset(
@@ -864,6 +870,11 @@ fn map_name_from_path(map_id: &str) -> Option<&str> {
         "hurm_helix" => "Drift",
         "hurm_hightide" => "Glitch",
         "hurm_yard" => "Piazza",
+        "skirmish_a" => "Skirmish A",
+        "skirmish_b" => "Skirmish B",
+        "skirmish_c" => "Skirmish C",
+        "skirmish_d" => "Skirmish D",
+        "skirmish_e" => "Skirmish E",
         _ => segment,
     })
 }
@@ -1162,6 +1173,35 @@ mod tests {
     }
 
     #[test]
+    fn hush_artwork_reaches_rpc_payload_and_preview() {
+        let art_url = super::asset_url("agent_hush").expect("Hush artwork should be registered");
+        for (phase, image_key) in [
+            (MatchPhase::Pregame, "large_image"),
+            (MatchPhase::Ingame, "small_image"),
+        ] {
+            let mut snapshot = snapshot(phase.clone());
+            snapshot.agent_id = Some("ddd5a15c-4fbe-42fa-3789-11a55ca5ee04".to_string());
+            snapshot.agent_name = Some("Hush".to_string());
+            let (activity, preview) = render_activity(
+                &snapshot,
+                &asset_config(),
+                None,
+                "en-US",
+                None,
+                RpcPrivacy::default(),
+            );
+            let payload = serde_json::to_value(activity).expect("serialized Hush activity");
+            assert_eq!(payload["assets"][image_key], "agent_hush");
+            let preview_url = if phase == MatchPhase::Pregame {
+                preview.large_image_url
+            } else {
+                preview.small_image_url
+            };
+            assert_eq!(preview_url.as_deref(), Some(art_url.as_str()));
+        }
+    }
+
+    #[test]
     fn derives_map_asset_from_riot_map_path() {
         let mut snapshot = snapshot(MatchPhase::Ingame);
         snapshot.map_id = Some("/Game/Maps/Ascent/Ascent".to_string());
@@ -1197,6 +1237,36 @@ mod tests {
 
             assert_eq!(large.image, image);
             assert_eq!(large.text, text);
+        }
+    }
+
+    #[test]
+    fn skirmish_variants_use_registered_map_artwork_and_keep_their_labels() {
+        let art_url = super::asset_url("splash_skirmisha_square").expect("Skirmish artwork");
+        for (map_id, name) in [
+            ("/Game/Maps/Duel/Duel_1/Skirmish_A", "Skirmish A"),
+            ("/Game/Maps/Duel/Duel_2/Skirmish_B", "Skirmish B"),
+            ("/Game/Maps/Duel/Duel_3/Skirmish_C", "Skirmish C"),
+            ("/Game/Maps/Duel/Duel_Platform/Skirmish_D", "Skirmish D"),
+            ("/Game/Maps/Duel/Duel_Heady/Skirmish_E", "Skirmish E"),
+        ] {
+            for map_name in [None, Some(name.to_string())] {
+                let mut snapshot = snapshot(MatchPhase::Ingame);
+                snapshot.map_id = Some(map_id.to_string());
+                snapshot.map_name = map_name;
+                let (activity, preview) = render_activity(
+                    &snapshot,
+                    &asset_config(),
+                    None,
+                    "en-US",
+                    None,
+                    RpcPrivacy::default(),
+                );
+                let payload = serde_json::to_value(activity).expect("serialized Skirmish activity");
+                assert_eq!(payload["assets"]["large_image"], "splash_skirmisha_square");
+                assert_eq!(payload["assets"]["large_text"], name);
+                assert_eq!(preview.large_image_url.as_deref(), Some(art_url.as_str()));
+            }
         }
     }
 
